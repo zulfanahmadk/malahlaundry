@@ -7,11 +7,12 @@
 <style>
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
         gap: 1.25rem;
         margin-bottom: 1.75rem;
     }
     .stat-card {
+        min-width: 0;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -29,6 +30,7 @@
         font-size: 1.5rem;
         font-weight: 700;
         color: var(--text-main);
+        overflow-wrap: anywhere;
     }
     .stat-sub {
         font-size: 0.75rem;
@@ -36,17 +38,6 @@
         margin-top: 0.25rem;
     }
 
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--text-main);
-    }
     .selfie-thumb {
         width: 36px;
         height: 36px;
@@ -84,7 +75,7 @@
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Transaksi Terkini (Paperless POS)</h2>
-        <div>
+        <div class="section-actions">
             <a href="{{ route('reports.export') }}" class="btn btn-secondary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -93,12 +84,12 @@
                 </svg>
                 Ekspor Laporan (Excel)
             </a>
-            <a href="{{ route('transactions.index') }}" class="btn btn-primary" style="margin-left: 0.5rem;">Lihat Semua</a>
+            <a href="{{ route('transactions.index') }}" class="btn btn-primary">Lihat Semua</a>
         </div>
     </div>
 
     <div class="table-responsive">
-        <table>
+        <table style="min-width: 800px;">
             <thead>
                 <tr>
                     <th>No Transaksi</th>
@@ -162,7 +153,7 @@
     </div>
 
     <div class="table-responsive">
-        <table>
+        <table style="min-width: 560px;">
             <thead>
                 <tr>
                     <th>Kasir</th>

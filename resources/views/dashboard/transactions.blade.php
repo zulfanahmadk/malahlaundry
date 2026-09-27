@@ -8,6 +8,7 @@
     .filter-bar {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 0.75rem;
         margin-bottom: 1.25rem;
         background: var(--surface);
@@ -16,6 +17,9 @@
         border: 1px solid var(--border);
     }
     .filter-input {
+        flex: 1 1 160px;
+        min-width: 0;
+        max-width: 100%;
         padding: 0.5rem 0.75rem;
         font-size: 0.85rem;
         border: 1px solid var(--border);
@@ -26,35 +30,42 @@
     .filter-input:focus {
         border-color: var(--primary);
     }
-    .pagination-wrap {
-        margin-top: 1.25rem;
+    .filter-search {
+        flex: 2 1 240px;
+    }
+    .filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 </style>
 
 <div class="card" style="padding: 0; overflow: hidden;">
     <!-- Filter -->
     <form action="{{ route('transactions.index') }}" method="GET" class="filter-bar" style="margin: 0; border: none; border-bottom: 1px solid var(--border); border-radius: 0;">
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input" style="flex: 2; min-width: 200px;">
-        <select name="status" class="filter-input" style="flex: 1; min-width: 140px;">
+        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input filter-search" aria-label="Cari transaksi">
+        <select name="status" class="filter-input" aria-label="Status cucian">
             <option value="">Semua Status Cucian</option>
             <option value="DITERIMA" {{ request('status') === 'DITERIMA' ? 'selected' : '' }}>DITERIMA</option>
             <option value="DIPROSES" {{ request('status') === 'DIPROSES' ? 'selected' : '' }}>DIPROSES</option>
             <option value="SIAP_DIAMBIL" {{ request('status') === 'SIAP_DIAMBIL' ? 'selected' : '' }}>SIAP DIAMBIL</option>
             <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }}>SELESAI</option>
         </select>
-        <select name="payment" class="filter-input" style="flex: 1; min-width: 140px;">
+        <select name="payment" class="filter-input" aria-label="Status pembayaran">
             <option value="">Semua Status Bayar</option>
             <option value="LUNAS" {{ request('payment') === 'LUNAS' ? 'selected' : '' }}>LUNAS</option>
             <option value="BELUM" {{ request('payment') === 'BELUM' ? 'selected' : '' }}>BELUM LUNAS</option>
         </select>
-        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
-        @if(request()->anyFilled(['q', 'status', 'payment']))
-            <a href="{{ route('transactions.index') }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem;">Reset</a>
-        @endif
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
+            @if(request()->anyFilled(['q', 'status', 'payment']))
+                <a href="{{ route('transactions.index') }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem;">Reset</a>
+            @endif
+        </div>
     </form>
 
     <div class="table-responsive">
-        <table>
+        <table style="min-width: 1060px;">
             <thead>
                 <tr>
                     <th>No. Transaksi</th>
@@ -121,7 +132,7 @@
 
     @if($transactions->hasPages())
         <div style="padding: 1rem;">
-            {{ $transactions->links() }}
+            {{ $transactions->links('components.pagination') }}
         </div>
     @endif
 </div>

@@ -4,41 +4,6 @@
 @section('page_title', 'Master Data Layanan & Harga')
 
 @section('content')
-<style>
-    .grid-layout {
-        display: grid;
-        grid-template-columns: 340px 1fr;
-        gap: 1.5rem;
-    }
-    @media (max-width: 900px) {
-        .grid-layout {
-            grid-template-columns: 1fr;
-        }
-    }
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    .form-group label {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 0.35rem;
-        color: var(--text-main);
-    }
-    .form-control {
-        width: 100%;
-        padding: 0.6rem 0.75rem;
-        font-size: 0.85rem;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: #FFFFFF;
-        outline: none;
-    }
-    .form-control:focus {
-        border-color: var(--primary);
-    }
-</style>
-
 <div class="grid-layout">
     <!-- Form Tambah Layanan -->
     <div class="card">
@@ -70,7 +35,7 @@
     <div class="card">
         <h2 style="font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem;">Daftar Layanan Tersedia</h2>
         <div class="table-responsive">
-            <table>
+            <table style="min-width: 580px;">
                 <thead>
                     <tr>
                         <th>Nama Layanan</th>

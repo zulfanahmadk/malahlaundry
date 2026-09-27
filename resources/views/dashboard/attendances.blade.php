@@ -16,13 +16,13 @@
 </style>
 
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <h2 style="font-size: 1rem; font-weight: 700;">Riwayat Absensi Shift Kasir</h2>
+    <div class="section-header">
+        <h2 class="section-title">Riwayat Absensi Shift Kasir</h2>
         <span style="font-size: 0.8rem; color: var(--text-muted);">Foto selfie terekam otomatis dari kamera depan Android POS</span>
     </div>
 
     <div class="table-responsive">
-        <table>
+        <table style="min-width: 960px;">
             <thead>
                 <tr>
                     <th>Kasir</th>
@@ -86,7 +86,7 @@
 
     @if($attendances->hasPages())
         <div style="padding: 1rem;">
-            {{ $attendances->links() }}
+            {{ $attendances->links('components.pagination') }}
         </div>
     @endif
 </div>
