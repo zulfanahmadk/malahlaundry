@@ -18,14 +18,16 @@ Route::get('/', function () {
 
 // Authentication Web
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Public Paperless Digital Receipt (Tanpa Auth, UUIDv4)
-Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])->name('nota.public');
+Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])
+    ->where('uuid', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}')
+    ->name('nota.public');
 
 // Web Dashboard Owner & Admin (Protected)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth:web', 'active', 'owner'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Master Services

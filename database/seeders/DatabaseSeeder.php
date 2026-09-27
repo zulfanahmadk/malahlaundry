@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Users (Owner & Kasir)
-        $owner = User::updateOrCreate(
+        $owner = User::firstOrCreate(
             ['username' => 'owner'],
             [
                 'name' => 'Owner Malah Laundry',
@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $cashier = User::updateOrCreate(
+        $cashier = User::firstOrCreate(
             ['username' => 'kasir1'],
             [
                 'name' => 'Kasir Malah Laundry',
@@ -43,21 +43,21 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. WhatsApp Templates
-        WhatsAppTemplate::updateOrCreate(
+        WhatsAppTemplate::firstOrCreate(
             ['type' => 'WA_DITERIMA'],
             [
                 'content' => "Halo Kak {nama}, cucian Anda di *Malah Laundry* telah kami terima dengan nomor {no_transaksi}.\nTotal tagihan: Rp{total} ({status_bayar}).\n\nCek rincian nota digital Anda di sini:\n{url_nota}\n\nTerima kasih telah mempercayakan pakaian Anda kepada kami!",
             ]
         );
 
-        WhatsAppTemplate::updateOrCreate(
+        WhatsAppTemplate::firstOrCreate(
             ['type' => 'WA_SIAP_DIAMBIL'],
             [
                 'content' => "Halo Kak {nama}, cucian Anda ({no_transaksi}) di *Malah Laundry* sudah SELESAI dan SIAP DIAMBIL.\n\nSisa tagihan: Rp{sisa_bayar}.\nSilakan tunjukkan nota digital saat pengambilan:\n{url_nota}\n\nTerima kasih!",
             ]
         );
 
-        WhatsAppTemplate::updateOrCreate(
+        WhatsAppTemplate::firstOrCreate(
             ['type' => 'WA_SELESAI'],
             [
                 'content' => "Halo Kak {nama}, cucian ({no_transaksi}) telah selesai diambil. Terima kasih banyak telah menggunakan jasa *Malah Laundry*! Semoga pakaian Anda selalu bersih dan wangi.",
@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Master Services
-        $service1 = Service::updateOrCreate(
+        $service1 = Service::firstOrCreate(
             ['name' => 'Cuci Komplit Reguler'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $service2 = Service::updateOrCreate(
+        $service2 = Service::firstOrCreate(
             ['name' => 'Cuci Kering'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -85,7 +85,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $service3 = Service::updateOrCreate(
+        $service3 = Service::firstOrCreate(
             ['name' => 'Setrika Saja'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $service4 = Service::updateOrCreate(
+        $service4 = Service::firstOrCreate(
             ['name' => 'Bed Cover Besar'],
             [
                 'uuid' => (string) Str::uuid(),

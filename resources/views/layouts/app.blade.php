@@ -174,6 +174,7 @@
 
         /* Main Content */
         .main-wrapper {
+            min-width: 0;
             margin-left: 250px;
             flex: 1;
             display: flex;
@@ -250,6 +251,7 @@
         }
 
         .card {
+            min-width: 0;
             background-color: var(--surface);
             border-radius: 12px;
             border: 1px solid var(--border);
@@ -311,7 +313,22 @@
         .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #BBF7D0; }
         .alert-error { background: var(--danger-light); color: var(--danger); border: 1px solid #FECACA; }
 
+        .menu-toggle, .sidebar-close { display: none; }
+        .sidebar-overlay { display: none; }
+        .topbar-heading { display: flex; align-items: center; gap: 0.75rem; }
+        :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+        .pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+        .pagination a { color: var(--primary-dark); }
+        .validation-list { margin: 0.35rem 0 0 1.25rem; }
+
         @media (max-width: 768px) {
+            .menu-toggle, .sidebar-close { display: inline-flex; }
+            .sidebar-close { margin-left: auto; }
+            .sidebar-overlay.open { display: block; position: fixed; inset: 0; background: #0f172a80; z-index: 40; border: 0; }
+            .topbar { padding: 0 1rem; }
+            .content-body { padding: 1rem; }
+            .page-title { font-size: 1rem; }
+            .time-badge { display: none; }
             .sidebar {
                 transform: translateX(-100%);
             }
@@ -333,6 +350,7 @@
                 <div class="brand-title">Malah Laundry</div>
                 <div class="brand-sub">Management System</div>
             </div>
+            <button type="button" class="btn-logout sidebar-close" aria-label="Tutup menu">&#10005;</button>
         </div>
 
         <ul class="nav-list">
@@ -348,7 +366,7 @@
                 </a>
             </li>
 
-            <li class="nav-label">Master Data (Omnichannel)</li>
+            <li class="nav-label">Master Data</li>
             <li class="nav-item">
                 <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
                     <span>Layanan &amp; Harga</span>
@@ -367,10 +385,10 @@
                 </a>
             </li>
 
-            <li class="nav-label">Laporan Masif (DLP)</li>
+            <li class="nav-label">Laporan</li>
             <li class="nav-item">
                 <a href="{{ route('reports.export') }}" class="nav-link">
-                    <span>Export Rekapitulasi (Excel)</span>
+                    <span>Ekspor Rekapitulasi (CSV)</span>
                 </a>
             </li>
         </ul>
@@ -392,13 +410,17 @@
             </form>
         </div>
     </aside>
+    <button type="button" class="sidebar-overlay" tabindex="-1" aria-label="Tutup menu"></button>
 
     <!-- Main Content -->
     <div class="main-wrapper">
         <header class="topbar">
-            <h1 class="page-title">@yield('page_title', 'Dashboard')</h1>
+            <div class="topbar-heading">
+                <button type="button" class="btn btn-secondary menu-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Buka menu">&#9776;</button>
+                <h1 class="page-title">@yield('page_title', 'Dashboard')</h1>
+            </div>
             <div class="topbar-actions">
-                <div class="time-badge">{{ now()->translatedFormat('l, d M Y - H:i') }} WIB</div>
+                <div class="time-badge">{{ now()->timezone('Asia/Jakarta')->locale('id')->translatedFormat('l, d M Y - H:i') }} WIB</div>
             </div>
         </header>
 
@@ -409,9 +431,42 @@
             @if(session('error'))
                 <div class="alert alert-error">{{ session('error') }}</div>
             @endif
+            @if($errors->any())
+                <div class="alert alert-error" role="alert">
+                    Periksa kembali data yang diisi.
+                    <ul class="validation-list">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             @yield('content')
         </main>
     </div>
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebarOverlay = document.querySelector('.sidebar-overlay');
+        const sidebarClose = document.querySelector('.sidebar-close');
+        const mobileMenu = window.matchMedia('(max-width: 768px)');
+        function setMenu(open, returnFocus = false) {
+            sidebar.classList.toggle('open', open);
+            sidebarOverlay.classList.toggle('open', open);
+            menuToggle.setAttribute('aria-expanded', String(open));
+            sidebar.inert = mobileMenu.matches && !open;
+            if (open) sidebarClose.focus();
+            if (returnFocus) menuToggle.focus();
+        }
+        menuToggle.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
+        sidebarClose.addEventListener('click', () => setMenu(false, true));
+        sidebarOverlay.addEventListener('click', () => setMenu(false, true));
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && mobileMenu.matches) setMenu(false, true);
+        });
+        mobileMenu.addEventListener('change', () => setMenu(false));
+        setMenu(false);
+    </script>
 </body>
 </html>

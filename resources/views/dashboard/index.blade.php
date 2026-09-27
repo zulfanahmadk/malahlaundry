@@ -38,6 +38,8 @@
 
     .section-header {
         display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1rem;
@@ -71,7 +73,7 @@
     <div class="stat-card">
         <div class="stat-label">Cucian Aktif</div>
         <div class="stat-val" style="color: var(--warning);">{{ $stats['active_laundry_count'] }}</div>
-        <div class="stat-sub">Diterima &amp; Sedang Diproses</div>
+        <div class="stat-sub">Diterima, diproses, dan siap diambil</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Siap Diambil</div>
@@ -83,7 +85,7 @@
 <!-- Transaksi Terbaru -->
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Transaksi Terkini (Paperless POS)</h2>
+        <h2 class="section-title">Transaksi Terkini</h2>
         <div>
             <a href="{{ route('reports.export') }}" class="btn btn-secondary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,7 +93,7 @@
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Ekspor Laporan (Excel)
+                Ekspor Laporan (CSV)
             </a>
             <a href="{{ route('transactions.index') }}" class="btn btn-primary" style="margin-left: 0.5rem;">Lihat Semua</a>
         </div>
@@ -146,7 +148,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Belum ada transaksi recorded.</td>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Belum ada transaksi tercatat.</td>
                     </tr>
                 @endforelse
             </tbody>

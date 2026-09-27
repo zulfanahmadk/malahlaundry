@@ -47,22 +47,22 @@
             @csrf
             <div class="form-group">
                 <label for="name">Nama Lengkap</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Contoh: Siti Rahma" required>
+                <input type="text" id="name" name="name" value="{{ old('name') }}" class="form-control" placeholder="Contoh: Siti Rahma" maxlength="255" required>
             </div>
             <div class="form-group">
                 <label for="username">Username (Untuk Login POS &amp; Web)</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="Contoh: sitikasir" required>
+                <input type="text" id="username" name="username" value="{{ old('username') }}" class="form-control" placeholder="Contoh: sitikasir" maxlength="50" autocomplete="off" required>
             </div>
             <div class="form-group">
                 <label for="role">Hak Akses (Role)</label>
                 <select id="role" name="role" class="form-control" required>
                     <option value="cashier">Kasir (Android POS &amp; Shift)</option>
-                    <option value="owner">Owner (Hak Akses Penuh)</option>
+                    <option value="owner" @selected(old('role') === 'owner')>Owner (Hak Akses Penuh)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Minimal 6 karakter" required>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Minimal 8 karakter" minlength="8" maxlength="72" autocomplete="new-password" required>
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
                 Daftarkan Pengguna

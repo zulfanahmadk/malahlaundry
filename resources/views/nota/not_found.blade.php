@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
     <title>Nota Tidak Ditemukan - Malah Laundry</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,16 +58,6 @@
             line-height: 1.5;
             margin-bottom: 1.5rem;
         }
-        .code-box {
-            font-family: monospace;
-            background: #F1F5F9;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            color: #475569;
-            word-break: break-all;
-            margin-bottom: 1.5rem;
-        }
         .btn-primary {
             display: inline-block;
             background-color: #0284C7;
@@ -80,21 +72,24 @@
         .btn-primary:hover {
             background-color: #0369A1;
         }
+        .btn-primary:focus-visible {
+            outline: 2px solid #0284C7;
+            outline-offset: 3px;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
+    <main class="card">
         <div class="icon-circle">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="15" y1="9" x2="9" y2="15"></line>
                 <line x1="9" y1="9" x2="15" y2="15"></line>
             </svg>
         </div>
         <h1>Nota Tidak Ditemukan</h1>
-        <p>Data transaksi dengan identifier di bawah ini tidak terdaftar pada sistem kami atau link tidak valid.</p>
-        <div class="code-box">{{ $uuid }}</div>
-        <a href="/" class="btn-primary">Kembali ke Beranda</a>
-    </div>
+        <p>Pastikan tautan nota dari WhatsApp sudah lengkap. Jika cucian baru diserahkan, nota mungkin belum tersinkronisasi. Coba kembali beberapa saat lagi atau hubungi kasir.</p>
+        <a href="{{ url()->current() }}" class="btn-primary">Coba Lagi</a>
+    </main>
 </body>
 </html>

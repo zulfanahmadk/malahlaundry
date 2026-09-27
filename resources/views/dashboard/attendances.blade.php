@@ -86,7 +86,7 @@
 
     @if($attendances->hasPages())
         <div style="padding: 1rem;">
-            {{ $attendances->links() }}
+            {{ $attendances->links('components.pagination') }}
         </div>
     @endif
 </div>

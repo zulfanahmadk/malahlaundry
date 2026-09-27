@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,9 +44,7 @@ class Transaction extends Model
                 $transaction->uuid = (string) Str::uuid();
             }
             if (empty($transaction->transaction_number)) {
-                $dateStr = now()->format('Ymd');
-                $countToday = static::whereDate('created_at', today())->count() + 1;
-                $transaction->transaction_number = 'TRX-' . $dateStr . '-' . str_pad($countToday, 3, '0', STR_PAD_LEFT);
+                $transaction->transaction_number = 'TRX-' . now()->format('Ymd') . '-' . str_replace('-', '', $transaction->uuid);
             }
         });
     }
@@ -53,6 +52,32 @@ class Transaction extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class, 'customer_uuid', 'uuid');
+    }
+
+    public function scopeFilter(Builder $query, array $filters): void
+    {
+        if (isset($filters['q']) && $filters['q'] !== '') {
+            $search = '%'.$filters['q'].'%';
+            $query->where(function (Builder $query) use ($search) {
+                $query->where('transaction_number', 'like', $search)
+                    ->orWhereHas('customer', function (Builder $customer) use ($search) {
+                        $customer->where('name', 'like', $search)->orWhere('phone', 'like', $search);
+                    });
+            });
+        }
+
+        foreach (['status' => 'laundry_status', 'payment' => 'payment_status'] as $key => $column) {
+            if (!empty($filters[$key])) {
+                $query->where($column, $filters[$key]);
+            }
+        }
+
+        if (!empty($filters['from'])) {
+            $query->whereDate('created_at', '>=', $filters['from']);
+        }
+        if (!empty($filters['to'])) {
+            $query->whereDate('created_at', '<=', $filters['to']);
+        }
     }
 
     public function user(): BelongsTo

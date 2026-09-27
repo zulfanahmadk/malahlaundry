@@ -34,21 +34,24 @@
 <div class="card" style="padding: 0; overflow: hidden;">
     <!-- Filter -->
     <form action="{{ route('transactions.index') }}" method="GET" class="filter-bar" style="margin: 0; border: none; border-bottom: 1px solid var(--border); border-radius: 0;">
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input" style="flex: 2; min-width: 200px;">
-        <select name="status" class="filter-input" style="flex: 1; min-width: 140px;">
+        <input type="search" name="q" value="{{ request('q') }}" aria-label="Cari transaksi atau pelanggan" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input" style="flex: 2; min-width: 200px;">
+        <select name="status" aria-label="Status cucian" class="filter-input" style="flex: 1; min-width: 140px;">
             <option value="">Semua Status Cucian</option>
             <option value="DITERIMA" {{ request('status') === 'DITERIMA' ? 'selected' : '' }}>DITERIMA</option>
             <option value="DIPROSES" {{ request('status') === 'DIPROSES' ? 'selected' : '' }}>DIPROSES</option>
             <option value="SIAP_DIAMBIL" {{ request('status') === 'SIAP_DIAMBIL' ? 'selected' : '' }}>SIAP DIAMBIL</option>
             <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }}>SELESAI</option>
         </select>
-        <select name="payment" class="filter-input" style="flex: 1; min-width: 140px;">
+        <select name="payment" aria-label="Status pembayaran" class="filter-input" style="flex: 1; min-width: 140px;">
             <option value="">Semua Status Bayar</option>
             <option value="LUNAS" {{ request('payment') === 'LUNAS' ? 'selected' : '' }}>LUNAS</option>
             <option value="BELUM" {{ request('payment') === 'BELUM' ? 'selected' : '' }}>BELUM LUNAS</option>
         </select>
+        <label>Dari <input type="date" name="from" value="{{ request('from') }}" class="filter-input"></label>
+        <label>Sampai <input type="date" name="to" value="{{ request('to') }}" class="filter-input"></label>
         <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
-        @if(request()->anyFilled(['q', 'status', 'payment']))
+        <a href="{{ route('reports.export', request()->only(['q', 'status', 'payment', 'from', 'to'])) }}" class="btn btn-secondary">Ekspor Hasil (CSV)</a>
+        @if(request()->anyFilled(['q', 'status', 'payment', 'from', 'to']))
             <a href="{{ route('transactions.index') }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem;">Reset</a>
         @endif
     </form>
@@ -121,7 +124,7 @@
 
     @if($transactions->hasPages())
         <div style="padding: 1rem;">
-            {{ $transactions->links() }}
+            {{ $transactions->links('components.pagination') }}
         </div>
     @endif
 </div>

@@ -1,59 +1,57 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Malah Laundry — Web & API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12, Sanctum, dan nota publik dengan QR SVG. Kontrak API: [../docs/API.md](../docs/API.md). Cakupan fitur dan backlog: [../docs/PROGRESS.md](../docs/PROGRESS.md).
 
-## About Laravel
+## Menjalankan lokal
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Prasyarat: PHP 8.2+, Composer, ekstensi PDO MySQL/SQLite, mbstring, DOM, fileinfo dan GD (uji decode QR/foto). Pilih database khusus proyek ini; pengujian otomatis menggunakan SQLite dalam memori.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Dari folder `web`:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```powershell
+composer install
+# Hanya jika .env belum ada:
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
 
-## Learning Laravel
+Atur `APP_URL` ke alamat yang dipakai membuka web. Untuk MySQL XAMPP, atur `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD`. Default contoh memakai SQLite; buat `database/database.sqlite` jika memakai konfigurasi tersebut. Gunakan `APP_TIMEZONE=Asia/Jakarta` dan `APP_LOCALE=id`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Jalankan `php artisan key:generate` **hanya jika APP_KEY masih kosong**, lalu:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```powershell
+php artisan migrate
+php artisan storage:link
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-## Laravel Sponsors
+Buka http://127.0.0.1:8000/login. Document root Apache harus diarahkan ke `web/public`. Tampilan dashboard saat ini menggunakan Blade dan CSS inline; tidak membutuhkan Vite untuk dijalankan. Jangan menimpa konfigurasi/database yang sudah digunakan.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Untuk database pengembangan/demo saja:
 
-### Premium Partners
+```powershell
+php artisan db:seed
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Seeder membuat akun `owner` dan `kasir1` dengan password demo `password123`, layanan contoh, template WhatsApp, serta satu nota. Login web hanya menerima owner; kasir menggunakan API. Pengisian ulang demo mempertahankan UUID, harga, password dan record yang sudah ada. Jangan gunakan kredensial demo pada deployment nyata.
 
-## Contributing
+Nota contoh: `/n/e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c`. UUID tersebut hanya untuk data demo; transaksi operasional memakai UUIDv4 acak.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Alur yang tersedia
 
-## Code of Conduct
+- Dashboard owner: statistik, transaksi, dan absensi.
+- Tambah/edit/aktif-nonaktif layanan; tambah pengguna dan nonaktifkan akun.
+- Riwayat transaksi dengan pencarian, status, pembayaran, tanggal, dan pagination.
+- Ekspor hasil filter sebagai CSV UTF-8 yang dapat dibuka di Excel. Ekspor memerlukan sesi browser owner, token API saja tidak cukup.
+- API login/push/pull/unggah foto dan nota publik. Header respons nota mencegah cache/pengindeksan; nomor HP disamarkan.
+- Belum ada UI POS web, ekspor XLSX/PDF laporan, ataupun pengiriman WhatsApp otomatis dari server.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Pemeriksaan
 
-## Security Vulnerabilities
+```powershell
+php artisan test
+php vendor/bin/pint --test app/Http/Controllers app/Http/Middleware app/Http/Requests app/Exports app/Models/Transaction.php app/Services/QrCodeService.php bootstrap/app.php routes database/factories/UserFactory.php database/seeders/DatabaseSeeder.php tests/Feature
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Pint memakai preset PSR-12 dari `pint.json`. Tes menggunakan `RefreshDatabase` dengan SQLite `:memory:` pada `phpunit.xml`, bukan database pada .env. GD diperlukan untuk tes decode QR dan pembuatan gambar uji.
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+API lokal berada di `/api/v1`, bukan `/v1`. Untuk perangkat Android nyata gunakan alamat server yang dapat dijangkau perangkat; konfigurasi jaringan/Cloudflare Tunnel belum disertakan.
