@@ -263,6 +263,7 @@
         th { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg); color: var(--text-muted); text-align: left; font-weight: 600; }
         td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
+        .validation-list { margin: 0.35rem 0 0 1.25rem; }
         .alert { padding: 0.75rem 1rem; margin-bottom: 1.25rem; border-radius: 8px; font-size: 0.85rem; }
         .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #BBF7D0; }
         .alert-error { background: var(--danger-light); color: var(--danger); border: 1px solid #FECACA; }
@@ -321,7 +322,7 @@
                 </a>
             </li>
 
-            <li class="nav-label">Master Data (Omnichannel)</li>
+            <li class="nav-label">Master Data</li>
             <li class="nav-item">
                 <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
                     <span>Layanan &amp; Harga</span>
@@ -340,10 +341,10 @@
                 </a>
             </li>
 
-            <li class="nav-label">Laporan Masif (DLP)</li>
+            <li class="nav-label">Laporan</li>
             <li class="nav-item">
                 <a href="{{ route('reports.export') }}" class="nav-link">
-                    <span>Export Rekapitulasi (Excel)</span>
+                    <span>Ekspor Rekapitulasi (CSV)</span>
                 </a>
             </li>
         </ul>
@@ -380,7 +381,7 @@
                 <h1 class="page-title">@yield('page_title', 'Dashboard')</h1>
             </div>
             <div class="topbar-actions">
-                <div class="time-badge">{{ now()->translatedFormat('l, d M Y - H:i') }} WIB</div>
+                <div class="time-badge">{{ now()->timezone('Asia/Jakarta')->locale('id')->translatedFormat('l, d M Y - H:i') }} WIB</div>
             </div>
         </header>
 
@@ -390,6 +391,16 @@
             @endif
             @if(session('error'))
                 <div class="alert alert-error">{{ session('error') }}</div>
+            @endif
+            @if($errors->any())
+                <div class="alert alert-error" role="alert">
+                    Periksa kembali data yang diisi.
+                    <ul class="validation-list">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             @yield('content')

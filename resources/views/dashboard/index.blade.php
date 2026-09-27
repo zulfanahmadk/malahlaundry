@@ -62,7 +62,7 @@
     <div class="stat-card">
         <div class="stat-label">Cucian Aktif</div>
         <div class="stat-val" style="color: var(--warning);">{{ $stats['active_laundry_count'] }}</div>
-        <div class="stat-sub">Diterima &amp; Sedang Diproses</div>
+        <div class="stat-sub">Diterima, diproses, dan siap diambil</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Siap Diambil</div>
@@ -82,7 +82,7 @@
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Ekspor Laporan (Excel)
+                Ekspor Laporan (CSV)
             </a>
             <a href="{{ route('transactions.index') }}" class="btn btn-primary">Lihat Semua</a>
         </div>
@@ -137,7 +137,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Belum ada transaksi recorded.</td>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Belum ada transaksi tercatat.</td>
                     </tr>
                 @endforelse
             </tbody>

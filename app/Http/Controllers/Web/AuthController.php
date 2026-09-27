@@ -10,10 +10,16 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function showLogin(): View|RedirectResponse
+    public function showLogin(Request $request): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            if ($request->user()->active && $request->user()->isOwner()) {
+                return redirect()->route('dashboard');
+            }
+
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
         return view('auth.login');
     }
@@ -25,13 +31,13 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'active' => true], $request->boolean('remember'))) {
+        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'active' => true, 'role' => 'owner'], $request->boolean('remember'))) {
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }
 
         return back()->withErrors([
-            'username' => 'Username atau password tidak sesuai atau akun dinonaktifkan.',
+            'username' => 'Login gagal. Gunakan akun owner yang aktif dengan username dan password yang sesuai.',
         ])->onlyInput('username');
     }
 

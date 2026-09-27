@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
     <title>Nota Digital - {{ $transaction->transaction_number }} - Malah Laundry</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -133,6 +135,7 @@
             align-items: center;
             margin-bottom: 0.65rem;
             font-size: 0.85rem;
+            gap: 1rem;
         }
 
         .meta-label {
@@ -143,6 +146,8 @@
             font-weight: 600;
             color: var(--text-main);
             text-align: right;
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .trx-number {
@@ -199,6 +204,13 @@
             color: var(--text-muted);
             letter-spacing: 0.05em;
             margin-bottom: 0.75rem;
+        }
+
+        .status-message {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--text-main);
         }
 
         .stepper {
@@ -292,6 +304,8 @@
 
         .item-info {
             flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .item-name {
@@ -372,6 +386,11 @@
             border-color: #CBD5E1;
         }
 
+        .btn-print:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 3px;
+        }
+
         @media print {
             body {
                 background: #FFFFFF;
@@ -382,28 +401,28 @@
                 border: none;
                 max-width: 100%;
             }
-            .btn-print-wrap {
+            .print-btn-wrap {
                 display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="receipt-container">
+    <main class="receipt-container">
         <!-- Header -->
         <div class="receipt-header">
             <h1 class="brand-name">Malah Laundry</h1>
-            <p class="brand-sub">Sistem Manajemen Laundry Modern &amp; Ramah Lingkungan</p>
-            <div class="badge-paperless">Bukti Transaksi Resmi (100% Paperless)</div>
+            <p class="brand-sub">Cucian terawat, hari lebih ringan.</p>
+            <div class="badge-paperless">Nota Digital</div>
         </div>
 
         <!-- QR Code Section -->
         <div class="qr-section">
             <div class="qr-box">
-                <img src="{{ $qrCode }}" alt="QR Code Nota Transaksi">
+                <img src="{{ $qrCode }}" alt="QR Code Nota Transaksi" width="160" height="160">
             </div>
-            <div class="qr-caption">QR Code Pengambilan Laundry</div>
-            <div class="qr-subcaption">Tunjukkan layar ponsel ini kepada kasir saat mengambil cucian</div>
+            <div class="qr-caption">{{ $transaction->laundry_status === 'SELESAI' ? 'Bukti Pengambilan Laundry' : 'QR Code Pengambilan Laundry' }}</div>
+            <div class="qr-subcaption">{{ $transaction->laundry_status === 'SELESAI' ? 'Cucian pada transaksi ini sudah diambil.' : 'Tunjukkan layar ponsel ini kepada kasir saat mengambil cucian.' }}</div>
         </div>
 
         <div class="receipt-body">
@@ -414,7 +433,7 @@
             </div>
             <div class="meta-row">
                 <span class="meta-label">Tanggal Diterima</span>
-                <span class="meta-val">{{ $transaction->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
+                <span class="meta-val">{{ $transaction->created_at->timezone('Asia/Jakarta')->locale('id')->translatedFormat('d M Y, H:i') }} WIB</span>
             </div>
             <div class="meta-row">
                 <span class="meta-label">Nama Pelanggan</span>
@@ -422,7 +441,7 @@
             </div>
             <div class="meta-row">
                 <span class="meta-label">Nomor WhatsApp</span>
-                <span class="meta-val">{{ $customer->phone ?? '-' }}</span>
+                <span class="meta-val">{{ $maskedPhone }}</span>
             </div>
             <div class="meta-row">
                 <span class="meta-label">Status Pembayaran</span>
@@ -437,30 +456,31 @@
 
             <!-- Stepper Progress Pengerjaan -->
             @php
-                $statusList = ['DITERIMA', 'DIPROSES', 'SIAP_DIAMBIL', 'SELESAI'];
-                $currentIndex = array_search($transaction->laundry_status, $statusList);
-                if ($currentIndex === false) $currentIndex = 0;
+                $statusList = ['DITERIMA' => 'Diterima', 'DIPROSES' => 'Diproses', 'SIAP_DIAMBIL' => 'Siap Ambil', 'SELESAI' => 'Selesai'];
+                $currentIndex = array_search($transaction->laundry_status, array_keys($statusList), true);
+                $statusMessage = match ($transaction->laundry_status) {
+                    'DITERIMA' => 'Cucian Anda sudah diterima dan menunggu proses pencucian.',
+                    'DIPROSES' => 'Cucian Anda sedang kami proses. Kami akan mengabari saat siap diambil.',
+                    'SIAP_DIAMBIL' => 'Cucian Anda siap diambil. Tunjukkan QR code ini kepada kasir.',
+                    'SELESAI' => 'Cucian Anda sudah diambil. Terima kasih telah menggunakan layanan kami.',
+                    default => 'Hubungi kasir untuk mengetahui status cucian Anda.',
+                };
             @endphp
             <div class="stepper-section">
                 <div class="stepper-title">Status Pengerjaan Cucian</div>
-                <div class="stepper">
-                    <div class="step-item {{ $currentIndex >= 0 ? ($currentIndex > 0 ? 'completed' : 'active') : '' }}">
-                        <div class="step-circle">{{ $currentIndex > 0 ? '✓' : '1' }}</div>
-                        <div class="step-label">Diterima</div>
-                    </div>
-                    <div class="step-item {{ $currentIndex >= 1 ? ($currentIndex > 1 ? 'completed' : 'active') : '' }}">
-                        <div class="step-circle">{{ $currentIndex > 1 ? '✓' : '2' }}</div>
-                        <div class="step-label">Diproses</div>
-                    </div>
-                    <div class="step-item {{ $currentIndex >= 2 ? ($currentIndex > 2 ? 'completed' : 'active') : '' }}">
-                        <div class="step-circle">{{ $currentIndex > 2 ? '✓' : '3' }}</div>
-                        <div class="step-label">Siap Ambil</div>
-                    </div>
-                    <div class="step-item {{ $currentIndex >= 3 ? 'completed' : '' }}">
-                        <div class="step-circle">{{ $currentIndex >= 3 ? '✓' : '4' }}</div>
-                        <div class="step-label">Selesai</div>
-                    </div>
+                <div class="stepper" role="list" aria-label="Progres cucian">
+                    @foreach($statusList as $status => $label)
+                        @php
+                            $isCurrent = $transaction->laundry_status === $status;
+                            $isCompleted = $currentIndex !== false && ($currentIndex > $loop->index || $transaction->laundry_status === 'SELESAI');
+                        @endphp
+                        <div class="step-item {{ $isCompleted ? 'completed' : ($isCurrent ? 'active' : '') }}" role="listitem" @if($isCurrent) aria-current="step" @endif>
+                            <div class="step-circle" aria-hidden="true">{{ $isCompleted ? '✓' : $loop->iteration }}</div>
+                            <div class="step-label">{{ $label }}</div>
+                        </div>
+                    @endforeach
                 </div>
+                <p class="status-message">{{ $statusMessage }}</p>
             </div>
 
             <!-- Daftar Layanan -->
@@ -499,11 +519,12 @@
             <p class="footer-note">
                 Terima kasih atas kepercayaan Anda menggunakan <strong>Malah Laundry</strong>.<br>
                 Simpan link atau tangkapan layar halaman ini untuk bukti pengambilan.
+                Jaga kerahasiaan tautan nota Anda.
             </p>
             <div class="print-btn-wrap">
-                <button type="button" class="btn-print" onclick="window.print()">Cetak / Simpan PDF</button>
+                <button type="button" class="btn-print" onclick="window.print()">Simpan sebagai PDF</button>
             </div>
         </div>
-    </div>
+    </main>
 </body>
 </html>

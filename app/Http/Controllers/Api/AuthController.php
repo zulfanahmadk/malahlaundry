@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -17,8 +17,9 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
+            'username' => 'required|string|max:50',
+            'password' => 'required|string|max:72',
+            'device_name' => 'sometimes|required|string|max:255',
         ]);
 
         $user = User::where('username', $request->username)->first();
@@ -37,7 +38,6 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Hapus token lama jika perlu, lalu generate token baru
         $deviceName = $request->input('device_name', 'Android-Device');
         $token = $user->createToken($deviceName)->plainTextToken;
 
@@ -65,7 +65,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'user' => $request->user(),
+                'user' => $request->user()->only(['id', 'name', 'username', 'role', 'active']),
             ],
         ]);
     }
@@ -75,7 +75,10 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
 
         return response()->json([
             'status' => 'success',

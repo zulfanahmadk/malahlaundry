@@ -38,12 +38,20 @@
         flex-wrap: wrap;
         gap: 0.5rem;
     }
+    .filter-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1 1 210px;
+        min-width: 0;
+        font-size: 0.85rem;
+    }
 </style>
 
 <div class="card" style="padding: 0; overflow: hidden;">
     <!-- Filter -->
     <form action="{{ route('transactions.index') }}" method="GET" class="filter-bar" style="margin: 0; border: none; border-bottom: 1px solid var(--border); border-radius: 0;">
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input filter-search" aria-label="Cari transaksi">
+        <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input filter-search" aria-label="Cari transaksi atau pelanggan">
         <select name="status" class="filter-input" aria-label="Status cucian">
             <option value="">Semua Status Cucian</option>
             <option value="DITERIMA" {{ request('status') === 'DITERIMA' ? 'selected' : '' }}>DITERIMA</option>
@@ -56,9 +64,12 @@
             <option value="LUNAS" {{ request('payment') === 'LUNAS' ? 'selected' : '' }}>LUNAS</option>
             <option value="BELUM" {{ request('payment') === 'BELUM' ? 'selected' : '' }}>BELUM LUNAS</option>
         </select>
+        <label class="filter-date">Dari <input type="date" name="from" value="{{ request('from') }}" class="filter-input"></label>
+        <label class="filter-date">Sampai <input type="date" name="to" value="{{ request('to') }}" class="filter-input"></label>
         <div class="filter-actions">
+            <a href="{{ route('reports.export', request()->only(['q', 'status', 'payment', 'from', 'to'])) }}" class="btn btn-secondary">Ekspor Hasil (CSV)</a>
             <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
-            @if(request()->anyFilled(['q', 'status', 'payment']))
+            @if(request()->anyFilled(['q', 'status', 'payment', 'from', 'to']))
                 <a href="{{ route('transactions.index') }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem;">Reset</a>
             @endif
         </div>
