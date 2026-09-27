@@ -106,7 +106,7 @@ class SyncController extends Controller
                     }
                 }
                 $wasPaid = $transaction->exists && $transaction->isPaid();
-                $statuses = ['DITERIMA', 'DIPROSES', 'SIAP_DIAMBIL', 'SELESAI'];
+                $statuses = ['DITERIMA', 'SIAP_DIAMBIL', 'SELESAI'];
                 if (isset($data['laundry_status'])
                     && array_search($data['laundry_status'], $statuses, true) < array_search($transaction->laundry_status, $statuses, true)) {
                     throw ValidationException::withMessages([
@@ -133,6 +133,21 @@ class SyncController extends Controller
                     ]);
                 }
 
+                if ($transaction->laundry_status === 'SELESAI' && ! $transaction->picked_up_at) {
+                    $pickup = isset($data['picked_up_at'])
+                        ? Carbon::parse($data['picked_up_at'])->setTimezone(config('app.timezone')) : now();
+                    if ($pickup->lt($transaction->created_at ?? now()) || $pickup->gt(now()->addMinutes(5))) {
+                        throw ValidationException::withMessages([
+                            "transactions.$index.picked_up_at" => 'Waktu pengambilan harus setelah penerimaan dan tidak melebihi waktu saat ini.',
+                        ]);
+                    }
+                    $transaction->picked_up_at = $pickup;
+                } elseif ($transaction->laundry_status !== 'SELESAI' && ! empty($data['picked_up_at'])) {
+                    throw ValidationException::withMessages([
+                        "transactions.$index.picked_up_at" => 'Tanggal pengambilan hanya untuk cucian selesai.',
+                    ]);
+                }
+
                 if (array_key_exists('items', $data)) {
                     $items = array_map(fn (array $item) => array_replace($item, [
                         'service_uuid' => strtolower($item['service_uuid']),
@@ -141,8 +156,13 @@ class SyncController extends Controller
                         'items.*.service_uuid' => [Rule::exists('services', 'uuid')],
                     ], "transactions.$index");
                     $services = Service::whereIn('uuid', array_column($items, 'service_uuid'))->get()->keyBy('uuid');
+                    foreach ($items as &$snapshot) {
+                        $snapshot['service_name'] = $snapshot['service_name'] ?? $services[$snapshot['service_uuid']]->name;
+                        $snapshot['unit'] = $snapshot['unit'] ?? $services[$snapshot['service_uuid']]->unit;
+                    }
+                    unset($snapshot);
                     foreach ($items as $itemIndex => $item) {
-                        if ($services[$item['service_uuid']]->unit === 'pcs' && floor((float) $item['qty']) !== (float) $item['qty']) {
+                        if ($item['unit'] === 'pcs' && floor((float) $item['qty']) !== (float) $item['qty']) {
                             throw ValidationException::withMessages([
                                 "transactions.$index.items.$itemIndex.qty" => 'Jumlah layanan pcs harus berupa bilangan bulat.',
                             ]);

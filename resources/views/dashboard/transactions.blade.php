@@ -55,7 +55,6 @@
         <select name="status" class="filter-input" aria-label="Status cucian">
             <option value="">Semua Status Cucian</option>
             <option value="DITERIMA" {{ request('status') === 'DITERIMA' ? 'selected' : '' }}>DITERIMA</option>
-            <option value="DIPROSES" {{ request('status') === 'DIPROSES' ? 'selected' : '' }}>DIPROSES</option>
             <option value="SIAP_DIAMBIL" {{ request('status') === 'SIAP_DIAMBIL' ? 'selected' : '' }}>SIAP DIAMBIL</option>
             <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }}>SELESAI</option>
         </select>
@@ -67,7 +66,7 @@
         <label class="filter-date">Dari <input type="date" name="from" value="{{ request('from') }}" class="filter-input"></label>
         <label class="filter-date">Sampai <input type="date" name="to" value="{{ request('to') }}" class="filter-input"></label>
         <div class="filter-actions">
-            <a href="{{ route('reports.export', request()->only(['q', 'status', 'payment', 'from', 'to'])) }}" class="btn btn-secondary">Ekspor Hasil (CSV)</a>
+            <a href="{{ route('reports.export', request()->only(['q', 'status', 'payment', 'from', 'to'])) }}" class="btn btn-secondary">Ekspor Hasil (Excel)</a>
             <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
             @if(request()->anyFilled(['q', 'status', 'payment', 'from', 'to']))
                 <a href="{{ route('transactions.index') }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem;">Reset</a>
@@ -81,6 +80,7 @@
                 <tr>
                     <th>No. Transaksi</th>
                     <th>Waktu (WIB)</th>
+                    <th>Tanggal Pengambilan (WIB)</th>
                     <th>Pelanggan</th>
                     <th>Layanan &amp; Qty</th>
                     <th>Total</th>
@@ -95,6 +95,7 @@
                     <tr>
                         <td><strong>{{ $trx->transaction_number }}</strong></td>
                         <td>{{ $trx->created_at->translatedFormat('d M Y, H:i') }}</td>
+                        <td>{{ $trx->picked_up_at?->translatedFormat('d M Y, H:i') ?? '-' }}</td>
                         <td>
                             <div>{{ $trx->customer->name ?? 'Pelanggan Umum' }}</div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $trx->customer->phone ?? '-' }}</div>
@@ -102,7 +103,7 @@
                         <td>
                             @foreach($trx->items as $item)
                                 <div style="font-size: 0.8rem;">
-                                    {{ $item->service->name ?? 'Layanan' }} ({{ $item->qty }} {{ $item->service->unit ?? '' }})
+                                    {{ $item->service_name ?? $item->service->name ?? 'Layanan' }} ({{ $item->qty }} {{ $item->unit ?? $item->service->unit ?? '' }})
                                 </div>
                             @endforeach
                         </td>
@@ -112,8 +113,6 @@
                                 <span class="badge badge-success">Selesai</span>
                             @elseif($trx->laundry_status === 'SIAP_DIAMBIL')
                                 <span class="badge badge-success">Siap Diambil</span>
-                            @elseif($trx->laundry_status === 'DIPROSES')
-                                <span class="badge badge-warning">Diproses</span>
                             @else
                                 <span class="badge badge-primary">Diterima</span>
                             @endif
@@ -134,7 +133,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Tidak ada transaksi ditemukan.</td>
+                        <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">Tidak ada transaksi ditemukan.</td>
                     </tr>
                 @endforelse
             </tbody>

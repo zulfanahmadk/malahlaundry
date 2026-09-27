@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Exports\TransactionCsvExport;
+use App\Exports\TransactionXlsxExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TransactionFilterRequest;
 use App\Models\Attendance;
@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\Storage;
+use App\Services\UpdateUser;
 
 class DashboardController extends Controller
 {
@@ -29,7 +32,7 @@ class DashboardController extends Controller
             'today_omzet' => Transaction::whereDate('created_at', $today)->where('payment_status', 'LUNAS')->sum('total'),
             'month_omzet' => Transaction::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->where('payment_status', 'LUNAS')->sum('total'),
             'today_transactions_count' => Transaction::whereDate('created_at', $today)->count(),
-            'active_laundry_count' => Transaction::whereIn('laundry_status', ['DITERIMA', 'DIPROSES', 'SIAP_DIAMBIL'])->count(),
+            'active_laundry_count' => Transaction::whereIn('laundry_status', ['DITERIMA', 'SIAP_DIAMBIL'])->count(),
             'ready_pickup_count' => Transaction::where('laundry_status', 'SIAP_DIAMBIL')->count(),
             'unpaid_count' => Transaction::where('payment_status', 'BELUM')->count(),
         ];
@@ -142,6 +145,17 @@ class DashboardController extends Controller
         return back()->with('success', 'Status akun pengguna diperbarui.');
     }
 
+    public function editUser(User $user): View
+    {
+        return view('dashboard.user-edit', compact('user'));
+    }
+
+    public function updateUser(Request $request, User $user, UpdateUser $update): RedirectResponse
+    {
+        $update->handle($request, $user);
+        return redirect()->route('users.index')->with('success', 'Data pengguna berhasil diperbarui.');
+    }
+
     /**
      * Daftar Riwayat Transaksi
      */
@@ -156,20 +170,43 @@ class DashboardController extends Controller
     /**
      * Riwayat Absensi Kasir (Check-In / Out dengan Foto Selfie)
      */
-    public function attendances(): View
+    public function attendances(Request $request): View
     {
+        $filters = $request->validate([
+            'q' => 'nullable|string|max:255',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'status' => 'nullable|in:active,finished',
+            'from' => 'nullable|date_format:Y-m-d',
+            'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])],
+        ]);
         $attendances = Attendance::with('user')
+            ->when($filters['q'] ?? null, fn ($query, $q) => $query->whereHas('user', fn ($user) => $user->where('name', 'like', '%'.$q.'%')->orWhere('username', 'like', '%'.$q.'%')))
+            ->when($filters['user_id'] ?? null, fn ($query, $id) => $query->where('user_id', $id))
+            ->when(($filters['status'] ?? '') === 'active', fn ($query) => $query->whereNull('check_out_time'))
+            ->when(($filters['status'] ?? '') === 'finished', fn ($query) => $query->whereNotNull('check_out_time'))
+            ->when($filters['from'] ?? null, fn ($query, $date) => $query->whereDate('check_in_time', '>=', $date))
+            ->when($filters['to'] ?? null, fn ($query, $date) => $query->whereDate('check_in_time', '<=', $date))
             ->latest('check_in_time')
-            ->paginate(15);
+            ->orderByDesc('id')->paginate(15)->withQueryString();
 
-        return view('dashboard.attendances', compact('attendances'));
+        $users = User::orderBy('name')->get(['id', 'name']);
+        return view('dashboard.attendances', compact('attendances', 'users'));
+    }
+
+    public function attendancePhoto(string $uuid, string $type): StreamedResponse
+    {
+        abort_unless(in_array($type, ['check_in', 'check_out'], true), 404);
+        $attendance = Attendance::where('uuid', $uuid)->firstOrFail();
+        $path = $attendance->{$type.'_photo_path'};
+        abort_unless($path && Storage::disk('public')->exists($path), 404, 'Foto belum berhasil diunggah.');
+        return Storage::disk('public')->response($path, null, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 
     /**
      * Web-Exclusive DLP Export (Download Laporan Rekapitulasi)
      * Hanya dapat diakses melalui browser admin yang terotentikasi sesi web.
      */
-    public function exportReports(TransactionFilterRequest $request, TransactionCsvExport $export): StreamedResponse
+    public function exportReports(TransactionFilterRequest $request, TransactionXlsxExport $export): BinaryFileResponse
     {
         return $export->download($request->validated());
     }

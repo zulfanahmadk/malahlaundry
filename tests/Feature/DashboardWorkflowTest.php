@@ -103,7 +103,7 @@ class DashboardWorkflowTest extends TestCase
         $excluded->update(['transaction_number' => 'TRX-B']);
         $excluded->customer->update(['phone' => '111']);
         $this->actingAs($owner)->get('/transactions?q=0')->assertOk()->assertSee('TRX-A')->assertDontSee('TRX-B');
-        $csv = $this->get('/reports/export?q=0')->assertOk()->streamedContent();
+        $csv = $this->worksheet($this->get('/reports/export?q=0')->assertOk());
         $this->assertStringContainsString('TRX-A', $csv);
         $this->assertStringNotContainsString('TRX-B', $csv);
     }
@@ -130,12 +130,12 @@ class DashboardWorkflowTest extends TestCase
         $this->actingAs($owner)->get('/transactions?'.$query)
             ->assertOk()->assertSee($included->transaction_number)->assertDontSee($excluded->transaction_number);
         $response = $this->get('/reports/export?'.$query)->assertOk()
-            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-        $csv = $response->streamedContent();
-        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+            ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $csv = $this->worksheet($response);
         $this->assertStringContainsString($included->transaction_number, $csv);
         $this->assertStringNotContainsString($excluded->transaction_number, $csv);
-        $this->assertStringContainsString("'=1+1", $csv);
+        $this->assertStringContainsString('>=1+1</t>', $csv);
+        $this->assertStringNotContainsString('<f>', $csv);
         $this->assertStringContainsString($included->public_receipt_url, $csv);
     }
 
@@ -188,5 +188,23 @@ class DashboardWorkflowTest extends TestCase
         $transaction->save();
 
         return $transaction;
+    }
+
+    private function worksheet($response): string
+    {
+        $file = tempnam(sys_get_temp_dir(), 'test-xlsx-');
+        file_put_contents($file, $response->streamedContent());
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($file));
+        try {
+            foreach (['[Content_Types].xml', 'xl/workbook.xml', 'xl/styles.xml', 'xl/worksheets/sheet1.xml'] as $name) {
+                $document = new \DOMDocument();
+                $this->assertTrue($document->loadXML($zip->getFromName($name)));
+            }
+            return $zip->getFromName('xl/worksheets/sheet1.xml');
+        } finally {
+            $zip->close();
+            unlink($file);
+        }
     }
 }

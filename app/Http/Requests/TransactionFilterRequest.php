@@ -15,7 +15,7 @@ class TransactionFilterRequest extends FormRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'in:DITERIMA,DIPROSES,SIAP_DIAMBIL,SELESAI'],
+            'status' => ['nullable', 'in:DITERIMA,SIAP_DIAMBIL,SELESAI'],
             'payment' => ['nullable', 'in:BELUM,LUNAS'],
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', ...($this->filled('from') ? ['after_or_equal:from'] : [])],

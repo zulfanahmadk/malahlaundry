@@ -17,6 +17,8 @@ class TransactionItem extends Model
         'service_uuid',
         'qty',
         'price',
+        'service_name',
+        'unit',
     ];
 
     protected function casts(): array

@@ -16,6 +16,14 @@
 </style>
 
 <div class="card">
+    <form action="{{ route('attendances.index') }}" method="GET" style="display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; align-items: end;">
+        <div class="form-group" style="flex: 2 1 180px; margin: 0;"><label for="q">Cari nama / username</label><input id="q" type="search" name="q" value="{{ request('q') }}" class="form-control"></div>
+        <div class="form-group" style="flex: 1 1 150px; margin: 0;"><label for="user_id">Pengguna</label><select id="user_id" name="user_id" class="form-control"><option value="">Semua pengguna</option>@foreach($users as $user)<option value="{{ $user->id }}" @selected((string) request('user_id') === (string) $user->id)>{{ $user->name }}</option>@endforeach</select></div>
+        <div class="form-group" style="flex: 1 1 150px; margin: 0;"><label for="status">Status shift</label><select id="status" name="status" class="form-control"><option value="">Semua shift</option><option value="active" @selected(request('status') === 'active')>Sedang bertugas</option><option value="finished" @selected(request('status') === 'finished')>Sudah pulang</option></select></div>
+        <div class="form-group" style="flex: 1 1 145px; margin: 0;"><label for="from">Masuk dari tanggal</label><input id="from" type="date" name="from" value="{{ request('from') }}" class="form-control"></div>
+        <div class="form-group" style="flex: 1 1 145px; margin: 0;"><label for="to">Sampai tanggal</label><input id="to" type="date" name="to" value="{{ request('to') }}" class="form-control"></div>
+        <button class="btn btn-primary" type="submit">Filter absensi</button><a class="btn btn-secondary" href="{{ route('attendances.index') }}">Reset</a>
+    </form>
     <div class="section-header">
         <h2 class="section-title">Riwayat Absensi Shift Kasir</h2>
         <span style="font-size: 0.8rem; color: var(--text-muted);">Foto selfie terekam otomatis dari kamera depan Android POS</span>
@@ -44,11 +52,11 @@
                         </td>
                         <td>
                             @if($att->check_in_photo_path)
-                                <a href="{{ Storage::disk('public')->url($att->check_in_photo_path) }}" target="_blank" title="Klik untuk perbesar">
-                                    <img src="{{ Storage::disk('public')->url($att->check_in_photo_path) }}" class="selfie-card-img" alt="Selfie Masuk">
+                                <a href="{{ route('attendances.photo', [$att->uuid, 'check_in']) }}" target="_blank" rel="noopener" title="Klik untuk perbesar">
+                                    <img src="{{ route('attendances.photo', [$att->uuid, 'check_in']) }}" class="selfie-card-img" alt="Selfie Masuk" loading="lazy">
                                 </a>
                             @else
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Tidak ada foto</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Foto belum diunggah dari Android</span>
                             @endif
                         </td>
                         <td>
@@ -60,8 +68,8 @@
                         </td>
                         <td>
                             @if($att->check_out_photo_path)
-                                <a href="{{ Storage::disk('public')->url($att->check_out_photo_path) }}" target="_blank" title="Klik untuk perbesar">
-                                    <img src="{{ Storage::disk('public')->url($att->check_out_photo_path) }}" class="selfie-card-img" alt="Selfie Keluar">
+                                <a href="{{ route('attendances.photo', [$att->uuid, 'check_out']) }}" target="_blank" rel="noopener" title="Klik untuk perbesar">
+                                    <img src="{{ route('attendances.photo', [$att->uuid, 'check_out']) }}" class="selfie-card-img" alt="Selfie Keluar" loading="lazy">
                                 </a>
                             @else
                                 <span style="font-size: 0.75rem; color: var(--text-muted);">-</span>

@@ -163,5 +163,6 @@
             <button type="submit" class="btn-submit">Masuk ke Dashboard</button>
         </form>
     </div>
+<script src="{{ asset('js/password-toggle.js') }}" defer></script>
 </body>
 </html>

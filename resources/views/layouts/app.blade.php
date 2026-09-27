@@ -344,7 +344,7 @@
             <li class="nav-label">Laporan</li>
             <li class="nav-item">
                 <a href="{{ route('reports.export') }}" class="nav-link">
-                    <span>Ekspor Rekapitulasi (CSV)</span>
+                    <span>Ekspor Rekapitulasi (Excel)</span>
                 </a>
             </li>
         </ul>
@@ -487,5 +487,6 @@
             render();
         })();
     </script>
+<script src="{{ asset('js/password-toggle.js') }}" defer></script>
 </body>
 </html>

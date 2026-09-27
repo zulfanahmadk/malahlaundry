@@ -39,12 +39,15 @@ Route::middleware(['auth:web', 'active', 'owner'])->group(function () {
     Route::get('/users', [DashboardController::class, 'users'])->name('users.index');
     Route::post('/users', [DashboardController::class, 'storeUser'])->name('users.store');
     Route::post('/users/{id}/toggle', [DashboardController::class, 'toggleUser'])->name('users.toggle');
+    Route::get('/users/{user}/edit', [DashboardController::class, 'editUser'])->name('users.edit');
+    Route::post('/users/{user}', [DashboardController::class, 'updateUser'])->name('users.update');
 
     // Transactions History
     Route::get('/transactions', [DashboardController::class, 'transactions'])->name('transactions.index');
 
     // Attendances & Selfie Monitoring
     Route::get('/attendances', [DashboardController::class, 'attendances'])->name('attendances.index');
+    Route::get('/attendances/{uuid}/photo/{type}', [DashboardController::class, 'attendancePhoto'])->whereIn('type', ['check_in', 'check_out'])->name('attendances.photo');
 
     // Web-Exclusive DLP Export (Excel/CSV)
     Route::get('/reports/export', [DashboardController::class, 'exportReports'])->name('reports.export');

@@ -69,6 +69,7 @@
                                 @endif
                             </td>
                             <td>
+                                <a href="{{ route('users.edit', $user) }}" class="btn btn-secondary" style="padding: .3rem .6rem; font-size: .75rem; margin-bottom: .35rem;">Edit data</a>
                                 @if($user->id !== auth()->id())
                                     <form action="{{ route('users.toggle', $user->id) }}" method="POST">
                                         @csrf

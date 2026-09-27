@@ -27,6 +27,7 @@ class Transaction extends Model
         'total',
         'payment_status',
         'laundry_status',
+        'picked_up_at',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class Transaction extends Model
         return [
             'subtotal' => 'integer',
             'total' => 'integer',
+            'picked_up_at' => 'datetime',
         ];
     }
 

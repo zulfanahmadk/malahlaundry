@@ -8,9 +8,36 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => ['required', 'string', 'max:50', Rule::unique('users', 'username')->ignore($user->id)],
+            'current_password' => 'nullable|string',
+            'password' => 'nullable|string|min:8|max:72|confirmed',
+        ]);
+        $sensitive = $data['username'] !== $user->username || ! empty($data['password']);
+        if ($sensitive && ! Hash::check($data['current_password'] ?? '', $user->password)) {
+            throw ValidationException::withMessages(['current_password' => 'Password saat ini tidak sesuai.']);
+        }
+        $user->fill(['name' => $data['name'], 'username' => $data['username']]);
+        if (! empty($data['password'])) {
+            $user->password = $data['password'];
+        }
+        $user->save();
+        // Keep this device's token so its offline outbox remains usable.
+        if ($sensitive) {
+            $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+        }
+        return response()->json(['status' => 'success', 'data' => ['user' => $user->only(['id', 'name', 'username', 'role', 'active'])]]);
+    }
+
     /**
      * Login endpoint untuk aplikasi Android kasir/owner.
      */

@@ -82,7 +82,7 @@
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Ekspor Laporan (CSV)
+                Ekspor Laporan (Excel)
             </a>
             <a href="{{ route('transactions.index') }}" class="btn btn-primary">Lihat Semua</a>
         </div>
@@ -116,8 +116,6 @@
                                 <span class="badge badge-success">Selesai</span>
                             @elseif($trx->laundry_status === 'SIAP_DIAMBIL')
                                 <span class="badge badge-success">Siap Diambil</span>
-                            @elseif($trx->laundry_status === 'DIPROSES')
-                                <span class="badge badge-warning">Diproses</span>
                             @else
                                 <span class="badge badge-primary">Diterima</span>
                             @endif

@@ -455,12 +455,17 @@
             </div>
 
             <!-- Stepper Progress Pengerjaan -->
+            @if($transaction->picked_up_at)
+                <div class="meta-row">
+                    <span class="meta-label">Tanggal Pengambilan</span>
+                    <span class="meta-val">{{ $transaction->picked_up_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') }} WIB</span>
+                </div>
+            @endif
             @php
-                $statusList = ['DITERIMA' => 'Diterima', 'DIPROSES' => 'Diproses', 'SIAP_DIAMBIL' => 'Siap Ambil', 'SELESAI' => 'Selesai'];
+                $statusList = ['DITERIMA' => 'Diterima', 'SIAP_DIAMBIL' => 'Siap Ambil', 'SELESAI' => 'Selesai'];
                 $currentIndex = array_search($transaction->laundry_status, array_keys($statusList), true);
                 $statusMessage = match ($transaction->laundry_status) {
                     'DITERIMA' => 'Cucian Anda sudah diterima dan menunggu proses pencucian.',
-                    'DIPROSES' => 'Cucian Anda sedang kami proses. Kami akan mengabari saat siap diambil.',
                     'SIAP_DIAMBIL' => 'Cucian Anda siap diambil. Tunjukkan QR code ini kepada kasir.',
                     'SELESAI' => 'Cucian Anda sudah diambil. Terima kasih telah menggunakan layanan kami.',
                     default => 'Hubungi kasir untuk mengetahui status cucian Anda.',
@@ -489,9 +494,9 @@
                 @foreach($items as $item)
                     <div class="item-row">
                         <div class="item-info">
-                            <div class="item-name">{{ $item->service->name ?? 'Layanan Laundry' }}</div>
+                            <div class="item-name">{{ $item->service_name ?? $item->service->name ?? 'Layanan Laundry' }}</div>
                             <div class="item-sub">
-                                {{ rtrim(rtrim(number_format($item->qty, 2, ',', '.'), '0'), ',') }} {{ $item->service->unit ?? 'satuan' }} × Rp{{ number_format($item->price, 0, ',', '.') }}
+                                {{ rtrim(rtrim(number_format($item->qty, 2, ',', '.'), '0'), ',') }} {{ $item->unit ?? $item->service->unit ?? 'satuan' }} × Rp{{ number_format($item->price, 0, ',', '.') }}
                             </div>
                         </div>
                         <div class="item-total">
