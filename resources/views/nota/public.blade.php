@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="no-referrer">
-    <title>Nota Digital - {{ $transaction->transaction_number }} - Malah Laundry</title>
+    <title>Nota Digital - {{ $transaction->transaction_number }} - {{ $store['name'] }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -74,6 +74,41 @@
         .brand-sub {
             font-size: 0.8rem;
             opacity: 0.9;
+        }
+
+        .brand-logo {
+            display: block;
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            background: #FFFFFF;
+            border-radius: 12px;
+            margin: 0.75rem auto;
+        }
+
+        .store-contact {
+            overflow-wrap: anywhere;
+            line-height: 1.6;
+        }
+
+        .receipt-terms {
+            text-align: left;
+            font-size: 0.8rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .receipt-terms h2 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .receipt-terms p {
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+            line-height: 1.65;
         }
 
         .badge-paperless {
@@ -365,54 +400,29 @@
             line-height: 1.4;
         }
 
-        .print-btn-wrap {
-            margin-top: 1rem;
-        }
-
-        .btn-print {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .btn-print:hover {
-            background-color: var(--bg);
-            border-color: #CBD5E1;
-        }
-
-        .btn-print:focus-visible {
-            outline: 2px solid var(--primary);
-            outline-offset: 3px;
-        }
-
-        @media print {
-            body {
-                background: #FFFFFF;
-                padding: 0;
-            }
-            .receipt-container {
-                box-shadow: none;
-                border: none;
-                max-width: 100%;
-            }
-            .print-btn-wrap {
-                display: none;
-            }
-        }
     </style>
 </head>
 <body>
     <main class="receipt-container">
         <!-- Header -->
         <div class="receipt-header">
-            <h1 class="brand-name">Malah Laundry</h1>
-            <p class="brand-sub">Cucian terawat, hari lebih ringan.</p>
+            <h1 class="brand-name" style="overflow-wrap: anywhere;">{{ $store['name'] }}</h1>
+            @if($store['logo_url'])
+                <img class="brand-logo" src="{{ $store['logo_url'] }}" alt="Logo {{ $store['name'] }}" width="80" height="80">
+            @endif
+            @if($store['address'] || $store['phone'])
+                <p class="brand-sub store-contact">
+                    @if($store['address'])
+                        <span>{{ $store['address'] }}</span>
+                    @endif
+                    @if($store['address'] && $store['phone'])
+                        <span aria-hidden="true">|</span>
+                    @endif
+                    @if($store['phone'])
+                        <span>WhatsApp: {{ $store['phone'] }}</span>
+                    @endif
+                </p>
+            @endif
             <div class="badge-paperless">Nota Digital</div>
         </div>
 
@@ -521,14 +531,17 @@
 
         <!-- Footer -->
         <div class="receipt-footer">
+            @if($store['receipt_terms'])
+                <section class="receipt-terms" aria-labelledby="receipt-terms-title">
+                    <h2 id="receipt-terms-title">Syarat dan Ketentuan</h2>
+                    <p>{{ $store['receipt_terms'] }}</p>
+                </section>
+            @endif
             <p class="footer-note">
-                Terima kasih atas kepercayaan Anda menggunakan <strong>Malah Laundry</strong>.<br>
+                Terima kasih atas kepercayaan Anda menggunakan <strong>{{ $store['name'] }}</strong>.<br>
                 Simpan link atau tangkapan layar halaman ini untuk bukti pengambilan.
                 Jaga kerahasiaan tautan nota Anda.
             </p>
-            <div class="print-btn-wrap">
-                <button type="button" class="btn-print" onclick="window.print()">Simpan sebagai PDF</button>
-            </div>
         </div>
     </main>
 </body>

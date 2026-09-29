@@ -19,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\View::composer(['layouts.app', 'nota.public', 'auth.login'], function ($view) {
+            $view->with('store', app(\App\Services\StoreConfiguration::class)->read());
+        });
     }
 }

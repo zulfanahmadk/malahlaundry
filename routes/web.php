@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\NotaPublicController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\StoreSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,7 @@ Route::get('/', function () {
 
 // Authentication Web
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/store/logo', [StoreSettingsController::class, 'logo'])->name('store.logo');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -29,6 +31,8 @@ Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])
 // Web Dashboard Owner & Admin (Protected)
 Route::middleware(['auth:web', 'active', 'owner'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/settings', [StoreSettingsController::class, 'edit'])->name('settings.edit');
+    Route::post('/settings', [StoreSettingsController::class, 'update'])->name('settings.update');
 
     // Master Services
     Route::get('/services', [DashboardController::class, 'services'])->name('services.index');

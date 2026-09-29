@@ -39,11 +39,11 @@ Nota contoh: `/n/e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c`. UUID tersebut hanya untu
 ## Alur yang tersedia
 
 - Dashboard owner: statistik, transaksi, dan absensi.
-- Tambah/edit/aktif-nonaktif layanan; tambah pengguna dan nonaktifkan akun.
+- Tambah/edit/aktif-nonaktif layanan; tambah/edit pengguna, ubah username/password/peran, dan nonaktifkan akun.
 - Riwayat transaksi dengan pencarian, status, pembayaran, tanggal, dan pagination.
-- Ekspor hasil filter sebagai CSV UTF-8 yang dapat dibuka di Excel. Ekspor memerlukan sesi browser owner, token API saja tidak cukup.
-- API login/push/pull/unggah foto dan nota publik. Header respons nota mencegah cache/pengindeksan; nomor HP disamarkan.
-- Belum ada UI POS web, ekspor XLSX/PDF laporan, ataupun pengiriman WhatsApp otomatis dari server.
+- Ekspor hasil filter sebagai Excel OOXML (.xlsx). Ekspor memerlukan sesi browser owner, token API saja tidak cukup.
+- API login/profil/push/pull/riwayat seluruh kasir/unggah foto dan nota publik. Header respons nota mencegah cache/pengindeksan; nomor HP disamarkan.
+- Absensi memiliki filter nama, pengguna, status shift, dan tanggal; foto diakses melalui sesi owner. Status cucian: DITERIMA → SIAP_DIAMBIL → SELESAI, dengan tanggal pengambilan.
 
 ## Pemeriksaan
 
@@ -55,3 +55,8 @@ php vendor/bin/pint --test app/Http/Controllers app/Http/Middleware app/Http/Req
 Pint memakai preset PSR-12 dari `pint.json`. Tes menggunakan `RefreshDatabase` dengan SQLite `:memory:` pada `phpunit.xml`, bukan database pada .env. GD diperlukan untuk tes decode QR dan pembuatan gambar uji.
 
 API lokal berada di `/api/v1`, bukan `/v1`. Untuk perangkat Android nyata gunakan alamat server yang dapat dijangkau perangkat; konfigurasi jaringan/Cloudflare Tunnel belum disertakan.
+
+## Pengaturan toko
+
+Menu **Pengaturan Toko & Nota** khusus owner mengatur nama, kontak, alamat, logo, tiga format WhatsApp, dan syarat nota digital. Jalankan migrasi 000008 sebelum memakai versi 1.2; tabel baru store_settings menyimpan identitas, sementara template memakai whatsapp_templates. PHP GD diperlukan untuk validasi dan normalisasi logo; ZIP diperlukan untuk laporan Excel. Logo dilayani melalui /store/logo tanpa symlink. Tombol Simpan sebagai PDF pada nota digital telah dihapus. Monitoring absensi kasir tetap tersedia untuk owner.
+Data awal nota yang belum diisi dapat dilengkapi dengan `php artisan db:seed --class=StoreSettingsSeeder`. Seeder ini hanya mengisi nama/kontak/alamat/ketentuan kosong dan logo yang belum ada; nilai owner yang sudah diisi tidak ditimpa. Kontak contoh diberi penanda dan dapat diganti melalui Pengaturan Toko & Nota. Logo awal mengikuti ikon mesin cuci aplikasi; sumber SVG dan PNG ada di resources/images.

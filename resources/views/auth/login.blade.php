@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - Malah Laundry Web Dashboard</title>
+    <title>Masuk - {{ $store['name'] }} Web Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -139,8 +139,8 @@
 <body>
     <div class="login-card">
         <div class="login-header">
-            <div class="brand-badge">M</div>
-            <h1 class="login-title">Malah Laundry</h1>
+            @if($store['logo_url'])<img src="{{ $store['logo_url'] }}" alt="Logo toko" style="width: 64px; height: 64px; object-fit: contain;">@else<div class="brand-badge">{{ mb_substr($store['name'], 0, 1) }}</div>@endif
+            <h1 class="login-title">{{ $store['name'] }}</h1>
             <p class="login-subtitle">Masuk ke Web Dashboard Owner</p>
         </div>
 

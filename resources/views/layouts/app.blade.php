@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard') - Malah Laundry</title>
+    <title>@yield('title', 'Dashboard') - {{ $store['name'] }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -90,7 +90,7 @@
             font-weight: 700;
         }
         .brand-copy { min-width: 0; }
-        .brand-title { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+        .brand-title { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-sub { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; }
         .sidebar-navigation { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
         .nav-list { list-style: none; padding: 1rem; }
@@ -294,10 +294,10 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" tabindex="-1">
         <div class="brand-header">
-            <a href="{{ route('dashboard') }}" class="brand-link" aria-label="Malah Laundry — Dashboard">
-                <div class="brand-logo-badge" aria-hidden="true">M</div>
+            <a href="{{ route('dashboard') }}" class="brand-link" aria-label="{{ $store['name'] }} — Dashboard">
+                @if($store['logo_url'])<img src="{{ $store['logo_url'] }}" alt="Logo toko" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;">@else<div class="brand-logo-badge" aria-hidden="true">{{ mb_substr($store['name'], 0, 1) }}</div>@endif
                 <div class="brand-copy">
-                    <div class="brand-title">Malah Laundry</div>
+                    <div class="brand-title">{{ $store['name'] }}</div>
                     <div class="brand-sub">Management System</div>
                 </div>
             </a>
@@ -323,6 +323,7 @@
             </li>
 
             <li class="nav-label">Master Data</li>
+            <li class="nav-item"><a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}"><span>Pengaturan Toko & Nota</span></a></li>
             <li class="nav-item">
                 <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
                     <span>Layanan &amp; Harga</span>

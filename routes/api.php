@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\RecordsController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\StoreSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/user', [AuthController::class, 'user']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/auth/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/settings', [StoreSettingsController::class, 'update']);
         Route::post('/users/{user}', [UserController::class, 'update']);
 
         // Sync Endpoints

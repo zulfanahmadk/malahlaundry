@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(StoreSettingsSeeder::class);
         // 1. Users (Owner & Kasir)
         $owner = User::firstOrCreate(
             ['username' => 'owner'],
@@ -60,7 +61,7 @@ class DatabaseSeeder extends Seeder
         WhatsAppTemplate::firstOrCreate(
             ['type' => 'WA_SELESAI'],
             [
-                'content' => "Halo Kak {nama}, cucian ({no_transaksi}) telah selesai diambil. Terima kasih banyak telah menggunakan jasa *Malah Laundry*! Semoga pakaian Anda selalu bersih dan wangi.",
+                'content' => 'Halo Kak {nama}, cucian ({no_transaksi}) telah selesai diambil. Terima kasih banyak telah menggunakan jasa *Malah Laundry*! Semoga pakaian Anda selalu bersih dan wangi.',
             ]
         );
 
@@ -121,7 +122,7 @@ class DatabaseSeeder extends Seeder
             [
                 'customer_uuid' => $customer->uuid,
                 'user_id' => $cashier->id,
-                'transaction_number' => 'TRX-' . now()->format('Ymd') . '-001',
+                'transaction_number' => 'TRX-'.now()->format('Ymd').'-001',
                 'subtotal' => 21000,
                 'total' => 21000,
                 'payment_status' => 'LUNAS',

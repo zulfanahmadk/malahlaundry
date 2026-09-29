@@ -244,6 +244,7 @@ class SyncController extends Controller
             'users' => User::select('id', 'name', 'username', 'role', 'active')->get(),
             'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active')->get(),
             'wa_templates' => WhatsAppTemplate::select('type', 'content')->get(),
+            'store' => app(\App\Services\StoreConfiguration::class)->read(true),
             'server_time' => now()->toIso8601String(),
         ]);
     }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 108 108" role="img" aria-label="Logo laundry">
+  <rect width="108" height="108" rx="22" fill="#0369A1"/>
+  <path fill="#FFFFFF" d="M35 27H73Q79 27 79 33V76Q79 82 73 82H35Q29 82 29 76V33Q29 27 35 27Z"/>
+  <path fill="#0369A1" d="M39 34A3 3 0 1 0 39 40A3 3 0 1 0 39 34M51 35H69V39H51ZM54 45A15 15 0 1 0 54 75A15 15 0 1 0 54 45"/>
+  <path fill="#FFFFFF" d="M43 59C49 53 58 66 65 59A11 11 0 0 1 43 59Z"/>
+</svg>
