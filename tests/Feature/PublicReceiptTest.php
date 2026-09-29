@@ -35,7 +35,7 @@ class PublicReceiptTest extends TestCase
             ->assertSee('BELUM LUNAS')
             ->assertSee('10 Agt 2026, 09:30')
             ->assertSee('aria-current="step"', false)
-            ->assertSee(QrCodeService::generateDataUri($transaction->uuid), false)
+            ->assertSee(QrCodeService::generateDataUri($transaction->public_receipt_url), false)
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
             ->assertHeader('Referrer-Policy', 'no-referrer');
 
@@ -86,14 +86,17 @@ class PublicReceiptTest extends TestCase
         }
     }
 
-    public function test_generated_svg_qr_decodes_to_the_transaction_uuid(): void
+    public function test_receipt_qr_decodes_to_a_link_that_opens_without_login(): void
     {
         if (! extension_loaded('gd')) {
             $this->markTestSkipped('GD is needed to decode the generated QR image.');
         }
 
-        $uuid = '9b73b50e-1f43-47fd-a874-85756dd2a872';
-        $dataUri = QrCodeService::generateDataUri($uuid);
+        $transaction = $this->createTransaction();
+        $response = $this->get('https://laundry.example/n/'.$transaction->uuid)->assertOk();
+        preg_match('/src="(data:image\/svg\+xml;base64,[^"]+)"/', $response->getContent(), $matches);
+        $this->assertNotEmpty($matches);
+        $dataUri = $matches[1];
         $prefix = 'data:image/svg+xml;base64,';
         $this->assertStringStartsWith($prefix, $dataUri);
 
@@ -123,7 +126,8 @@ class PublicReceiptTest extends TestCase
         }
 
         $decoded = (new QRCode())->readFromSource(new GDLuminanceSource($bitmap));
-        $this->assertSame($uuid, $decoded->data);
+        $this->assertSame('https://laundry.example/n/'.$transaction->uuid, $decoded->data);
+        $this->get($decoded->data)->assertOk()->assertSee($transaction->transaction_number);
         imagedestroy($bitmap);
     }
 

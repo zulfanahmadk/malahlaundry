@@ -46,7 +46,12 @@ class Transaction extends Model
                 $transaction->uuid = (string) Str::uuid();
             }
             if (empty($transaction->transaction_number)) {
-                $transaction->transaction_number = 'TRX-' . now()->format('Ymd') . '-' . str_replace('-', '', $transaction->uuid);
+                $time = ($transaction->created_at ?? now())->copy()->setTimezone('Asia/Jakarta');
+                do {
+                    $number = 'KL'.$time->format('ymdHisv');
+                    $time->addMillisecond();
+                } while (static::where('transaction_number', $number)->exists());
+                $transaction->transaction_number = $number;
             }
         });
     }

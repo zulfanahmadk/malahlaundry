@@ -97,7 +97,6 @@ class SyncController extends Controller
                     $transaction = new Transaction([
                         'uuid' => $uuid,
                         'user_id' => $actor->id,
-                        'transaction_number' => 'TRX-'.$uuid,
                         'payment_status' => 'BELUM',
                         'laundry_status' => 'DITERIMA',
                     ]);

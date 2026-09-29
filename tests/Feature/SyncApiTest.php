@@ -87,6 +87,37 @@ class SyncApiTest extends TestCase
             'laundry_status' => 'DITERIMA',
         ]);
         $this->assertDatabaseHas('services', ['uuid' => $serviceUuid, 'price' => 9000]);
+        $this->assertMatchesRegularExpression('/^KL[0-9]{15}$/', Transaction::findOrFail($transactionUuid)->transaction_number);
+    }
+
+    public function test_compact_offline_receipt_number_survives_sync_and_retries(): void
+    {
+        $user = $this->user();
+        $existing = $this->transaction($user);
+        Sanctum::actingAs($user);
+        $uuid = (string) Str::uuid();
+        $payload = ['transactions' => [[
+            'uuid' => $uuid,
+            'customer_uuid' => $existing->customer_uuid,
+            'transaction_number' => 'KL250216132153159',
+            'created_at' => '2025-02-16T06:21:53.159Z',
+            'items' => [['service_uuid' => $existing->items()->first()->service_uuid, 'qty' => 1, 'price' => 7000]],
+        ]]];
+        $this->postJson('/api/v1/sync/push', $payload)->assertOk();
+        $this->postJson('/api/v1/sync/push', $payload)->assertOk();
+        $this->assertSame('KL250216132153159', Transaction::findOrFail($uuid)->transaction_number);
+        $this->assertDatabaseCount('transactions', 2);
+    }
+
+    public function test_generated_receipt_numbers_use_wib_and_skip_existing_milliseconds(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2025-02-16T06:21:53.999Z'));
+        $customer = Customer::create(['name' => 'Pelanggan', 'phone' => '081234']);
+        $first = Transaction::create(['customer_uuid' => $customer->uuid, 'total' => 0, 'subtotal' => 0]);
+        $second = Transaction::create(['customer_uuid' => $customer->uuid, 'total' => 0, 'subtotal' => 0]);
+        $this->assertSame('KL250216132153999', $first->transaction_number);
+        $this->assertSame('KL250216132154000', $second->transaction_number);
+        $this->travelBack();
     }
 
     public function test_invalid_reference_rolls_back_the_entire_batch(): void

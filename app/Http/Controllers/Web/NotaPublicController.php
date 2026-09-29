@@ -32,8 +32,8 @@ class NotaPublicController extends Controller
             return response()->view('nota.not_found', [], 404, $headers);
         }
 
-        // Generate QR Code untuk dipindai kamera HP kasir saat pengambilan
-        $qrCodeUri = QrCodeService::generateDataUri($transaction->uuid);
+        // Kamera biasa membuka nota; scanner kasir mengambil UUID dari URL yang sama.
+        $qrCodeUri = QrCodeService::generateDataUri($transaction->public_receipt_url);
         $phone = $transaction->customer?->phone;
         $maskedPhone = $phone
             ? Str::mask($phone, '*', 0, mb_strlen($phone) > 4 ? mb_strlen($phone) - 4 : mb_strlen($phone))
