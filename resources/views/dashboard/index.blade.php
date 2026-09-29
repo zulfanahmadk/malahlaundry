@@ -128,7 +128,7 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('nota.public', $trx->uuid) }}" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            <a href="{{ $trx->public_receipt_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
                                 Buka Nota &amp; QR
                             </a>
                         </td>

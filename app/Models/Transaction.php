@@ -104,6 +104,8 @@ class Transaction extends Model
 
     public function getPublicReceiptUrlAttribute(): string
     {
-        return url('/n/' . $this->uuid);
+        $base = config('domains.receipt_url');
+
+        return $base ? rtrim($base, '/').'/n/'.$this->uuid : url('/n/'.$this->uuid);
     }
 }

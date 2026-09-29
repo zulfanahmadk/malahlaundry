@@ -170,8 +170,8 @@ class DashboardWorkflowTest extends TestCase
 
         $this->seed();
 
-        $this->assertDatabaseCount('transactions', 1);
-        $this->assertDatabaseCount('transaction_items', 1);
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertDatabaseCount('transaction_items', 0);
         $this->assertDatabaseCount('services', 4);
         $this->assertDatabaseHas('services', ['uuid' => $service->uuid, 'price' => 9000]);
         $this->assertTrue(Hash::check('new-password', User::where('username', 'owner')->firstOrFail()->password));

@@ -16,8 +16,13 @@ class NotaPublicController extends Controller
      * URL Format: /n/{uuid} (UUIDv4)
      * Tidak memerlukan otentikasi.
      */
-    public function show(string $uuid): Response
+    public function show(string $uuid): Response|\Illuminate\Http\RedirectResponse
     {
+        $receiptUrl = config('domains.receipt_url');
+        if ($receiptUrl && request()->getHost() !== parse_url($receiptUrl, PHP_URL_HOST)) {
+            return redirect()->away(rtrim($receiptUrl, '/').'/n/'.$uuid, 302)
+                ->header('Cache-Control', 'private, no-store');
+        }
         $headers = [
             'Cache-Control' => 'private, no-store',
             'X-Robots-Tag' => 'noindex, nofollow',

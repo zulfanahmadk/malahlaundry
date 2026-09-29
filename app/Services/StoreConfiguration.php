@@ -29,6 +29,7 @@ class StoreConfiguration
             'phone' => $record?->phone ?? '',
             'address' => $record?->address ?? '',
             'receipt_terms' => $record?->receipt_terms ?? '',
+            'receipt_base_url' => config('domains.receipt_url') ?: config('app.url'),
             'logo_url' => $hasLogo ? route('store.logo', ['v' => $record->updated_at?->timestamp]) : null,
             'templates' => array_intersect_key($templates, self::TEMPLATES),
         ];

@@ -21,6 +21,7 @@ class OperationalEnhancementsTest extends TestCase
     public function test_every_active_account_can_download_seeded_history_and_customers(): void
     {
         $this->seed();
+        $this->createTestTransaction();
         Sanctum::actingAs(User::factory()->create());
         $this->getJson('/api/v1/sync/records?type=transactions')->assertOk()
             ->assertJsonCount(1, 'data')->assertJsonPath('data.0.customer_name', 'Budi Santoso')
@@ -48,7 +49,7 @@ class OperationalEnhancementsTest extends TestCase
     public function test_three_stage_pickup_records_original_offline_time_and_is_idempotent(): void
     {
         $this->seed();
-        $transaction = Transaction::firstOrFail();
+        $transaction = $this->createTestTransaction();
         $transaction->forceFill(['created_at' => now()->subDays(2)])->save();
         Sanctum::actingAs(User::factory()->create());
         $this->postJson('/api/v1/sync/push', ['transactions' => [['uuid' => $transaction->uuid, 'laundry_status' => 'DIPROSES']]])->assertUnprocessable();

@@ -27,6 +27,7 @@ class StoreSettingsTest extends TestCase
     {
         Storage::fake('public');
         $this->seed();
+        $transaction = $this->createTestTransaction();
         $owner = User::where('username', 'owner')->firstOrFail();
         $this->actingAs($owner)->get('/settings')->assertOk();
         $this->post('/settings', [...$this->settings(), 'logo' => UploadedFile::fake()->image('brand.png', 600, 300)])
@@ -38,7 +39,7 @@ class StoreSettingsTest extends TestCase
         $this->assertSame(192, $image[1]);
         $this->get('/store/logo')->assertOk()->assertHeader('Content-Type', 'image/png');
         $this->get('/dashboard')->assertSee('Laundry Bintang')->assertSee('Pengaturan Toko');
-        $this->get('/n/e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c')->assertOk()
+        $this->get('/n/'.$transaction->uuid)->assertOk()
             ->assertSee('Laundry Bintang')->assertSee('081234567890')->assertSee('Syarat dan Ketentuan')
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
             ->assertDontSee('<script>alert(1)</script>', false)->assertDontSee('Simpan sebagai PDF')

@@ -17,6 +17,22 @@ class PublicReceiptTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_separate_receipt_domain_redirects_old_links_and_blocks_dashboard_and_api(): void
+    {
+        config(['domains.receipt_url' => 'https://nota.malahproject.com']);
+        $transaction = $this->createTransaction();
+        $url = 'https://nota.malahproject.com/n/'.$transaction->uuid;
+
+        $this->assertSame($url, $transaction->public_receipt_url);
+        $this->get('https://laundry.malahproject.com/n/'.$transaction->uuid)->assertRedirect($url);
+        $this->get($url)->assertOk()->assertSee($transaction->transaction_number);
+        $this->get('https://nota.malahproject.com/')->assertOk();
+        $this->get('https://nota.malahproject.com/login')->assertNotFound();
+        $this->get('https://nota.malahproject.com/dashboard')->assertNotFound();
+        $this->postJson('https://nota.malahproject.com/api/v1/auth/login', [])->assertNotFound();
+        $this->get('https://laundry.malahproject.com/login')->assertOk();
+    }
+
     public function test_receipt_is_public_and_shows_historical_prices_without_exposing_contact_details(): void
     {
         $transaction = $this->createTransaction();
