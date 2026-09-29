@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Customer;
 use App\Models\Service;
-use App\Models\Transaction;
-use App\Models\TransactionItem;
 use App\Models\User;
 use App\Models\WhatsAppTemplate;
 use Illuminate\Database\Seeder;
@@ -21,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(StoreSettingsSeeder::class);
         // 1. Users (Owner & Kasir)
-        $owner = User::firstOrCreate(
+        User::firstOrCreate(
             ['username' => 'owner'],
             [
                 'name' => 'Owner Malah Laundry',
@@ -32,7 +29,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $cashier = User::firstOrCreate(
+        User::firstOrCreate(
             ['username' => 'kasir1'],
             [
                 'name' => 'Kasir Malah Laundry',
@@ -66,7 +63,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Master Services
-        $service1 = Service::firstOrCreate(
+        Service::firstOrCreate(
             ['name' => 'Cuci Komplit Reguler'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -76,7 +73,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $service2 = Service::firstOrCreate(
+        Service::firstOrCreate(
             ['name' => 'Cuci Kering'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -86,7 +83,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $service3 = Service::firstOrCreate(
+        Service::firstOrCreate(
             ['name' => 'Setrika Saja'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -96,7 +93,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $service4 = Service::firstOrCreate(
+        Service::firstOrCreate(
             ['name' => 'Bed Cover Besar'],
             [
                 'uuid' => (string) Str::uuid(),
@@ -106,41 +103,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 4. Sample Customer & Transaction for Demonstration
-        $customer = Customer::firstOrCreate(
-            ['phone' => '081234567890'],
-            [
-                'uuid' => (string) Str::uuid(),
-                'name' => 'Budi Santoso',
-                'address' => 'Jl. Pemuda No. 45, Jakarta',
-            ]
-        );
-
-        $sampleTrxUuid = 'e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c';
-        $trx = Transaction::firstOrCreate(
-            ['uuid' => $sampleTrxUuid],
-            [
-                'customer_uuid' => $customer->uuid,
-                'user_id' => $cashier->id,
-                'transaction_number' => 'TRX-'.now()->format('Ymd').'-001',
-                'subtotal' => 21000,
-                'total' => 21000,
-                'payment_status' => 'LUNAS',
-                'laundry_status' => 'DITERIMA',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        TransactionItem::firstOrCreate(
-            [
-                'transaction_uuid' => $trx->uuid,
-                'service_uuid' => $service1->uuid,
-            ],
-            [
-                'qty' => 3.0,
-                'price' => 7000,
-            ]
-        );
+        // Data transaksi dan pelanggan diisi melalui aplikasi, tanpa data demo.
     }
 }

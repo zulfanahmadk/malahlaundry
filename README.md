@@ -32,9 +32,9 @@ Untuk database pengembangan/demo saja:
 php artisan db:seed
 ```
 
-Seeder membuat akun `owner` dan `kasir1` dengan password demo `password123`, layanan contoh, template WhatsApp, serta satu nota. Login web hanya menerima owner; kasir menggunakan API. Pengisian ulang demo mempertahankan UUID, harga, password dan record yang sudah ada. Jangan gunakan kredensial demo pada deployment nyata.
+Seeder membuat akun `owner` dan `kasir1` dengan password demo `password123`, layanan contoh, template WhatsApp, serta pengaturan toko. Seeder tidak membuat pelanggan atau transaksi contoh. Login web hanya menerima owner; kasir menggunakan API. Pengisian ulang mempertahankan UUID, harga, password dan record yang sudah ada. Jangan gunakan kredensial demo pada deployment nyata.
 
-Nota contoh: `/n/e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c`. UUID tersebut hanya untuk data demo; transaksi operasional memakai UUIDv4 acak.
+Nota tersedia setelah transaksi dibuat melalui aplikasi dan disinkronkan, pada `/n/<uuid-transaksi>`. Transaksi memakai UUIDv4 acak.
 
 ## Alur yang tersedia
 
