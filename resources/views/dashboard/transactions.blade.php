@@ -94,8 +94,8 @@
                 @forelse($transactions as $trx)
                     <tr>
                         <td><strong>{{ $trx->transaction_number }}</strong></td>
-                        <td>{{ $trx->created_at->translatedFormat('d M Y, H:i') }}</td>
-                        <td>{{ $trx->picked_up_at?->translatedFormat('d M Y, H:i') ?? '-' }}</td>
+                        <td>{{ $trx->created_at->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }}</td>
+                        <td>{{ $trx->picked_up_at?->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') ?? '-' }}</td>
                         <td>
                             <div>{{ $trx->customer->name ?? 'Pelanggan Umum' }}</div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $trx->customer->phone ?? '-' }}</div>

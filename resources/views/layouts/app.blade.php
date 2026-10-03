@@ -382,11 +382,21 @@
                 <h1 class="page-title">@yield('page_title', 'Dashboard')</h1>
             </div>
             <div class="topbar-actions">
-                <div class="time-badge">{{ now()->timezone('Asia/Jakarta')->locale('id')->translatedFormat('l, d M Y - H:i') }} WIB</div>
+                <div class="time-badge">{{ now()->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }} WIB</div>
             </div>
         </header>
 
         <main class="content-body">
+            <form method="POST" action="{{ route('branches.select') }}" class="branch-switcher">
+                @csrf
+                <label for="active-branch">Cabang aktif</label>
+                <select id="active-branch" name="branch_id" class="form-control">
+                    @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}" @selected($branch->id === request()->attributes->get('branch_id'))>{{ $branch->name }}{{ $branch->active ? '' : ' (nonaktif)' }}</option>
+                    @endforeach
+                </select>
+                <button class="btn btn-secondary" type="submit">Pilih cabang</button>
+            </form>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif

@@ -443,7 +443,7 @@
             </div>
             <div class="meta-row">
                 <span class="meta-label">Tanggal Diterima</span>
-                <span class="meta-val">{{ $transaction->created_at->timezone('Asia/Jakarta')->locale('id')->translatedFormat('d M Y, H:i') }} WIB</span>
+                <span class="meta-val">{{ $transaction->created_at->timezone('Asia/Jakarta')->locale('id')->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }} WIB</span>
             </div>
             <div class="meta-row">
                 <span class="meta-label">Nama Pelanggan</span>
@@ -468,7 +468,7 @@
             @if($transaction->picked_up_at)
                 <div class="meta-row">
                     <span class="meta-label">Tanggal Pengambilan</span>
-                    <span class="meta-val">{{ $transaction->picked_up_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') }} WIB</span>
+                    <span class="meta-val">{{ $transaction->picked_up_at->timezone('Asia/Jakarta')->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }} WIB</span>
                 </div>
             @endif
             @php

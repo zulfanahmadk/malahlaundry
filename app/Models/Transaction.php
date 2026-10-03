@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'transactions';
     protected $primaryKey = 'uuid';
@@ -19,6 +19,7 @@ class Transaction extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'branch_id', 'estimated_at', 'ready_at', 'paid_at', 'payment_method', 'version',
         'uuid',
         'customer_uuid',
         'user_id',
@@ -33,6 +34,7 @@ class Transaction extends Model
     protected function casts(): array
     {
         return [
+            'estimated_at' => 'datetime', 'ready_at' => 'datetime', 'paid_at' => 'datetime', 'version' => 'integer',
             'subtotal' => 'integer',
             'total' => 'integer',
             'picked_up_at' => 'datetime',

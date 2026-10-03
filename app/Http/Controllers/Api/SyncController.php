@@ -29,13 +29,33 @@ class SyncController extends Controller
         $actor = $request->user();
 
         DB::transaction(function () use ($payload, $actor): void {
+            // Serialize master changes in this branch, including duplicate-phone checks.
+            \App\Models\Branch::whereKey(request()->attributes->get('branch_id'))->lockForUpdate()->firstOrFail();
             // Dependencies must exist before transactions from the same offline batch.
             foreach ($payload['customers'] ?? [] as $index => $data) {
                 $customer = Customer::firstOrNew(['uuid' => strtolower($data['uuid'])]);
                 if (! $customer->exists) {
                     $this->validateRecord($data, ['name' => 'required', 'phone' => 'required'], "customers.$index");
                 }
-                $customer->fill(Arr::only($data, ['name', 'phone', 'address']))->save();
+                if (isset($data['phone'])) {
+                    $phone = preg_replace('/\D/', '', $data['phone']);
+                    if (str_starts_with($phone, '0')) $phone = '62'.substr($phone, 1);
+                    if (str_starts_with($phone, '8')) $phone = '62'.$phone;
+                    if (!preg_match('/^62[0-9]{8,13}$/', $phone)) {
+                        throw ValidationException::withMessages(["customers.$index.phone" => 'Nomor telepon Indonesia tidak valid.']);
+                    }
+                    if (Customer::where('phone', $phone)->where('uuid', '!=', $customer->uuid)->exists()) {
+                        throw ValidationException::withMessages(["customers.$index.phone" => 'Nomor telepon sudah terdaftar pada pelanggan lain.']);
+                    }
+                    $data['phone'] = $phone;
+                }
+                if (array_key_exists('archived_at', $data)) {
+                    abort_unless($actor->isOwner(), 403, 'Hanya owner dapat mengarsipkan pelanggan.');
+                    if ($data['archived_at'] && $customer->transactions()->where('laundry_status', '!=', 'SELESAI')->exists()) {
+                        throw ValidationException::withMessages(['customer' => 'Selesaikan cucian aktif sebelum mengarsipkan pelanggan.']);
+                    }
+                }
+                $customer->fill(Arr::only($data, ['name', 'phone', 'address', 'notes', 'archived_at']))->save();
             }
 
             foreach ($payload['services'] ?? [] as $index => $data) {
@@ -43,11 +63,14 @@ class SyncController extends Controller
                 if (! $service->exists) {
                     $this->validateRecord($data, ['name' => 'required', 'price' => 'required'], "services.$index");
                 }
-                $service->fill(Arr::only($data, ['name', 'unit', 'price', 'is_active']))->save();
+                $service->fill(Arr::only($data, ['name', 'unit', 'price', 'is_active', 'speed', 'duration_hours']))->save();
             }
 
             foreach ($payload['users'] ?? [] as $index => $data) {
                 $user = User::firstOrNew(['username' => $data['username']]);
+                if ($user->exists) {
+                    throw ValidationException::withMessages(["users.$index.username" => 'Username sudah terdaftar. Gunakan Edit pengguna untuk mengubah akun.']);
+                }
                 if (! $user->exists) {
                     $this->validateRecord($data, ['name' => 'required', 'password' => 'required'], "users.$index");
                 }
@@ -60,7 +83,7 @@ class SyncController extends Controller
                 if ($user->exists && isset($data['password']) && Hash::check($data['password'], $user->password)) {
                     unset($data['password']);
                 }
-                $user->fill(Arr::only($data, ['name', 'role', 'active', 'password']));
+                $user->fill(Arr::only($data, ['name', 'role', 'active', 'password', 'branch_id']));
                 $revokeTokens = $user->exists && ($user->isDirty('password') || $user->isDirty('active') && ! $user->active);
                 $user->save();
                 if ($revokeTokens) {
@@ -69,6 +92,25 @@ class SyncController extends Controller
             }
 
             foreach ($payload['attendances'] ?? [] as $index => $data) {
+                abort_unless($actor->isCashier(), 403, 'Presensi hanya untuk kasir.');
+                $branch = request()->attributes->get('branch');
+                if ($branch->latitude !== null && $branch->longitude !== null) {
+                    $phase = isset($data['check_out_time']) ? 'out' : 'in';
+                    $latitude = $data[$phase.'_latitude'] ?? null;
+                    $longitude = $data[$phase.'_longitude'] ?? null;
+                    if ($latitude === null || $longitude === null) {
+                        throw ValidationException::withMessages(['location' => 'Lokasi presensi diperlukan untuk cabang ini.']);
+                    }
+                    $lat1 = deg2rad((float) $branch->latitude);
+                    $lat2 = deg2rad((float) $latitude);
+                    $dlat = $lat2 - $lat1;
+                    $dlon = deg2rad((float) $longitude - (float) $branch->longitude);
+                    $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
+                    $distance = 6371000 * 2 * atan2(sqrt($a), sqrt(max(0, 1 - $a)));
+                    if ($distance > $branch->radius_meters + min(100, (int) ($data[$phase.'_accuracy'] ?? 0))) {
+                        throw ValidationException::withMessages(['location' => 'Presensi berada di luar radius cabang.']);
+                    }
+                }
                 $attendance = Attendance::where('uuid', strtolower($data['uuid']))->lockForUpdate()->first();
                 abort_if($attendance && $attendance->user_id !== $actor->id, 403, 'Absensi ini milik pengguna lain.');
                 if (! $attendance) {
@@ -80,7 +122,7 @@ class SyncController extends Controller
                         $data[$field] = Carbon::parse($data[$field])->setTimezone(config('app.timezone'));
                     }
                 }
-                $attendance->fill(Arr::only($data, ['device_id', 'check_in_time', 'check_out_time']));
+                $attendance->fill(Arr::only($data, ['device_id', 'check_in_time', 'check_out_time', 'in_latitude', 'in_longitude', 'in_accuracy', 'out_latitude', 'out_longitude', 'out_accuracy']));
                 if ($attendance->check_out_time && (! $attendance->check_in_time || $attendance->check_out_time->lt($attendance->check_in_time))) {
                     throw ValidationException::withMessages([
                         "attendances.$index.check_out_time" => 'Waktu keluar harus setelah atau sama dengan waktu masuk.',
@@ -104,6 +146,14 @@ class SyncController extends Controller
                         $transaction->created_at = Carbon::parse($data['created_at'])->setTimezone(config('app.timezone'));
                     }
                 }
+                if ($transaction->exists && isset($data['expected_total']) && (int) $data['expected_total'] !== (int) $transaction->total) {
+                    abort(409, 'Nominal transaksi di server berubah. Tinjau versi server sebelum mencatat pembayaran.');
+                }
+                if (!$transaction->exists) {
+                    abort_unless(request()->attributes->get('branch')->active, 422, 'Cabang nonaktif tidak menerima transaksi baru.');
+                    $customer = Customer::where('uuid', $data['customer_uuid'])->firstOrFail();
+                    abort_if($customer->archived_at, 422, 'Pelanggan sudah diarsipkan.');
+                }
                 $wasPaid = $transaction->exists && $transaction->isPaid();
                 $statuses = ['DITERIMA', 'SIAP_DIAMBIL', 'SELESAI'];
                 if (isset($data['laundry_status'])
@@ -121,7 +171,7 @@ class SyncController extends Controller
                     $data['customer_uuid'] = strtolower($data['customer_uuid']);
                 }
                 $this->validateRecord($data, [
-                    'customer_uuid' => ['sometimes', Rule::exists('customers', 'uuid')],
+                    'customer_uuid' => ['sometimes', Rule::exists('customers', 'uuid')->where('branch_id', request()->attributes->get('branch_id'))],
                     'transaction_number' => ['sometimes', Rule::unique('transactions', 'transaction_number')->ignore($uuid, 'uuid')],
                 ], "transactions.$index");
                 // The creator remains unchanged when another cashier handles pickup.
@@ -132,6 +182,14 @@ class SyncController extends Controller
                     ]);
                 }
 
+                if ($transaction->laundry_status === 'SIAP_DIAMBIL' && !$transaction->ready_at) {
+                    $transaction->ready_at = isset($data['ready_at']) ? Carbon::parse($data['ready_at']) : now();
+                }
+                if ($transaction->payment_status === 'LUNAS' && !$transaction->paid_at) {
+                    $transaction->paid_at = isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : now();
+                    $transaction->payment_method = $data['payment_method'] ?? null;
+                }
+                if ($transaction->exists && $transaction->isDirty()) $transaction->version++;
                 if ($transaction->laundry_status === 'SELESAI' && ! $transaction->picked_up_at) {
                     $pickup = isset($data['picked_up_at'])
                         ? Carbon::parse($data['picked_up_at'])->setTimezone(config('app.timezone')) : now();
@@ -152,7 +210,7 @@ class SyncController extends Controller
                         'service_uuid' => strtolower($item['service_uuid']),
                     ]), $data['items']);
                     $this->validateRecord(['items' => $items], [
-                        'items.*.service_uuid' => [Rule::exists('services', 'uuid')],
+                        'items.*.service_uuid' => [Rule::exists('services', 'uuid')->where('branch_id', request()->attributes->get('branch_id'))],
                     ], "transactions.$index");
                     $services = Service::whereIn('uuid', array_column($items, 'service_uuid'))->get()->keyBy('uuid');
                     foreach ($items as &$snapshot) {
@@ -181,6 +239,10 @@ class SyncController extends Controller
                     }
                     // Snapshot prices retain the amount charged by the offline cashier.
                     $subtotal = array_sum(array_map(fn (array $item) => (int) round($item['qty'] * $item['price']), $items));
+                    if (!$transaction->exists) {
+                        $duration = $services->max('duration_hours') ?? 48;
+                        $transaction->estimated_at = ($transaction->created_at ?? now())->copy()->addHours($duration);
+                    }
                     $transaction->subtotal = $subtotal;
                     $transaction->total = $subtotal;
                     $transaction->save();
@@ -240,10 +302,11 @@ class SyncController extends Controller
     public function pull(): JsonResponse
     {
         return response()->json([
-            'users' => User::select('id', 'name', 'username', 'role', 'active')->get(),
-            'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active')->get(),
+            'users' => User::where('branch_id', request()->attributes->get('branch_id'))->select('id', 'name', 'username', 'role', 'active', 'branch_id')->get(),
+            'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active', 'speed', 'duration_hours', 'branch_id')->get(),
             'wa_templates' => WhatsAppTemplate::select('type', 'content')->get(),
             'store' => app(\App\Services\StoreConfiguration::class)->read(true),
+            'branch' => request()->attributes->get('branch'),
             'server_time' => now()->toIso8601String(),
         ]);
     }

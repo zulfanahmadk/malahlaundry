@@ -18,7 +18,7 @@ class StoreConfiguration
         'WA_SELESAI' => "Terima kasih {nama}, cucian {no_transaksi} telah diambil.\nTerima kasih telah menggunakan {outlet}.\nNota: {url_nota}\nHubungi: {telepon_outlet}",
     ];
 
-    public function read(bool $includeLogoData = false): array
+    public function read(bool $includeLogoData = false, ?int $branchId = null): array
     {
         $record = StoreSetting::find(1);
         $path = $record?->logo_path;
@@ -35,6 +35,22 @@ class StoreConfiguration
         ];
         if ($includeLogoData) {
             $data['logo_data'] = $hasLogo ? base64_encode(Storage::disk('public')->get($path)) : '';
+        }
+        $branchId ??= request()->attributes->get('branch_id');
+        $branch = $branchId ? \App\Models\Branch::find($branchId) : null;
+        if ($branch) {
+            $data['logo_url'] = $branch->logo_data ? route('store.logo', ['branch' => $branch->id, 'v' => $branch->updated_at?->timestamp]) : null;
+            if ($includeLogoData) {
+                $data['logo_data'] = $branch->logo_data ?? '';
+            }
+            $data = array_replace($data, [
+                'name' => $branch->show_branch ? $branch->store_name.' — '.$branch->name : $branch->store_name,
+                'store_name' => $branch->store_name, 'branch_name' => $branch->name, 'branch_id' => $branch->id,
+                'phone' => $branch->phone ?? '', 'address' => $branch->address ?? '',
+                'receipt_terms' => $branch->receipt_terms ?? '',
+                'templates' => array_replace($data['templates'], $branch->templates ?? []),
+                'show_branch' => $branch->show_branch, 'complaint_days' => $branch->complaint_days,
+            ]);
         }
         return $data;
     }

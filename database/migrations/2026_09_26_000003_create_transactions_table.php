@@ -16,7 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('subtotal')->default(0);
             $table->unsignedBigInteger('total')->default(0);
             $table->enum('payment_status', ['BELUM', 'LUNAS'])->default('BELUM');
-            $table->enum('laundry_status', ['DITERIMA', 'DIPROSES', 'SIAP_DIAMBIL', 'SELESAI'])->default('DITERIMA');
+            $table->enum('laundry_status', ['DITERIMA', 'SIAP_DIAMBIL', 'SELESAI'])->default('DITERIMA');
+            $table->timestamp('picked_up_at')->nullable()->index();
             $table->timestamps();
 
             $table->foreign('customer_uuid')->references('uuid')->on('customers')->cascadeOnDelete();

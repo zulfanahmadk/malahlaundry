@@ -20,7 +20,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Support\Facades\View::composer(['layouts.app', 'nota.public', 'auth.login'], function ($view) {
-            $view->with('store', app(\App\Services\StoreConfiguration::class)->read());
+            if (!array_key_exists('store', $view->getData())) {
+                $view->with('store', app(\App\Services\StoreConfiguration::class)->read());
+            }
+        });
+        \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
+            $view->with('branches', \App\Models\Branch::orderBy('name')->get(['id', 'name', 'active']));
         });
     }
 }

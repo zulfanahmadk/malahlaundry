@@ -12,6 +12,7 @@ class UpdateUser
     public function handle(Request $request, User $user): User
     {
         $data = $request->validate([
+            'branch_id' => 'sometimes|required|exists:branches,id',
             'name' => 'required|string|max:255',
             'username' => ['required', 'string', 'max:50', Rule::unique('users', 'username')->ignore($user->id)],
             'role' => 'required|in:owner,cashier',
@@ -25,7 +26,7 @@ class UpdateUser
             unset($data['password']);
         }
         $user->fill($data);
-        $revoke = $user->isDirty('password') || $user->isDirty('username') || ($user->isDirty('active') && ! $user->active);
+        $revoke = $user->isDirty('branch_id') || $user->isDirty('role') || $user->isDirty('password') || $user->isDirty('username') || ($user->isDirty('active') && ! $user->active);
         $user->save();
         if ($revoke) {
             $user->tokens()->delete();

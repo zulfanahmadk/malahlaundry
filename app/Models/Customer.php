@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Customer extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'customers';
     protected $primaryKey = 'uuid';
@@ -17,6 +17,7 @@ class Customer extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'branch_id', 'notes', 'archived_at',
         'uuid',
         'name',
         'phone',

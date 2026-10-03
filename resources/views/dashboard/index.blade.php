@@ -105,7 +105,7 @@
                 @forelse($recentTransactions as $trx)
                     <tr>
                         <td><strong>{{ $trx->transaction_number }}</strong></td>
-                        <td>{{ $trx->created_at->translatedFormat('d M Y, H:i') }}</td>
+                        <td>{{ $trx->created_at->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }}</td>
                         <td>
                             <div>{{ $trx->customer->name ?? 'Pelanggan Umum' }}</div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $trx->customer->phone ?? '-' }}</div>
@@ -165,7 +165,7 @@
                 @forelse($todayAttendances as $att)
                     <tr>
                         <td><strong>{{ $att->user->name ?? 'Kasir' }}</strong></td>
-                        <td>{{ $att->check_in_time ? $att->check_in_time->format('H:i:s \W\I\B') : '-' }}</td>
+                        <td>{{ $att->check_in_time ? $att->check_in_time->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i').' WIB' : '-' }}</td>
                         <td>
                             @if($att->check_in_photo_path)
                                 <a href="{{ Storage::disk('public')->url($att->check_in_photo_path) }}" target="_blank">
@@ -175,7 +175,7 @@
                                 <span style="font-size: 0.75rem; color: var(--text-muted);">-</span>
                             @endif
                         </td>
-                        <td>{{ $att->check_out_time ? $att->check_out_time->format('H:i:s \W\I\B') : 'Belum Keluar' }}</td>
+                        <td>{{ $att->check_out_time ? $att->check_out_time->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i').' WIB' : 'Belum Keluar' }}</td>
                         <td>
                             @if($att->check_out_photo_path)
                                 <a href="{{ Storage::disk('public')->url($att->check_out_photo_path) }}" target="_blank">

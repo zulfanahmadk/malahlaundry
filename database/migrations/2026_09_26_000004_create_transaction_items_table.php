@@ -14,6 +14,8 @@ return new class extends Migration
             $table->uuid('service_uuid')->index();
             $table->decimal('qty', 8, 2)->default(1);
             $table->unsignedBigInteger('price')->default(0);
+            $table->string('service_name')->nullable();
+            $table->string('unit', 10)->nullable();
             $table->timestamps();
 
             $table->foreign('transaction_uuid')->references('uuid')->on('transactions')->cascadeOnDelete();

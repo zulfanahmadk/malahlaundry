@@ -35,7 +35,7 @@ class AuthController extends Controller
         if ($sensitive) {
             $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
         }
-        return response()->json(['status' => 'success', 'data' => ['user' => $user->only(['id', 'name', 'username', 'role', 'active'])]]);
+        return response()->json(['status' => 'success', 'data' => ['user' => $user->only(['id', 'name', 'username', 'role', 'active', 'branch_id'])]]);
     }
 
     /**
@@ -79,6 +79,7 @@ class AuthController extends Controller
                     'username' => $user->username,
                     'role' => $user->role,
                     'active' => $user->active,
+                    'branch_id' => $user->branch_id,
                 ],
             ],
         ]);
@@ -92,7 +93,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'user' => $request->user()->only(['id', 'name', 'username', 'role', 'active']),
+                'user' => $request->user()->only(['id', 'name', 'username', 'role', 'active', 'branch_id']),
             ],
         ]);
     }

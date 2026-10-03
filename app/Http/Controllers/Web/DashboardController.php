@@ -21,6 +21,13 @@ use App\Services\UpdateUser;
 
 class DashboardController extends Controller
 {
+    public function selectBranch(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['branch_id' => 'required|integer|exists:branches,id']);
+        $request->session()->put('branch_id', (int) $data['branch_id']);
+        return redirect()->route('dashboard')->with('success', 'Cabang aktif berhasil diganti.');
+    }
+
     /**
      * Dashboard Ringkasan & Statistik
      */

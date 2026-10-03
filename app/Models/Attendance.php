@@ -9,11 +9,12 @@ use Illuminate\Support\Str;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'attendances';
 
     protected $fillable = [
+        'branch_id', 'in_latitude', 'in_longitude', 'in_accuracy', 'out_latitude', 'out_longitude', 'out_accuracy',
         'uuid',
         'user_id',
         'device_id',

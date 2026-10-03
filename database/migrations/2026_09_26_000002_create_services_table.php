@@ -12,7 +12,7 @@ return new class extends Migration
             $table->uuid('uuid')->primary();
             $table->string('name');
             $table->enum('unit', ['kg', 'pcs'])->default('kg');
-            $table->unsignedBigInteger('price');
+            $table->unsignedBigInteger('price')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

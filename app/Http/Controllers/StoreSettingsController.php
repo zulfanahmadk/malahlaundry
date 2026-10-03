@@ -24,8 +24,13 @@ class StoreSettingsController extends Controller
         return redirect()->route('settings.edit')->with('success', 'Pengaturan toko berhasil disimpan.');
     }
 
-    public function logo()
+    public function logo(Request $request)
     {
+        if ($request->filled('branch')) {
+            $logo = \App\Models\Branch::findOrFail($request->integer('branch'))->logo_data;
+            abort_unless($logo, 404);
+            return response(base64_decode($logo), 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'no-cache', 'X-Content-Type-Options' => 'nosniff']);
+        }
         $path = StoreSetting::find(1)?->logo_path;
         abort_unless($path && Storage::disk('public')->exists($path), 404);
         return Storage::disk('public')->response($path, null, ['Content-Type' => 'image/png', 'Cache-Control' => 'no-cache', 'X-Content-Type-Options' => 'nosniff']);

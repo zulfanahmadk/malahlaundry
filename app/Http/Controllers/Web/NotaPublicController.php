@@ -44,7 +44,13 @@ class NotaPublicController extends Controller
             ? Str::mask($phone, '*', 0, mb_strlen($phone) > 4 ? mb_strlen($phone) - 4 : mb_strlen($phone))
             : '-';
 
+        $store = app(\App\Services\StoreConfiguration::class)->read(false, $transaction->branch_id);
+        $store['receipt_terms'] = strtr($store['receipt_terms'], [
+            '{nama_toko}' => $store['store_name'] ?? $store['name'], '{cabang}' => $store['branch_name'] ?? '',
+            '{nomor_nota}' => $transaction->transaction_number, '{hari_komplain}' => (string) ($store['complaint_days'] ?? 3),
+        ]);
         return response()->view('nota.public', [
+            'store' => $store,
             'transaction' => $transaction,
             'customer' => $transaction->customer,
             'items' => $transaction->items,

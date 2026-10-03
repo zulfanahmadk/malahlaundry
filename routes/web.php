@@ -29,7 +29,8 @@ Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])
     ->name('nota.public');
 
 // Web Dashboard Owner & Admin (Protected)
-Route::middleware(['auth:web', 'active', 'owner'])->group(function () {
+Route::middleware(['auth:web', 'active', 'owner', 'branch'])->group(function () {
+    Route::post('/branches/select', [DashboardController::class, 'selectBranch'])->name('branches.select');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/settings', [StoreSettingsController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [StoreSettingsController::class, 'update'])->name('settings.update');

@@ -48,7 +48,7 @@
                         <td><strong>{{ $att->user->name ?? 'Kasir' }}</strong></td>
                         <td><code>{{ $att->device_id ?? 'Android POS' }}</code></td>
                         <td>
-                            <strong>{{ $att->check_in_time ? $att->check_in_time->translatedFormat('d M Y, H:i') . ' WIB' : '-' }}</strong>
+                            <strong>{{ $att->check_in_time ? $att->check_in_time->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') . ' WIB' : '-' }}</strong>
                         </td>
                         <td>
                             @if($att->check_in_photo_path)
@@ -61,7 +61,7 @@
                         </td>
                         <td>
                             @if($att->check_out_time)
-                                <strong>{{ $att->check_out_time->translatedFormat('d M Y, H:i') . ' WIB' }}</strong>
+                                <strong>{{ $att->check_out_time->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') . ' WIB' }}</strong>
                             @else
                                 <span style="color: var(--text-muted); font-size: 0.85rem;">Belum Check-Out</span>
                             @endif

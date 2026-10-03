@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Service extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'services';
     protected $primaryKey = 'uuid';
@@ -17,6 +17,7 @@ class Service extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'branch_id', 'speed', 'duration_hours',
         'uuid',
         'name',
         'unit',
