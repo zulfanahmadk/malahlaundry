@@ -172,6 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         showDialog(failedForm.dataset.reopenDialog);
     }
+    document.querySelectorAll('[data-template-reset]').forEach(button => button.addEventListener('click', () => {
+        const input = document.getElementById(`template-${button.dataset.templateReset}`);
+        if (!input) return;
+        input.value = button.dataset.defaultTemplate;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }));
     document.querySelectorAll('[data-template-input]').forEach(input => input.addEventListener('input', () => {
         const preview = document.querySelector(`[data-template-preview="${input.dataset.templateInput}"]`);
         if (preview) preview.textContent = input.value;

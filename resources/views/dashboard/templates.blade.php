@@ -48,8 +48,9 @@
         <section class="card">
             <h2>Isi pesan</h2>@foreach(['WA_DITERIMA'=>'Cucian diterima','WA_SIAP_DIAMBIL'=>'Cucian siap diambil','WA_SELESAI'=>'Cucian selesai','WA_REMINDER'=>'Pengingat pengambilan'] as $key=>$label)<div class="form-group" style="margin-top:18px">
                 <label for="template-{{ $key }}">{{ $label }}</label>
+                <button type="button" class="btn btn-small" data-template-reset="{{ $key }}" data-default-template="{{ \App\Services\StoreConfiguration::TEMPLATES[$key] }}">Gunakan template bawaan</button>
                 <textarea id="template-{{ $key }}" name="templates[{{ $key }}]" data-template-input="{{ $key }}" rows="5" maxlength="4000" required>{{ old('templates.'.$key, $store['templates'][$key] ?? \App\Services\StoreConfiguration::TEMPLATES[$key]) }}</textarea>
-            </div>@endforeach<p class="form-help">Variabel: {nama}, {outlet}, {no_transaksi}, {items}, {total}, {status_bayar}, {sisa_bayar}, {url_nota}, {alamat_outlet}, {telepon_outlet}, {tanggal_siap}. Variabel diganti dengan data transaksi saat kasir membuka pratinjau di Android.</p>
+            </div>@endforeach<p class="form-help">Variabel: {nama}, {outlet}, {no_transaksi}, {items}, {total}, {total_dibayar}, {status_bayar}, {status_bayar_label}, {sisa_bayar}, {url_nota}, {alamat_outlet}, {telepon_outlet}, {tanggal_siap}. Variabel diganti dengan data transaksi saat kasir membuka pratinjau di Android.</p>
         </section>
     </div>
     <aside class="stack">

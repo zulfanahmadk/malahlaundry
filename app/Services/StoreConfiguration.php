@@ -13,10 +13,151 @@ use Illuminate\Validation\ValidationException;
 class StoreConfiguration
 {
     public const TEMPLATES = [
-        'WA_REMINDER' => "Halo {nama}, cucian {no_transaksi} sudah siap diambil sejak {tanggal_siap}. Silakan mampir ke {outlet}.\nSisa tagihan: Rp{sisa_bayar}\nNota: {url_nota}",
-        'WA_DITERIMA' => "Halo {nama}, cucian Anda sudah diterima di {outlet}.\nNo. nota: {no_transaksi}\n{items}\nTotal: Rp{total}\nPembayaran: {status_bayar}\nNota: {url_nota}\n{alamat_outlet}\nHubungi: {telepon_outlet}",
-        'WA_SIAP_DIAMBIL' => "Halo {nama}, cucian {no_transaksi} sudah siap diambil di {outlet}.\nSisa tagihan: Rp{sisa_bayar}\nNota: {url_nota}\n{alamat_outlet}\nHubungi: {telepon_outlet}",
-        'WA_SELESAI' => "Terima kasih {nama}, cucian {no_transaksi} telah diambil.\nTerima kasih telah menggunakan {outlet}.\nNota: {url_nota}\nHubungi: {telepon_outlet}",
+        'WA_DITERIMA' => <<<'MESSAGE'
+🧺 {outlet}
+Cuci • Lipat • Beres
+
+Hai Kak {nama} 👋
+
+Kami dari {outlet} ingin menginformasikan bahwa laundry Kakak sudah kami terima dan akan diproses.
+
+📋 DETAIL TRANSAKSI
+No. Transaksi: {no_transaksi}
+Layanan:
+{items}
+Total: Rp{total}
+
+💰 STATUS PEMBAYARAN
+Total Bayar: Rp{total_dibayar}
+Sisa Pembayaran: Rp{sisa_bayar}
+Status: {status_bayar_label}
+
+📦 STATUS CUCIAN
+Laundry Kakak sedang menunggu proses pencucian. Kami akan mengabari Kakak saat laundry siap diambil.
+
+📍 OUTLET
+{alamat_outlet}
+WhatsApp: {telepon_outlet}
+
+🔗 Detail Transaksi & Nota:
+{url_nota}
+
+Terima kasih telah mempercayakan kebutuhan laundry Kakak kepada {outlet}. 🙏
+
+🧺 {outlet}
+Cuci • Lipat • Beres ✨
+MESSAGE,
+        'WA_SIAP_DIAMBIL' => <<<'MESSAGE'
+🧺 {outlet}
+Cuci • Lipat • Beres
+
+Hai Kak {nama} 👋
+
+Kabar baik! Laundry Kakak di {outlet} sudah selesai diproses dan siap diambil.
+
+📋 DETAIL TRANSAKSI
+No. Transaksi: {no_transaksi}
+Layanan:
+{items}
+Total: Rp{total}
+
+💰 STATUS PEMBAYARAN
+Total Bayar: Rp{total_dibayar}
+Sisa Pembayaran: Rp{sisa_bayar}
+Status: {status_bayar_label}
+
+📦 STATUS PENGAMBILAN
+Laundry Kakak sudah tersedia di {outlet} dan siap diambil.
+
+Silakan datang ke outlet kami dan tunjukkan nota digital saat pengambilan.
+Jika membutuhkan layanan antar, silakan hubungi kami melalui WhatsApp.
+
+📍 OUTLET
+{alamat_outlet}
+WhatsApp: {telepon_outlet}
+
+🔗 Detail Transaksi & Nota:
+{url_nota}
+
+Terima kasih telah mempercayakan kebutuhan laundry Kakak kepada {outlet}. 🙏
+
+🧺 {outlet}
+Cuci • Lipat • Beres ✨
+MESSAGE,
+        'WA_SELESAI' => <<<'MESSAGE'
+🧺 {outlet}
+Cuci • Lipat • Beres
+
+Hai Kak {nama} 👋
+
+Kami dari {outlet} ingin menginformasikan bahwa laundry Kakak sudah selesai diambil.
+
+📋 DETAIL TRANSAKSI
+No. Transaksi: {no_transaksi}
+Layanan:
+{items}
+Total: Rp{total}
+
+💰 STATUS PEMBAYARAN
+Total Bayar: Rp{total_dibayar}
+Sisa Pembayaran: Rp{sisa_bayar}
+Status: {status_bayar_label}
+
+📦 STATUS PENGAMBILAN
+Laundry Kakak sudah diserahkan. Semoga pakaian Kakak selalu bersih dan wangi. Kami menunggu kunjungan Kakak berikutnya!
+
+📍 OUTLET
+{alamat_outlet}
+WhatsApp: {telepon_outlet}
+
+🔗 Detail Transaksi & Nota:
+{url_nota}
+
+Terima kasih telah mempercayakan kebutuhan laundry Kakak kepada {outlet}. 🙏
+
+🧺 {outlet}
+Cuci • Lipat • Beres ✨
+MESSAGE,
+        'WA_REMINDER' => <<<'MESSAGE'
+🧺 {outlet}
+Cuci • Lipat • Beres
+
+Hai Kak {nama} 👋
+
+Kami dari {outlet} ingin menginformasikan bahwa laundry Kakak belum dilakukan pengambilan.
+
+📋 DETAIL TRANSAKSI
+No. Transaksi: {no_transaksi}
+Layanan:
+{items}
+Total: Rp{total}
+
+💰 STATUS PEMBAYARAN
+Total Bayar: Rp{total_dibayar}
+Sisa Pembayaran: Rp{sisa_bayar}
+Status: {status_bayar_label}
+
+📦 STATUS PENGAMBILAN
+Laundry Kakak masih tersedia di {outlet} dan belum dilakukan pengambilan.
+Siap diambil sejak: {tanggal_siap}
+
+Silakan datang ke outlet kami untuk melakukan pengambilan.
+Jika membutuhkan layanan antar, silakan hubungi kami melalui WhatsApp.
+
+📍 OUTLET
+{alamat_outlet}
+WhatsApp: {telepon_outlet}
+
+🔗 Detail Transaksi & Nota:
+{url_nota}
+
+Terima kasih telah mempercayakan kebutuhan laundry Kakak kepada {outlet}. 🙏
+
+🧺 {outlet}
+Cuci • Lipat • Beres ✨
+
+Mohon diabaikan apabila laundry sudah diambil.
+MESSAGE,
     ];
 
     public function read(bool $includeLogoData = false, ?int $branchId = null): array

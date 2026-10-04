@@ -41,27 +41,9 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. WhatsApp Templates
-        WhatsAppTemplate::firstOrCreate(
-            ['type' => 'WA_DITERIMA'],
-            [
-                'content' => "Halo Kak {nama}, cucian Anda di *Malah Laundry* telah kami terima dengan nomor {no_transaksi}.\nTotal tagihan: Rp{total} ({status_bayar}).\n\nCek rincian nota digital Anda di sini:\n{url_nota}\n\nTerima kasih telah mempercayakan pakaian Anda kepada kami!",
-            ]
-        );
-
-        WhatsAppTemplate::firstOrCreate(
-            ['type' => 'WA_SIAP_DIAMBIL'],
-            [
-                'content' => "Halo Kak {nama}, cucian Anda ({no_transaksi}) di *Malah Laundry* sudah SELESAI dan SIAP DIAMBIL.\n\nSisa tagihan: Rp{sisa_bayar}.\nSilakan tunjukkan nota digital saat pengambilan:\n{url_nota}\n\nTerima kasih!",
-            ]
-        );
-
-        WhatsAppTemplate::firstOrCreate(
-            ['type' => 'WA_SELESAI'],
-            [
-                'content' => 'Halo Kak {nama}, cucian ({no_transaksi}) telah selesai diambil. Terima kasih banyak telah menggunakan jasa *Malah Laundry*! Semoga pakaian Anda selalu bersih dan wangi.',
-            ]
-        );
-
+        foreach (\App\Services\StoreConfiguration::TEMPLATES as $type => $content) {
+            WhatsAppTemplate::firstOrCreate(['type' => $type], ['content' => $content]);
+        }
         // 3. Master Services
         Service::firstOrCreate(
             ['name' => 'Cuci Komplit Reguler'],
