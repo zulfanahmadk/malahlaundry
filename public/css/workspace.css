@@ -97,7 +97,7 @@ strong {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 60;
-    width: 252px;
+    width: var(--sidebar-width);
     padding: 18px 14px 16px;
     display: flex;
     flex-direction: column;
@@ -320,7 +320,7 @@ strong {
 }
 
 .main-wrapper {
-    margin-left: 252px;
+    margin-left: var(--sidebar-width);
     min-height: 100vh;
 }
 
@@ -331,6 +331,7 @@ strong {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    flex-wrap: wrap;
     padding: 16px 24px;
     background: white;
     border-bottom: 1px solid var(--border);
@@ -348,10 +349,15 @@ strong {
     gap: 14px;
     flex-shrink: 0;
     flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .branch-select {
-    width: 220px;
+    width: 260px;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .content-body {
@@ -359,6 +365,8 @@ strong {
     display: grid;
     gap: 16px;
     max-width: 1800px;
+    margin-inline: auto;
+    align-content: start;
 }
 
 .topbar-heading {
@@ -366,6 +374,7 @@ strong {
     align-items: center;
     gap: 12px;
     min-width: 0;
+    flex: 1 1 280px;
 }
 
 .topbar-heading>div {
@@ -437,7 +446,7 @@ strong {
     position: absolute;
     z-index: 70;
     right: 24px;
-    top: 66px;
+    top: calc(100% - 8px);
     width: 380px;
     max-width: calc(100vw - 32px);
     padding: 16px;
@@ -445,6 +454,7 @@ strong {
     border: 1px solid var(--border);
     border-radius: 14px;
     box-shadow: 0 12px 30px #1720331a;
+    overflow-y: auto;
 }
 
 .popover-head {
@@ -499,7 +509,6 @@ strong {
     display: grid;
     grid-template-columns: repeat(4,minmax(0,1fr));
     gap: 12px;
-    margin-bottom: 30px;
 }
 
 .stat-card,.card,.insight {
@@ -595,6 +604,7 @@ strong {
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 .section-head a,.section-head small {
@@ -609,10 +619,22 @@ strong {
 .table-container,.table-responsive {
     overflow-x: auto;
     width: 100%;
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+}
+
+.table-scroll-hint {
+    margin: 0;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-size: 11px;
 }
 
 table {
     width: 100%;
+    min-width: 640px;
     border-collapse: collapse;
     font-size: 12px;
     text-align: left;
@@ -635,6 +657,7 @@ td {
     padding: 16px 14px;
     border-top: 1px solid var(--border);
     vertical-align: middle;
+    overflow-wrap: anywhere;
 }
 
 td:first-child {
@@ -643,6 +666,31 @@ td:first-child {
 
 td:last-child,th:last-child {
     text-align: right;
+}
+
+.table-nowrap {
+    white-space: nowrap;
+}
+
+.table-code {
+    white-space: nowrap;
+    min-width: 180px;
+}
+
+table:has(td.empty):not(:has(td:not([colspan]))) {
+    min-width: 0;
+}
+
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.table-actions-secondary {
+    margin-top: 8px;
 }
 
 td a {
@@ -708,22 +756,24 @@ td .muted {
 
 .toolbar,.filter-form {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 30px;
 }
 
 .toolbar input[type=search] {
-    width: 300px;
+    width: 100%;
 }
 
 .toolbar select {
-    width: 165px;
+    width: 100%;
 }
 
 .toolbar .count {
     margin-left: auto;
+    flex: 0 0 auto;
+    padding-block: 12px;
+    text-align: right;
     font-size: 11px;
     color: #667085;
 }
@@ -732,10 +782,26 @@ td .muted {
     position: relative;
 }
 
+.toolbar>.search-field {
+    flex: 1 1 220px;
+    max-width: 300px;
+    min-width: 0;
+}
+
+.toolbar>.form-group {
+    flex: 0 1 165px;
+    min-width: 0;
+}
+
+.toolbar>.btn {
+    min-height: 40px;
+}
+
 .search-field>.icon {
     position: absolute;
     left: 12px;
-    top: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     pointer-events: none;
 }
 
@@ -743,7 +809,7 @@ td .muted {
     padding-left: 36px;
 }
 
-.form-control,input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select,textarea {
+.form-control,:where(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select,textarea) {
     width: 100%;
     height: 40px;
     padding: 10px 12px;
@@ -771,6 +837,35 @@ textarea {
 .form-group {
     display: grid;
     gap: 8px;
+    align-content: start;
+    min-width: 0;
+}
+
+.form-group>label:not(.checkline):not(.switch),.exception-row>label {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+input[type=file] {
+    width: 100%;
+    min-width: 0;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    font-size: 11px;
+}
+
+input[type=file]::file-selector-button {
+    margin-right: 8px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font: inherit;
+    cursor: pointer;
 }
 
 .form-group label,.field-label {
@@ -782,10 +877,26 @@ textarea {
     display: grid;
     grid-template-columns: repeat(2,minmax(0,1fr));
     gap: 16px;
+    align-items: start;
 }
 
 .form-grid.four {
     grid-template-columns: repeat(4,minmax(0,1fr));
+}
+
+.form-grid.hours-row {
+    grid-template-columns: minmax(72px,.65fr) repeat(3,minmax(0,1fr));
+    align-items: end;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.hours-row>strong {
+    align-self: center;
+}
+
+.form-grid .upload-field {
+    grid-column: span 3;
 }
 
 .span-all {
@@ -873,6 +984,7 @@ textarea {
     color: var(--text-muted);
     margin-top: 8px;
     line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
 .notice,.alert {
@@ -1005,6 +1117,9 @@ textarea {
     font-size: 10px;
     color: #667085;
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .bar-column .label {
@@ -1021,7 +1136,13 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.settings-top .badge {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .preference {
@@ -1033,6 +1154,12 @@ textarea {
 
 .preference>span:nth-child(2) {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.preference>.switch {
+    flex-shrink: 0;
 }
 
 .preference strong {
@@ -1191,7 +1318,8 @@ textarea {
 .select-field>.icon {
     position: absolute;
     right: 12px;
-    top: 16px;
+    top: 50%;
+    transform: translateY(-50%);
     pointer-events: none;
 }
 
@@ -1239,6 +1367,9 @@ textarea {
     }
     .form-grid.four {
         grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .form-grid .upload-field {
+        grid-column: 1/-1;
     }
     .detail-stats.five {
         grid-template-columns: repeat(4,minmax(0,1fr));
@@ -1309,6 +1440,10 @@ textarea {
         width: 100%;
         justify-content: flex-end;
     }
+    .topbar-actions>.btn {
+        order: 1;
+        flex: 1 1 100%;
+    }
     .branch-select {
         flex: 1;
         width: auto;
@@ -1318,7 +1453,6 @@ textarea {
     }
     .stats-grid {
         grid-template-columns: repeat(2,minmax(0,1fr));
-        margin-bottom: 12px;
     }
     .stat-card {
         padding: 12px;
@@ -1332,23 +1466,33 @@ textarea {
     }
     .toolbar,.filter-form {
         gap: 8px;
-        margin-bottom: 12px;
     }
     .toolbar .search-field {
         width: 100%;
+        flex-basis: 100%;
+        max-width: none;
     }
     .toolbar input[type=search],.toolbar select {
         width: 100%;
     }
     .toolbar>.form-group {
-        flex: 1;
-        min-width: 140px;
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
     }
     .toolbar .count {
         width: 100%;
+        flex-basis: 100%;
+        padding-block: 0;
     }
     .form-grid,.form-grid.four {
         grid-template-columns: 1fr;
+    }
+    .form-grid.hours-row {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .hours-row>.form-group:last-child {
+        grid-column: 2;
+        grid-row: 1;
     }
     .insights {
         grid-template-columns: 1fr;
@@ -1381,10 +1525,6 @@ textarea {
     }
     .notifications-popover {
         right: 16px;
-        top: 125px;
-    }
-    .settings-top {
-        margin-bottom: 12px;
     }
     .photo-link {
         font-size: 11px;

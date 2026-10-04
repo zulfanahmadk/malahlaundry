@@ -55,11 +55,13 @@
                     <td>{{ $service->name }}</td>
                     <td>{{ ['kg'=>'Kiloan','pcs'=>'Satuan','m2'=>'Luas'][$service->unit] ?? $service->unit }}</td>
                     <td>{{ ucfirst(strtolower($service->speed)) }}</td>
-                    <td>{{ \App\Support\Workspace::money($service->price) }}/{{ $service->unit === 'm2' ? 'm²' : $service->unit }}</td>
-                    <td>{{ $service->duration_hours }} jam</td>
+                    <td class="table-nowrap">{{ \App\Support\Workspace::money($service->price) }}/{{ $service->unit === 'm2' ? 'm²' : $service->unit }}</td>
+                    <td class="table-nowrap">{{ $service->duration_hours }} jam</td>
                     <td>
-                        <span class="badge {{ $service->is_active ? 'badge-success' : '' }}">{{ $service->is_active ? 'AKTIF' : 'NONAKTIF' }}</span>
-                        <button class="btn btn-small btn-secondary" data-open-dialog="service-{{ $service->uuid }}">Edit</button>
+                        <div class="table-actions">
+                            <span class="badge {{ $service->is_active ? 'badge-success' : '' }}">{{ $service->is_active ? 'AKTIF' : 'NONAKTIF' }}</span>
+                            <button class="btn btn-small btn-secondary" data-open-dialog="service-{{ $service->uuid }}">Edit</button>
+                        </div>
                     </td>
                 </tr>@empty<tr>
                     <td colspan="6" class="empty">Belum ada layanan yang sesuai filter.</td>

@@ -62,8 +62,8 @@
                     </td>
                     <td>{{ request()->attributes->get('branch')->name }}</td>
                     <td>
-                        <small>{{ \App\Support\Workspace::date($user->last_login_at) }}</small>
-                        <div class="actions" style="justify-content:flex-end;margin-top:8px">
+                        <small class="table-nowrap">{{ \App\Support\Workspace::date($user->last_login_at) }}</small>
+                        <div class="table-actions table-actions-secondary">
                             <a class="btn btn-small btn-secondary" href="{{ route('users.edit', $user) }}">Edit</a>
                             <form action="{{ route('users.toggle', $user->id) }}" method="POST">@csrf<button class="btn btn-small {{ $user->active ? 'btn-danger' : 'btn-secondary' }}">{{ $user->active ? 'Nonaktifkan' : 'Aktifkan' }}</button>
                             </form>

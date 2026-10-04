@@ -67,16 +67,46 @@ document.addEventListener('DOMContentLoaded', () => {
         event.currentTarget.form?.requestSubmit();
     });
 
+    document.querySelectorAll('.table-container').forEach(container => {
+        const hint = document.createElement('p');
+        hint.className = 'table-scroll-hint';
+        hint.textContent = 'Geser tabel untuk melihat kolom lainnya.';
+        hint.hidden = true;
+        container.before(hint);
+        const update = () => {
+            const overflow = container.scrollWidth > container.clientWidth + 1;
+            hint.hidden = !overflow;
+            if (overflow) {
+                container.tabIndex = 0;
+                container.setAttribute('role', 'region');
+                container.setAttribute('aria-label', 'Tabel dapat digulir horizontal');
+            } else {
+                container.removeAttribute('tabindex');
+                container.removeAttribute('role');
+                container.removeAttribute('aria-label');
+            }
+        };
+        new ResizeObserver(update).observe(container);
+        update();
+    });
+
     const bell = document.getElementById('notification-toggle');
     const panel = document.getElementById('notification-popover');
     const closeNotifications = () => {
         if (panel) panel.hidden = true;
         bell?.setAttribute('aria-expanded', 'false');
     };
+    const fitNotifications = () => {
+        if (!panel || panel.hidden) return;
+        const top = panel.getBoundingClientRect().top;
+        panel.style.maxHeight = `${Math.max(0, window.innerHeight - top - 16)}px`;
+    };
+    window.addEventListener('resize', fitNotifications);
     bell?.addEventListener('click', () => {
         if (!panel) return;
         panel.hidden = !panel.hidden;
         bell.setAttribute('aria-expanded', String(!panel.hidden));
+        fitNotifications();
     });
     document.addEventListener('click', event => {
         if (!panel?.contains(event.target) && !bell?.contains(event.target)) closeNotifications();

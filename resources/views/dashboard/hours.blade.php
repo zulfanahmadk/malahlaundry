@@ -27,7 +27,7 @@
                 <h2>Informasi utama</h2>
                 <small>Jadwal mingguan</small>
             </div>
-            <div class="stack">@foreach($days as $day=>$label)@php($row = $hours->get($day, ['open'=>false,'from'=>'08:00','to'=>'18:00']))<div class="form-grid four" style="align-items:end">
+            <div class="stack">@foreach($days as $day=>$label)@php($row = $hours->get($day, ['open'=>false,'from'=>'08:00','to'=>'18:00']))<div class="form-grid hours-row">
                     <strong>{{ $label }}</strong>
                     <input type="hidden" name="opening_hours[{{ $loop->index }}][day]" value="{{ $day }}">
                     <div class="form-group">

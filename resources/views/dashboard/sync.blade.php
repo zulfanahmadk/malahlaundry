@@ -48,7 +48,7 @@
                     <td>{{ $device->name }}<small class="muted">{{ $device->user?->name }} · Laporan {{ \App\Support\Workspace::date($device->last_seen_at) }}</small>@if($device->last_error)<small class="muted">{{ $device->last_error }}</small>@endif</td>
                     <td>{{ request()->attributes->get('branch')->name }}</td>
                     <td>{{ $device->app_version }}</td>
-                    <td>{{ \App\Support\Workspace::date($device->last_synced_at) }}</td>
+                    <td class="table-nowrap">{{ \App\Support\Workspace::date($device->last_synced_at) }}</td>
                     <td>{{ $device->pending_count }} data @if($device->failed_count)<br>
                         <small>{{ $device->failed_count }} gagal</small>@endif</td>
                     <td>

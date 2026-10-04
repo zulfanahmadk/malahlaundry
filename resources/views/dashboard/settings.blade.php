@@ -51,7 +51,7 @@
                     <label for="complaint-days">Batas komplain (hari)</label>
                     <input id="complaint-days" name="complaint_days" type="number" min="0" max="365" value="{{ old('complaint_days', $store['complaint_days'] ?? 3) }}" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group upload-field">
                     <label for="store-logo">Logo toko</label>
                     <input id="store-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp">
                     <p class="form-help">Maksimal 1 MB. Logo akan diperkecil dan disimpan sebagai PNG.</p>@if($store['logo_url'])<label class="checkline">

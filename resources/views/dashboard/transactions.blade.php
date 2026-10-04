@@ -60,7 +60,7 @@
             </thead>
             <tbody>
                 @forelse($transactions as $trx)<tr>
-                    <td>
+                    <td class="table-code">
                         <a href="{{ route('transactions.show', $trx->uuid) }}">{{ $trx->transaction_number }}</a>
                         <small class="muted">{{ \App\Support\Workspace::date($trx->created_at) }}</small>
                     </td>
@@ -73,7 +73,7 @@
                     <td>
                         <span class="badge {{ $trx->isPaid() ? 'badge-success' : 'badge-warning' }}">{{ $trx->isPaid() ? 'LUNAS' : 'BELUM LUNAS' }}</span>
                     </td>
-                    <td>{{ \App\Support\Workspace::money($trx->total) }}</td>
+                    <td class="table-nowrap">{{ \App\Support\Workspace::money($trx->total) }}</td>
                 </tr>@empty<tr>
                     <td colspan="7" class="empty">Tidak ada cucian yang sesuai filter.</td>
                 </tr>@endforelse

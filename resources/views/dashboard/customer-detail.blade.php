@@ -42,15 +42,15 @@
                             </tr>
                         </thead>
                         <tbody>@forelse($transactions as $trx)<tr>
-                                <td>
+                                <td class="table-code">
                                     <a href="{{ route('transactions.show', $trx->uuid) }}">{{ $trx->transaction_number }}</a>
                                 </td>
-                                <td>{{ \App\Support\Workspace::date($trx->created_at) }}</td>
+                                <td class="table-nowrap">{{ \App\Support\Workspace::date($trx->created_at) }}</td>
                                 <td>{{ $trx->items->pluck('service_name')->filter()->join(', ') ?: 'Layanan' }}</td>
                                 <td>
                                     <span class="badge {{ $trx->laundry_status === 'DITERIMA' ? 'badge-teal' : ($trx->laundry_status === 'SIAP_DIAMBIL' ? 'badge-success' : '') }}">{{ str_replace('_', ' ', $trx->laundry_status) }}</span>
                                 </td>
-                                <td>{{ \App\Support\Workspace::money($trx->total) }}</td>
+                                <td class="table-nowrap">{{ \App\Support\Workspace::money($trx->total) }}</td>
                             </tr>@empty<tr>
                                 <td colspan="5" class="empty">Pelanggan ini belum memiliki transaksi.</td>
                             </tr>@endforelse</tbody>

@@ -60,10 +60,12 @@
                     <td>{{ $branch->address ?: 'Belum tercatat' }}</td>
                     <td>{{ $branch->active_orders }}</td>
                     <td>{{ $branch->staff_count }}</td>
-                    <td>{{ \App\Support\Workspace::date($branch->last_sync) }}</td>
+                    <td class="table-nowrap">{{ \App\Support\Workspace::date($branch->last_sync) }}</td>
                     <td>
-                        <span class="badge {{ $branch->active ? 'badge-success' : '' }}">{{ $branch->active ? 'AKTIF' : 'NONAKTIF' }}</span>
-                        <a class="btn btn-small btn-secondary" href="{{ route('branches.edit', $branch) }}">Edit</a>
+                        <div class="table-actions">
+                            <span class="badge {{ $branch->active ? 'badge-success' : '' }}">{{ $branch->active ? 'AKTIF' : 'NONAKTIF' }}</span>
+                            <a class="btn btn-small btn-secondary" href="{{ route('branches.edit', $branch) }}">Edit</a>
+                        </div>
                     </td>
                 </tr>@empty<tr>
                     <td colspan="6" class="empty">Tidak ada cabang yang sesuai filter.</td>
