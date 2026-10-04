@@ -26,6 +26,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Web\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/audit', [\App\Http\Controllers\Web\AdminAuditController::class, 'index'])->name('audit.index');
     Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'index'])->name('apk.index');
     Route::post('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'upload'])->name('apk.upload');
     Route::post('/password', [\App\Http\Controllers\Web\ApkReleaseController::class, 'password'])->name('password');

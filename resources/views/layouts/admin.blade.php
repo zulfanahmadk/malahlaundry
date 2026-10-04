@@ -14,6 +14,7 @@
     <nav aria-label="Menu admin" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
         <a class="btn {{ request()->routeIs('admin.dashboard') ? 'btn-primary' : 'btn-secondary' }}" href="{{ route('admin.dashboard') }}" @if(request()->routeIs('admin.dashboard')) aria-current="page" @endif>Ringkasan</a>
         <a class="btn {{ request()->routeIs('admin.apk.*') ? 'btn-primary' : 'btn-secondary' }}" href="{{ route('admin.apk.index') }}" @if(request()->routeIs('admin.apk.*')) aria-current="page" @endif>Versi APK</a>
+        <a class="btn {{ request()->routeIs('admin.audit.*') ? 'btn-primary' : 'btn-secondary' }}" href="{{ route('admin.audit.index') }}" @if(request()->routeIs('admin.audit.*')) aria-current="page" @endif>Log Audit</a>
     </nav>
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
     @if($errors->any())<div class="alert alert-danger" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif

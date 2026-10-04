@@ -45,6 +45,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $request->attributes->set('audit_actor', $request->user()?->only(['id', 'role']));
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

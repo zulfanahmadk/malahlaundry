@@ -50,6 +50,7 @@ class ApkReleaseTest extends TestCase
         $this->actingAs($admin)->from('/admin/apk')->post('/admin/apk', ['apk' => $apk, 'notes' => 'Perbaikan kasir'])->assertRedirect('/admin/apk')->assertSessionHasNoErrors();
         $release = DB::table('apk_releases')->first();
         $this->assertSame($hash, $release->sha256);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'admin/apk', 'actor_id' => $admin->id, 'feature' => 'versi-apk', 'outcome' => 'success']);
         $this->getJson('/api/v1/app-release?package=com.malahlaundry.app')->assertOk()
             ->assertJsonPath('release.version_code', 10)->assertJsonPath('release.version_name', '1.7.0')
             ->assertJsonPath('release.sha256', $hash)->assertHeader('Cache-Control', 'no-store, private');

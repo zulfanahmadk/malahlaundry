@@ -45,4 +45,27 @@ nama fitur request sebelumnya. Channel eksplisit memilih fitur tetap sehingga
 job antrean juga dapat menulis ke fitur yang sesuai.
 
 Setelah deployment, jalankan `php artisan config:cache` dan restart worker
-antrean yang berjalan. Tidak ada migrasi database untuk perubahan ini.
+antrean yang berjalan. Pemisahan file log tidak memerlukan migrasi database.
+
+## Log Audit admin
+
+Menu `/admin/audit` membaca tabel `audit_logs`, terpisah dari file log diagnostik
+di atas. Jalankan `php artisan migrate --force` saat deployment untuk membuat
+tabel. Pencatatan baru dimulai setelah migrasi terpasang; catatan lama dari file
+log tidak diimpor. Hanya admin aktif dapat membaca audit, tanpa akses untuk
+mengubah/menghapus catatan atau masuk ke operasional cabang owner.
+
+Audit merekam permintaan perubahan web/API, login berhasil/gagal, logout,
+ekspor, akses yang ditolak, dan pembacaan menu audit. Kolom yang disimpan:
+waktu UTC (ditampilkan WIB), ID/peran pelaku, ID cabang dari konteks operasional,
+fitur, pola route, metode, kanal web/API, hasil, status HTTP, dan ID permintaan.
+Tidak menyimpan nama/username, isi formulir, password/token, file/foto, data
+pelanggan/transaksi, query string, atau isi exception. Perubahan offline
+tercatat saat permintaan sinkronisasi diterima server. Ini audit permintaan
+HTTP; pekerjaan CLI/job dan rincian tiap record dalam batch tidak dicatat.
+
+Penolakan validasi web yang mengembalikan redirect tetap ditandai Ditolak.
+Audit dipertahankan di database tanpa rotasi 14 hari yang berlaku pada file
+diagnostik. Catatan tidak memiliki foreign key agar tetap ada jika akun dihapus.
+Kegagalan penulisan audit masuk ke file admin-sistem dan tidak mengubah respons
+transaksi/sinkronisasi yang sudah berhasil.

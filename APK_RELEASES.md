@@ -13,7 +13,13 @@ cabang, layanan, dan rilis APK, termasuk jumlah aktif/nonaktif. Ringkasan hanya
 berisi angka agregat seluruh sistem tanpa identitas pengguna, rincian cabang,
 pelanggan, transaksi, atau laporan keuangan. Admin tidak dapat memilih atau
 masuk ke cabang owner melalui web maupun API, termasuk dengan token lama.
-Menu admin hanya Ringkasan dan Versi APK. Pengelolaan toko tetap khusus owner.
+Menu admin berisi Ringkasan, Versi APK, dan Log Audit. Pengelolaan toko tetap khusus owner.
+
+Log Audit `/admin/audit` hanya dapat dibaca admin aktif. Catatan dimulai setelah
+migrasi `2026_10_04_000003_create_audit_logs` dipasang, tanpa mengimpor log teks
+lama. Filter tersedia untuk tanggal WIB, fitur, hasil, peran, dan ID pengguna;
+halaman memuat 30 catatan. Tidak ada fitur ubah/hapus audit. Lihat `LOGGING.md`
+untuk cakupan pencatatan dan pemisahan dari log diagnostik.
 
 Owner dapat membuka menu Pengaturan → APK Android (`/apk`) untuk mengecek versi
 terbaru aplikasi utama, catatan rilis, tanggal penerbitan, dan ukuran APK, lalu

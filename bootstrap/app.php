@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: ['127.0.0.1', '::1']);
+        $middleware->appendToGroup('web', \App\Http\Middleware\RecordAuditRequest::class);
+        $middleware->appendToGroup('api', \App\Http\Middleware\RecordAuditRequest::class);
         $middleware->prepend([
             \App\Http\Middleware\LogFeatureRequest::class,
             \App\Http\Middleware\ReceiptDomain::class,

@@ -72,6 +72,7 @@ class AuthController extends Controller
         $deviceName = $request->input('device_name', 'Android-Device');
         $user->forceFill(['last_login_at' => now()])->save();
         $token = $user->createToken($deviceName)->plainTextToken;
+        $request->attributes->set('audit_actor', $user->only(['id', 'role']));
 
         return response()->json([
             'status' => 'success',
