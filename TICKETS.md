@@ -12,6 +12,22 @@ seluruh owner beserta pengirim dan cabang laporan. Angka pada menu menunjukkan
 jumlah tiket yang masih menunggu keputusan, juga tersedia di ringkasan admin.
 Daftar dapat dicari berdasarkan nomor/judul dan difilter menurut jenis/status.
 
+Admin menerima satu notifikasi untuk setiap tiket baru melalui lonceng topbar
+dan **Dukungan > Notifikasi** (`/admin/notifications`). Tanda merah menunjukkan
+ada tiket yang belum dibaca oleh akun admin tersebut. Status baca disimpan per
+admin dalam `admin_ticket_reads`, sehingga membuka tiket tidak menghapus tanda
+belum dibaca pada akun admin lainnya. Tiket yang sudah ada saat fitur dipasang
+akan muncul sebagai belum dibaca sampai dibuka atau ditandai dibaca.
+
+Lonceng memeriksa tiket baru setiap 30 detik selama halaman terlihat, saat tab
+kembali aktif, dan saat lonceng dibuka. Empat notifikasi ditampilkan di popover;
+jumlah belum dibaca tetap menghitung semua tiket. Daftar lengkap menyediakan
+pencarian, filter dibaca/belum dibaca, dan pagination. Membuka detail tiket akan
+menandai notifikasinya dibaca. Tombol **Tandai semua dibaca** memproses tiket
+sampai batas saat form dimuat; tiket yang datang sesudahnya tetap belum dibaca.
+Status baca tidak mengubah keputusan/progres tiket atau angka tiket menunggu
+keputusan. Notifikasi tersedia di web, tanpa queue atau layanan push tambahan.
+
 Alur penanganan:
 
 - Diajukan: menunggu keputusan admin, progres 0%.

@@ -26,7 +26,9 @@ class AppServiceProvider extends ServiceProvider
         });
         \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
             if (auth()->user()?->isAdmin()) {
-                $view->with('workspaceNotifications', collect());
+                $feed = app(\App\Services\AdminNotifications::class);
+                $view->with('workspaceNotifications', $feed->preview(auth()->user()));
+                $view->with('adminNotificationSummary', $feed->summary(auth()->user()));
                 $view->with('newTicketCount', \App\Models\SupportTicket::where('status', 'SUBMITTED')->count());
                 return;
             }

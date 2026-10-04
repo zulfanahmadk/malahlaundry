@@ -41,6 +41,9 @@ class FeatureLog
 
         $uri = $request->route()?->uri() ?? $request->path();
         $uri = preg_replace('#^api/v1/#', '', $uri);
+        if ($uri === 'admin/notifications' || str_starts_with($uri, 'admin/notifications/')) {
+            return 'notifikasi';
+        }
         if ($uri === 'admin/tickets' || str_starts_with($uri, 'admin/tickets/')) {
             return 'tiket-bantuan';
         }

@@ -27,6 +27,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Web\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/audit', [\App\Http\Controllers\Web\AdminAuditController::class, 'index'])->name('audit.index');
+    Route::get('/notifications', [\App\Http\Controllers\Web\AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/feed', [\App\Http\Controllers\Web\AdminNotificationController::class, 'feed'])->name('notifications.feed');
+    Route::post('/notifications/read', [\App\Http\Controllers\Web\AdminNotificationController::class, 'read'])->name('notifications.read');
     Route::get('/tickets', [\App\Http\Controllers\Web\TicketController::class, 'adminIndex'])->name('tickets.index');
     Route::get('/tickets/{ticket}', [\App\Http\Controllers\Web\TicketController::class, 'show'])->whereUuid('ticket')->name('tickets.show');
     Route::get('/tickets/{ticket}/attachments/{attachment}', [\App\Http\Controllers\Web\TicketController::class, 'download'])->whereUuid('ticket')->whereNumber('attachment')->name('tickets.attachments.download');

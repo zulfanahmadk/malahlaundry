@@ -15,7 +15,7 @@ pelanggan, transaksi, atau laporan keuangan. Admin tidak dapat memilih atau
 masuk ke cabang owner melalui web maupun API, termasuk dengan token lama.
 Admin dan owner menggunakan layout dashboard yang sama: sidebar, topbar, menu
 responsif, kartu, tabel, dan formulir. Menu mengikuti peran. Admin berisi
-Ringkasan, Tiket masuk, Pengguna, Cabang, Versi APK, dan Log Audit. Alur tiket
+Ringkasan, Tiket masuk, Notifikasi, Pengguna, Cabang, Versi APK, dan Log Audit. Alur tiket
 owner/admin dijelaskan di [TICKETS.md](TICKETS.md).
 
 Admin mengelola semua akun di `/admin/users`: tambah, edit nama/username/peran,

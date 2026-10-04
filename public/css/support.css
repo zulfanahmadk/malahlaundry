@@ -8,6 +8,37 @@
     padding: 2px 7px;
 }
 
+.admin-notification-read-form {
+    margin-top: 12px;
+}
+
+.admin-notification-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 600px) {
+    .admin-notification-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+.notification-unread-marker {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--danger);
+    margin: 6px 0 0 auto;
+}
+
+.notification-row > .stat-icon {
+    flex-shrink: 0;
+}
+
+.notification-row > span:nth-child(2) {
+    min-width: 0;
+}
+
 .admin-overview-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

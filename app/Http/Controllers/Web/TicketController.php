@@ -68,6 +68,9 @@ class TicketController extends Controller
     {
         $admin = $request->user()->isAdmin();
         abort_unless($admin || $ticket->submitted_by === $request->user()->id, 404);
+        if ($admin) {
+            app(\App\Services\AdminNotifications::class)->markRead($request->user(), $ticket);
+        }
         $ticket->load(['submittedBy:id,name,username', 'branch:id,name,code', 'updates.attachments']);
         return view('tickets.show', compact('ticket', 'admin'));
     }

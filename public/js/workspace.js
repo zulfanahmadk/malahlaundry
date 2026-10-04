@@ -161,6 +161,98 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const bell = document.getElementById('notification-toggle');
     const panel = document.getElementById('notification-popover');
+    let refreshingAdminNotifications = false;
+    const refreshAdminNotifications = async () => {
+        if (!panel?.dataset.adminNotifications || document.hidden || refreshingAdminNotifications) return;
+        refreshingAdminNotifications = true;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+            const response = await fetch(panel.dataset.adminNotifications, {
+                credentials: 'same-origin', redirect: 'error', cache: 'no-store',
+                headers: { Accept: 'application/json' }, signal: controller.signal,
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            if (!Number.isInteger(data.unread) || !Array.isArray(data.notifications)) return;
+            panel.querySelector('[data-notification-unread-count]').textContent = `${data.unread} baru`;
+            bell.setAttribute('aria-label', data.unread > 0 ? `Buka pemberitahuan, ${data.unread} belum dibaca` : 'Buka pemberitahuan');
+            const dot = bell.querySelector('.unread-dot');
+            if (data.unread > 0 && !dot) {
+                const marker = document.createElement('span');
+                marker.className = 'unread-dot';
+                marker.setAttribute('aria-label', 'Ada notifikasi belum dibaca');
+                bell.append(marker);
+            } else if (data.unread === 0) dot?.remove();
+            const items = panel.querySelector('[data-notification-items]');
+            const focusedUrl = items.contains(document.activeElement) ? document.activeElement.closest('a')?.href : null;
+            items.replaceChildren();
+            data.notifications.forEach(notification => {
+                const url = new URL(notification.url, location.origin);
+                if (url.origin !== location.origin) return;
+                const row = document.createElement('a');
+                row.className = `notification-row${notification.read ? '' : ' unread'}`;
+                row.href = url.href;
+                const icon = document.createElement('span');
+                icon.className = 'stat-icon';
+                const iconWrapper = document.createElement('span');
+                iconWrapper.className = 'icon';
+                const image = document.createElement('img');
+                image.src = panel.dataset.notificationIcon;
+                image.alt = '';
+                iconWrapper.append(image);
+                icon.append(iconWrapper);
+                const text = document.createElement('span');
+                const title = document.createElement('strong');
+                title.textContent = notification.title;
+                const time = document.createElement('small');
+                time.textContent = notification.time;
+                text.append(title, time);
+                row.append(icon, text);
+                if (!notification.read) {
+                    const marker = document.createElement('span');
+                    marker.className = 'notification-unread-marker';
+                    marker.setAttribute('aria-label', 'Belum dibaca');
+                    row.append(marker);
+                }
+                items.append(row);
+            });
+            if (!items.children.length) {
+                const empty = document.createElement('p');
+                empty.className = 'empty';
+                empty.textContent = 'Belum ada pemberitahuan.';
+                items.append(empty);
+            }
+            if (focusedUrl) {
+                const focusedRow = [...items.querySelectorAll('a')].find(row => row.href === focusedUrl);
+                (focusedRow ?? bell).focus({ preventScroll: true });
+            }
+            panel.querySelector('[name="through_ticket_id"]').value = data.through_ticket_id;
+            const ticketLink = document.querySelector('[data-admin-ticket-link]');
+            let badge = ticketLink?.querySelector('.nav-ticket-count');
+            if (ticketLink && data.pending_tickets > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'nav-ticket-count';
+                    ticketLink.append(badge);
+                }
+                badge.textContent = data.pending_tickets;
+                badge.setAttribute('aria-label', `${data.pending_tickets} tiket menunggu keputusan`);
+            } else badge?.remove();
+            fitNotifications();
+        } catch (_) {
+            // Keep the existing notification state while offline or after the session expires.
+        } finally {
+            clearTimeout(timeout);
+            refreshingAdminNotifications = false;
+        }
+    };
+    if (panel?.dataset.adminNotifications) {
+        setInterval(refreshAdminNotifications, 30000);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) refreshAdminNotifications();
+        });
+    }
     const closeNotifications = () => {
         if (panel) panel.hidden = true;
         bell?.setAttribute('aria-expanded', 'false');
@@ -176,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.hidden = !panel.hidden;
         bell.setAttribute('aria-expanded', String(!panel.hidden));
         fitNotifications();
+        if (!panel.hidden) refreshAdminNotifications();
     });
     document.addEventListener('click', event => {
         if (!panel?.contains(event.target) && !bell?.contains(event.target)) closeNotifications();

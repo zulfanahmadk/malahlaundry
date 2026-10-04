@@ -20,7 +20,7 @@ class AuditActivity
             str_starts_with($action, 'api/v1/sync/') => 'Sinkronisasi data',
             str_ends_with($action, '/toggle') => 'Ubah status akun',
             $action === 'profile' || $action === 'api/v1/auth/profile' => 'Ubah profil',
-            $action === 'notifications/read' => 'Tandai notifikasi dibaca',
+            in_array($action, ['notifications/read', 'admin/notifications/read'], true) => 'Tandai notifikasi dibaca',
             in_array($method, ['POST', 'PUT', 'PATCH'], true) => 'Simpan perubahan',
             $method === 'DELETE' => 'Hapus data',
             default => 'Akses halaman',
