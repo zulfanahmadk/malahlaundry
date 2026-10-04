@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class AdminSeeder extends Seeder
 {
@@ -20,7 +19,7 @@ class AdminSeeder extends Seeder
             $this->command?->info('Akun dengan username admin sudah ada; tidak diubah oleh seeder.');
             return;
         }
-        $password = env('ADMIN_INITIAL_PASSWORD') ?: Str::password(24);
+        $password = env('ADMIN_INITIAL_PASSWORD') ?: 'password123';
         $user = User::create([
             'name' => 'Administrator Sistem', 'username' => $username,
             'email' => null, 'password' => $password, 'role' => 'admin',

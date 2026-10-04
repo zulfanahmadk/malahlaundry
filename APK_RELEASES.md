@@ -39,8 +39,8 @@ php artisan queue:restart
 AdminSeeder juga dijalankan oleh DatabaseSeeder untuk instalasi baru. Pada server
 yang sudah berisi data, jalankan AdminSeeder saja; jangan menjalankan seeder akun
 demo/pengguna lainnya. Username awal `admin`, dapat diubah lewat `ADMIN_USERNAME`.
-Password awal acak atau dari `ADMIN_INITIAL_PASSWORD`; seeder tidak mengganti
-password akun admin yang sudah ada. Password acak pertama tersimpan di
+Password awal `password123`, dapat diubah lewat `ADMIN_INITIAL_PASSWORD`; seeder
+tidak mengganti password akun admin yang sudah ada. Kredensial awal tersimpan di
 `storage/app/private/admin-initial-password.txt`. Ganti password melalui halaman
 admin; file kredensial awal dihapus setelah perubahan berhasil. Jangan commit
 file ini maupun file APK ke Git.
