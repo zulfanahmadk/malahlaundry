@@ -49,3 +49,13 @@ Sinkronisasi ke produksi belum dapat dinyatakan pulih: autentikasi SSH menolak a
 Hasil akhir lokal: 66 test Laravel / 464 assertion, 34 unit test Android, 20 test tablet, 45 kasus browser, Pint, ktlintCheck, lintDebug (0 error), build web dan build debug/QA/instrumentation Android semuanya lulus. Dokumentasi ini membatasi klaim pada jalur yang benar-benar diperiksa. Kamera fisik/lokasi dan printer Bluetooth belum diuji dengan perangkat/periferal nyata; pengujian foto presensi menggunakan JPEG fixture.
 
 Pemeriksaan setelah instalasi APK final 1.6.1 memverifikasi primary key pelanggan, transaksi, presensi, dan antrean identik dengan cadangan tepat sebelum pembaruan: 1 pelanggan, 1 transaksi, 1 presensi, 3 antrean. Database sesudah pembaruan lolos integrity_check dan MainActivity terbuka dengan status ok. Cadangan akhir berada pada folder privat LOCALAPPDATA/MalahLaundry/device-backups/20261004-143123-final; APK lama tersedia pada cadangan sebelumnya 20261004-140028. Server, akun dan cabang aktif Android dipertahankan.
+
+## Pemeriksaan ulang dashboard produksi
+
+Pengguna melaporkan HTTP 500 pada `https://laundry.malahproject.com/dashboard`. Dashboard terautentikasi pada MySQL lokal merespons HTTP 200 dalam transaksi read-only, tanpa perubahan database bisnis. Regresi tambahan memverifikasi dashboard berisi transaksi lunas, cucian terlambat diambil, presensi terlambat, perangkat gagal sinkron, notifikasi login dan pembatasan data lintas cabang. Suite Laravel terbaru lulus **67 test / 477 assertion**. Semua 13 migrasi lokal sudah diterapkan.
+
+Pemeriksaan HTTP produksi menunjukkan login, health check, CSS, JavaScript dan `figma/manifest.json` tersedia. Permintaan dashboard tanpa sesi hanya dialihkan ke login; ini tidak membuktikan dashboard setelah login berhasil. Endpoint push, pull dan upload yang dipanggil tanpa autentikasi mengembalikan 401, tetapi **POST `/api/v1/sync/device` masih 404**. Produksi belum dapat dinyatakan sesuai dengan seluruh route sumber `qa-master`.
+
+Audit Android memastikan APK 1.6.1 masih berjalan dan buffer crash kosong. Bukti 34 unit test, 20 test tablet serta lint 0 error / 30 warning sesuai sumber saat ini. Pemeriksaan read-only antrean nyata masih menemukan 3 data: presensi dan pelanggan gagal pada field `branch_id`, serta transaksi tertunda. Tidak dilakukan penghapusan data, retry antrean bisnis, atau pemasangan ulang saat audit ini.
+
+Penyebab exception dashboard produksi belum diketahui. Akses SSH ditolak autentikasinya; diperlukan exception terbaru dari `storage/logs/laravel.log` produksi untuk menentukan perbaikan. Migrasi, izin berkas dan cache produksi belum dapat diperiksa langsung. Hasil lokal tidak digunakan untuk menyatakan HTTP 500 maupun sinkronisasi produksi telah selesai diperbaiki.

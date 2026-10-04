@@ -3,11 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Attendance;
+use App\Models\Branch;
+use App\Models\DeviceSyncState;
 use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class DashboardWorkflowTest extends TestCase
@@ -45,6 +49,45 @@ class DashboardWorkflowTest extends TestCase
         $token = $owner->createToken('android')->plainTextToken;
 
         $this->withToken($token)->getJson('/reports/export')->assertUnauthorized();
+    }
+
+    public function test_populated_dashboard_renders_notifications_and_keeps_other_branch_data_out(): void
+    {
+        $this->travelTo(now()->setTime(12, 0));
+        $owner = User::factory()->owner()->create(['last_login_at' => now(), 'notify_login' => true]);
+        $cashier = User::factory()->create();
+        Branch::findOrFail(1)->update(['opening_hours' => [
+            ['day' => today()->dayOfWeekIso, 'open' => true, 'from' => '08:00', 'to' => '18:00'],
+        ]]);
+        $paid = $this->transaction($cashier, 'Pelanggan hari ini', 'DITERIMA', 'LUNAS', today()->setTime(9, 0)->toDateTimeString());
+        $paid->update(['total' => 7000, 'subtotal' => 7000]);
+        $overdue = $this->transaction($cashier, 'Pelanggan terlambat ambil', 'SIAP_DIAMBIL', 'BELUM', today()->subDays(5)->toDateTimeString());
+        $overdue->update(['ready_at' => today()->subDays(4)]);
+        Attendance::create(['user_id' => $cashier->id, 'check_in_time' => today()->setTime(9, 0)]);
+        DeviceSyncState::create([
+            'user_id' => $cashier->id, 'device_id' => (string) Str::uuid(), 'name' => 'Tablet perlu sinkron',
+            'app_version' => '1.6.1', 'pending_count' => 2, 'failed_count' => 1, 'last_seen_at' => now(),
+        ]);
+        $otherBranch = Branch::create(['name' => 'Cabang lain', 'code' => 'ML-OTHER']);
+        $otherCustomer = Customer::create(['branch_id' => $otherBranch->id, 'name' => 'Pelanggan cabang lain', 'phone' => '6281234567891']);
+        Transaction::create([
+            'branch_id' => $otherBranch->id, 'customer_uuid' => $otherCustomer->uuid,
+            'total' => 999000, 'subtotal' => 999000, 'payment_status' => 'LUNAS', 'laundry_status' => 'DITERIMA',
+        ]);
+        DeviceSyncState::create([
+            'branch_id' => $otherBranch->id, 'user_id' => $cashier->id, 'device_id' => (string) Str::uuid(),
+            'name' => 'Tablet cabang lain', 'app_version' => '1.6.1', 'pending_count' => 3, 'last_seen_at' => now(),
+        ]);
+
+        $this->actingAs($owner)->get('/dashboard')->assertOk()
+            ->assertViewHas('stats', fn (array $stats) => (int) $stats['today_omzet'] === 7000
+                && $stats['today_transactions_count'] === 1 && $stats['active_laundry_count'] === 2)
+            ->assertViewHas('overdue', 1)
+            ->assertSee('Pelanggan hari ini')->assertSee('Pelanggan terlambat ambil')->assertSee('Rp7.000')
+            ->assertSee('Tablet perlu sinkron')->assertSee('1 data gagal disinkronkan.')
+            ->assertSee('masuk setelah jam buka cabang.')->assertSee('Login akun '.$owner->username.' berhasil.')
+            ->assertDontSee('Pelanggan cabang lain')->assertDontSee('Tablet cabang lain')->assertDontSee('Rp999.000');
+        $this->travelBack();
     }
 
     public function test_cashier_web_login_is_rejected_but_owner_can_sign_in_and_out(): void
