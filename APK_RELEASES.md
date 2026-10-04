@@ -81,9 +81,15 @@ Endpoint publik Android:
   `release: null` bila belum ada APK.
 - `GET /api/v1/app-releases/{id}/download`: file APK.
 
-Android memeriksa versi saat aplikasi dibuka/kembali aktif (maksimal sekali tiap
-5 menit), dan menyediakan tombol Cek pembaruan. Jika versionCode lebih besar,
-dialog menampilkan catatan rilis dan ukuran unduhan. Pengguna dapat memilih Nanti.
+Android 1.7.2 (versionCode 12) memeriksa versi saat aplikasi dibuka/kembali aktif
+(maksimal sekali tiap 5 menit), serta setelah login. Pemeriksaan manual berada
+di **Lainnya > Pembaruan aplikasi**, tanpa tombol pada footer. Jika versionCode
+lebih besar untuk package yang sama, update wajib dilakukan. Dialog menampilkan
+catatan rilis dan ukuran unduhan, tanpa tombol Nanti dan tanpa penutupan lewat
+tombol kembali/sentuhan di luar dialog. Kegagalan unduh/izin atau pembatalan
+pemasangan tidak membuka kembali operasional aplikasi. Informasi rilis yang
+sudah terdeteksi disimpan sehingga kewajiban bertahan setelah aplikasi dibuka
+ulang, termasuk saat offline. Versi sama/lebih rendah tidak memicu update.
 Unduhan memakai HTTPS dari server tetap, lalu memeriksa ukuran, SHA-256, package,
 versionCode, dan kompatibilitas sertifikat dengan aplikasi yang terpasang.
 Pemasang Android memverifikasi tanda tangan dan meminta konfirmasi pengguna.
@@ -95,7 +101,10 @@ aplikasi utama. Jangan mengunggah APK release tanpa tanda tangan. APK yang dibua
 di mesin berbeda dengan debug keystore berbeda tidak dapat memperbarui instalasi
 yang sudah ada; gunakan kunci penandatanganan distribusi yang konsisten.
 
-Instalasi lama yang belum mempunyai pemeriksa pembaruan harus memasang versi
-1.7.0 ini secara manual sekali. Setelah itu aplikasi dapat menemukan rilis baru
-dari web. Koneksi gagal atau pembaruan ditunda tidak menghalangi penggunaan POS
-offline. Verifikasi pemasangan pada HP dilakukan setelah endpoint produksi tersedia.
+Instalasi lama yang belum mempunyai pemeriksa pembaruan perlu memasang APK baru
+secara manual sekali. Versi 1.7.0/1.7.1 memiliki dialog pembaruan yang bisa ditunda;
+perangkat tersebut perlu memasang 1.7.2 sekali agar kebijakan wajib update berlaku
+untuk rilis berikutnya. Aplikasi tidak dapat mengubah kode versi lama yang sudah
+terpasang. Koneksi gagal sebelum aplikasi mengetahui ada rilis baru tetap
+mengizinkan POS offline. Pengujian kebijakan dan dialog dilakukan pada paket QA;
+rilis produksi memerlukan APK bertanda tangan sama dan penerbitan melalui admin.
