@@ -1,6 +1,24 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-ticket-upload]').forEach(group => {
+        const input = group.querySelector('input[type="file"]');
+        const list = group.querySelector('[data-ticket-selected]');
+        input.addEventListener('change', () => {
+            list.replaceChildren();
+            const files = Array.from(input.files);
+            const error = files.length > 5 ? 'Pilih maksimal 5 file.' : files.some(file => file.size > 10 * 1024 * 1024) ? 'Setiap lampiran maksimal 10 MB.' : '';
+            input.setCustomValidity(error);
+            files.forEach(file => {
+                const item = document.createElement('li');
+                const size = file.size < 1024 * 1024 ? `${Math.max(1, Math.ceil(file.size / 1024))} KB` : `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                item.textContent = `${file.name} (${size})`;
+                list.append(item);
+            });
+            list.hidden = files.length === 0;
+            if (error) input.reportValidity();
+        });
+    });
     document.querySelectorAll('[data-ticket-status-form]').forEach(form => {
         const status = form.querySelector('[name="status"]');
         const group = form.querySelector('[data-ticket-progress]');

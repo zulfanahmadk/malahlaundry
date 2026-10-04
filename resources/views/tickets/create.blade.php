@@ -8,7 +8,7 @@
 <div class="ticket-detail-grid">
     <section class="card">
         <h2 class="section-title">Detail laporan</h2>
-        <form method="POST" action="{{ route('tickets.store') }}" class="stack">@csrf
+        <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="stack">@csrf
             <input type="hidden" name="submission_uuid" value="{{ old('submission_uuid', $submissionUuid) }}">
             <div class="form-grid">
                 <div class="form-group"><label for="type">Jenis tiket</label><select id="type" name="type" required>@foreach(\App\Models\SupportTicket::TYPES as $value => $label)<option value="{{ $value }}" @selected(old('type', 'BUGS') === $value)>{{ $label }}</option>@endforeach</select></div>
@@ -16,6 +16,7 @@
             </div>
             <div class="form-group"><label for="subject">Judul laporan</label><input id="subject" name="subject" value="{{ old('subject') }}" maxlength="180" placeholder="Contoh: QR nota tidak terbaca di Android" required></div>
             <div class="form-group"><label for="description">Uraian laporan</label><textarea id="description" name="description" rows="9" maxlength="10000" placeholder="Jelaskan masalah, langkah yang dilakukan, dan hasil yang diharapkan. Untuk enhancement, jelaskan fitur yang Anda butuhkan." required>{{ old('description') }}</textarea></div>
+            <x-ticket-upload id="report-files" />
             <div class="filter-actions"><button class="btn btn-primary">Kirim tiket ke admin</button><a class="btn btn-secondary" href="{{ route('tickets.index') }}">Batal</a></div>
         </form>
     </section>

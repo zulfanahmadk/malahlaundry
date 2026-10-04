@@ -6,12 +6,15 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TicketWorkflow
 {
+    public function __construct(private TicketAttachments $attachments)
+    {
+    }
+
     public function create(Request $request): SupportTicket
     {
         abort_unless($request->user()?->isOwner(), 403);
@@ -20,10 +23,11 @@ class TicketWorkflow
             'type' => ['required', Rule::in(array_keys(SupportTicket::TYPES))],
             'platform' => ['required', Rule::in(array_keys(SupportTicket::PLATFORMS))],
             'subject' => 'required|string|max:180', 'description' => 'required|string|max:10000',
-        ]);
+            ...$this->attachments->rules(),
+        ], $this->attachments->messages());
         for ($attempt = 0; $attempt < 5; $attempt++) {
             try {
-                return DB::transaction(function () use ($request, $data) {
+                return $this->attachments->transaction(function (array &$paths) use ($request, $data) {
                     $owner = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
                     abort_unless($owner->active && $owner->isOwner(), 403);
                     $existing = SupportTicket::where('uuid', $data['submission_uuid'])->first();
@@ -39,7 +43,7 @@ class TicketWorkflow
                         'subject' => $data['subject'], 'description' => $data['description'],
                         'status' => 'SUBMITTED', 'progress' => 0,
                     ]);
-                    $this->history($ticket, $owner, 'Tiket dikirim ke admin.');
+                    $this->history($ticket, $owner, 'Tiket dikirim ke admin.', $request, $paths);
                     return $ticket;
                 });
             } catch (UniqueConstraintViolationException) {
@@ -57,8 +61,9 @@ class TicketWorkflow
             'status' => ['required', Rule::in(array_keys(SupportTicket::STATUSES))],
             'progress' => 'nullable|integer|min:0|max:100',
             'message' => 'required|string|max:10000',
-        ]);
-        DB::transaction(function () use ($request, $ticket, $data) {
+            ...$this->attachments->rules(),
+        ], $this->attachments->messages());
+        $this->attachments->transaction(function (array &$paths) use ($request, $ticket, $data) {
             $ticket = SupportTicket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
             if ($ticket->revision !== (int) $data['revision']) {
                 throw ValidationException::withMessages(['revision' => 'Tiket sudah diperbarui. Muat ulang halaman sebelum menyimpan.']);
@@ -79,27 +84,28 @@ class TicketWorkflow
                 'result' => in_array($data['status'], ['RESOLVED', 'REJECTED'], true) ? $data['message'] : null,
                 'revision' => $ticket->revision + 1,
             ])->save();
-            $this->history($ticket, $request->user(), $data['message']);
+            $this->history($ticket, $request->user(), $data['message'], $request, $paths);
         });
     }
 
     public function reply(Request $request, SupportTicket $ticket): void
     {
-        $message = $request->validate(['message' => 'required|string|max:10000'])['message'];
-        DB::transaction(function () use ($request, $ticket, $message) {
+        $message = $request->validate(['message' => 'required|string|max:10000', ...$this->attachments->rules()], $this->attachments->messages())['message'];
+        $this->attachments->transaction(function (array &$paths) use ($request, $ticket, $message) {
             $ticket = SupportTicket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
             $actor = $request->user();
             abort_unless($actor?->isAdmin() || ($actor?->isOwner() && $ticket->submitted_by === $actor->id), 404);
             $ticket->increment('revision');
-            $this->history($ticket, $actor, $message);
+            $this->history($ticket, $actor, $message, $request, $paths);
         });
     }
 
-    private function history(SupportTicket $ticket, User $actor, string $message): void
+    private function history(SupportTicket $ticket, User $actor, string $message, Request $request, array &$paths): void
     {
-        $ticket->updates()->create([
+        $update = $ticket->updates()->create([
             'actor_id' => $actor->id, 'actor_name' => $actor->name, 'actor_role' => $actor->role,
             'status' => $ticket->status, 'progress' => $ticket->progress, 'message' => $message,
         ]);
+        $this->attachments->store($update, $request->file('attachments', []), $paths);
     }
 }

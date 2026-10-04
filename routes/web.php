@@ -29,6 +29,7 @@ Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin
     Route::get('/audit', [\App\Http\Controllers\Web\AdminAuditController::class, 'index'])->name('audit.index');
     Route::get('/tickets', [\App\Http\Controllers\Web\TicketController::class, 'adminIndex'])->name('tickets.index');
     Route::get('/tickets/{ticket}', [\App\Http\Controllers\Web\TicketController::class, 'show'])->whereUuid('ticket')->name('tickets.show');
+    Route::get('/tickets/{ticket}/attachments/{attachment}', [\App\Http\Controllers\Web\TicketController::class, 'download'])->whereUuid('ticket')->whereNumber('attachment')->name('tickets.attachments.download');
     Route::post('/tickets/{ticket}', [\App\Http\Controllers\Web\TicketController::class, 'update'])->whereUuid('ticket')->name('tickets.update');
     Route::post('/tickets/{ticket}/reply', [\App\Http\Controllers\Web\TicketController::class, 'reply'])->whereUuid('ticket')->name('tickets.reply');
     Route::get('/users', [\App\Http\Controllers\Web\AdminUserController::class, 'index'])->name('users.index');
@@ -54,6 +55,7 @@ Route::middleware(['auth:web', 'active', 'owner', 'branch'])->group(function () 
     Route::get('/tickets/create', [\App\Http\Controllers\Web\TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [\App\Http\Controllers\Web\TicketController::class, 'store'])->name('tickets.store');
     Route::get('/tickets/{ticket}', [\App\Http\Controllers\Web\TicketController::class, 'show'])->whereUuid('ticket')->name('tickets.show');
+    Route::get('/tickets/{ticket}/attachments/{attachment}', [\App\Http\Controllers\Web\TicketController::class, 'download'])->whereUuid('ticket')->whereNumber('attachment')->name('tickets.attachments.download');
     Route::post('/tickets/{ticket}/reply', [\App\Http\Controllers\Web\TicketController::class, 'reply'])->whereUuid('ticket')->name('tickets.reply');
     Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'ownerIndex'])->name('apk.index');
     Route::get('/apk/{id}/download', [\App\Http\Controllers\Web\ApkReleaseController::class, 'ownerDownload'])->whereNumber('id')->name('apk.download');

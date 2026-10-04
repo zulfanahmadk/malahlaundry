@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
+use App\Models\TicketAttachment;
 use App\Services\TicketWorkflow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TicketController extends Controller
 {
@@ -65,7 +68,7 @@ class TicketController extends Controller
     {
         $admin = $request->user()->isAdmin();
         abort_unless($admin || $ticket->submitted_by === $request->user()->id, 404);
-        $ticket->load(['submittedBy:id,name,username', 'branch:id,name,code', 'updates']);
+        $ticket->load(['submittedBy:id,name,username', 'branch:id,name,code', 'updates.attachments']);
         return view('tickets.show', compact('ticket', 'admin'));
     }
 
@@ -73,6 +76,19 @@ class TicketController extends Controller
     {
         $workflow->update($request, $ticket);
         return redirect()->route('admin.tickets.show', $ticket)->with('success', 'Progres tiket berhasil diperbarui dan dapat dilihat owner.');
+    }
+
+    public function download(Request $request, SupportTicket $ticket, TicketAttachment $attachment): StreamedResponse
+    {
+        abort_unless($request->user()->isAdmin() || $ticket->submitted_by === $request->user()->id, 404);
+        abort_unless($ticket->updates()->whereKey($attachment->ticket_update_id)->exists(), 404);
+        $disk = Storage::disk('ticket_attachments');
+        abort_unless($disk->exists($attachment->path), 404, 'Lampiran tidak tersedia.');
+        return $disk->download($attachment->path, $attachment->original_name, [
+            'Content-Type' => $attachment->mime_type,
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     public function reply(Request $request, SupportTicket $ticket, TicketWorkflow $workflow): RedirectResponse
