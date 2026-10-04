@@ -1,6 +1,21 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-admin-user-form]').forEach(form => {
+        const role = form.querySelector('[name="role"]');
+        const branchGroup = form.querySelector('[data-staff-branch]');
+        const branch = form.querySelector('[name="branch_id"]');
+        const help = form.querySelector('[data-branch-access]');
+        const updateRole = () => {
+            const admin = role.value === 'admin';
+            branchGroup.hidden = admin;
+            branch.disabled = admin;
+            branch.required = !admin;
+            help.textContent = admin ? 'Admin mengelola sistem tanpa akses operasional cabang.' : (role.value === 'owner' ? 'Penempatan menjadi cabang awal. Owner tetap dapat mengakses seluruh cabang.' : 'Kasir hanya dapat mengakses cabang penempatan.');
+        };
+        role.addEventListener('change', updateRole);
+        updateRole();
+    });
     document.querySelectorAll('input[type="password"]').forEach(input => {
         const wrapper = document.createElement('span');
         wrapper.className = 'password-field';

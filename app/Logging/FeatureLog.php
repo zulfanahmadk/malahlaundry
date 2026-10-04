@@ -46,6 +46,12 @@ class FeatureLog
         if ($uri === 'admin/password') {
             return 'autentikasi';
         }
+        if ($uri === 'admin/users' || str_starts_with($uri, 'admin/users/')) {
+            return 'pengguna';
+        }
+        if ($uri === 'admin/branches') {
+            return 'cabang';
+        }
         if ($uri === 'auth/profile') {
             return 'profil';
         }

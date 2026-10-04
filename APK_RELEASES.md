@@ -13,7 +13,25 @@ cabang, layanan, dan rilis APK, termasuk jumlah aktif/nonaktif. Ringkasan hanya
 berisi angka agregat seluruh sistem tanpa identitas pengguna, rincian cabang,
 pelanggan, transaksi, atau laporan keuangan. Admin tidak dapat memilih atau
 masuk ke cabang owner melalui web maupun API, termasuk dengan token lama.
-Menu admin berisi Ringkasan, Versi APK, dan Log Audit. Pengelolaan toko tetap khusus owner.
+Admin dan owner menggunakan layout dashboard yang sama: sidebar, topbar, menu
+responsif, kartu, tabel, dan formulir. Menu mengikuti peran. Admin berisi
+Ringkasan, Pengguna, Cabang, Versi APK, dan Log Audit.
+
+Admin mengelola semua akun di `/admin/users`: tambah, edit nama/username/peran,
+password baru, penempatan cabang, dan status aktif/nonaktif. Semua peran
+(admin/owner/kasir) dapat dikelola, tetapi admin tidak dapat menonaktifkan atau
+menurunkan peran akun sendiri. Penempatan dan akses saat ini ditampilkan:
+owner dapat memilih seluruh cabang; kasir hanya cabang penempatan; admin tidak
+memiliki akses operasional cabang. Filter cabang memeriksa penempatan, bukan
+mengubah izin akses owner. `/admin/branches` menampilkan daftar cabang dan jumlah
+owner/kasir yang ditempatkan, dengan tautan ke pengguna pada penempatan itu.
+Tidak ada perubahan aturan akses owner atau operasional toko.
+
+Perubahan username/password/peran/cabang atau penonaktifan mencabut token
+Android, cookie remember lama, dan sesi browser database pengguna yang terdampak.
+Sesi admin sendiri tetap aktif setelah pengubahan akunnya. Aktivitas perubahan
+tercatat pada audit dan log fitur pengguna. Owner tetap tidak dapat membuat
+atau mengubah akun admin melalui menu/API owner.
 
 Log Audit `/admin/audit` hanya dapat dibaca admin aktif. Catatan dimulai setelah
 migrasi `2026_10_04_000003_create_audit_logs` dipasang, tanpa mengimpor log teks

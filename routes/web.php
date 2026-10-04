@@ -27,6 +27,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Web\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/audit', [\App\Http\Controllers\Web\AdminAuditController::class, 'index'])->name('audit.index');
+    Route::get('/users', [\App\Http\Controllers\Web\AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [\App\Http\Controllers\Web\AdminUserController::class, 'create'])->name('users.create');
+    Route::post('/users', [\App\Http\Controllers\Web\AdminUserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [\App\Http\Controllers\Web\AdminUserController::class, 'edit'])->name('users.edit');
+    Route::post('/users/{user}', [\App\Http\Controllers\Web\AdminUserController::class, 'update'])->name('users.update');
+    Route::post('/users/{user}/toggle', [\App\Http\Controllers\Web\AdminUserController::class, 'toggle'])->name('users.toggle');
+    Route::get('/branches', [\App\Http\Controllers\Web\AdminUserController::class, 'branches'])->name('branches.index');
     Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'index'])->name('apk.index');
     Route::post('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'upload'])->name('apk.upload');
     Route::post('/password', [\App\Http\Controllers\Web\ApkReleaseController::class, 'password'])->name('password');

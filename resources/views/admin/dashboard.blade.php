@@ -4,28 +4,16 @@
 @section('content')
     <div class="section-head"><p>Jumlah pengguna dan cabang di seluruh sistem.</p><a class="btn btn-secondary" href="{{ route('admin.dashboard') }}">Perbarui ringkasan</a></div>
     <div class="stats-grid">
-        <section class="stat-card" aria-label="Jumlah pengguna toko">
-            <h2 class="stat-label">Pengguna toko</h2>
-            <p class="stat-value">{{ number_format($summary['users'], 0, ',', '.') }}</p>
-            <p class="stat-note">{{ $summary['owners'] }} owner · {{ $summary['cashiers'] }} kasir</p>
-            <p class="form-help">{{ $summary['active_users'] }} aktif · {{ $summary['users'] - $summary['active_users'] }} nonaktif</p>
-        </section>
-        <section class="stat-card" aria-label="Jumlah cabang">
-            <h2 class="stat-label">Cabang</h2>
-            <p class="stat-value">{{ number_format($summary['branches'], 0, ',', '.') }}</p>
-            <p class="stat-note">{{ $summary['active_branches'] }} aktif · {{ $summary['branches'] - $summary['active_branches'] }} nonaktif</p>
-        </section>
-        <section class="stat-card" aria-label="Jumlah layanan">
-            <h2 class="stat-label">Layanan</h2>
-            <p class="stat-value">{{ number_format($summary['services'], 0, ',', '.') }}</p>
-            <p class="stat-note">{{ $summary['active_services'] }} aktif · {{ $summary['services'] - $summary['active_services'] }} nonaktif</p>
-        </section>
-        <section class="stat-card" aria-label="Jumlah rilis APK">
-            <h2 class="stat-label">Rilis APK</h2>
-            <p class="stat-value">{{ number_format($summary['apk_releases'], 0, ',', '.') }}</p>
-            <p class="stat-note">Aplikasi utama dan QA</p>
-        </section>
+        <x-workspace-stat label="Pengguna toko" :value="number_format($summary['users'], 0, ',', '.')" :note="$summary['owners'].' owner · '.$summary['cashiers'].' kasir · '.$summary['active_users'].' aktif'" icon="imgIconUsers" />
+        <x-workspace-stat label="Cabang" :value="number_format($summary['branches'], 0, ',', '.')" :note="$summary['active_branches'].' aktif · '.($summary['branches'] - $summary['active_branches']).' nonaktif'" icon="imgIconBuilding" tone="green" />
+        <x-workspace-stat label="Layanan" :value="number_format($summary['services'], 0, ',', '.')" :note="$summary['active_services'].' aktif · '.($summary['services'] - $summary['active_services']).' nonaktif'" icon="imgIconCheck" tone="teal" />
+        <x-workspace-stat label="Rilis APK" :value="number_format($summary['apk_releases'], 0, ',', '.')" note="Aplikasi utama dan QA" icon="imgIconBuilding" tone="orange" />
     </div>
+    <section class="card" style="margin-top:20px">
+        <h2>Pengelolaan pengguna</h2>
+        <p>Kelola akun admin, owner, dan kasir. Lihat penempatan dan akses cabang setiap pengguna.</p>
+        <a class="btn btn-primary" href="{{ route('admin.users.index') }}">Kelola pengguna</a>
+    </section>
     <section class="card" style="margin-top:20px">
         <h2>Pembaruan aplikasi Android</h2>
         <p>Terbitkan APK baru dan lihat riwayat versi aplikasi.</p>
