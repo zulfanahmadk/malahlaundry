@@ -1,0 +1,65 @@
+# Admin sistem dan pembaruan Android
+
+Android versi 1.7.0 (versionCode 10) menggunakan server produksi
+`https://laundry.malahproject.com` pada formulir login tanpa kolom URL.
+Server tersimpan dari instalasi lama dipertahankan untuk melindungi antrean offline;
+sinkronkan data pada server lama sebelum pindah akun/server. Alamat server khusus
+hanya tersedia dalam pemanggilan repository untuk fixture pengujian, bukan UI.
+
+Role `admin` mengelola APK melalui `/admin/apk`. Role ini terpisah dari owner dan
+kasir, tidak dapat login Android, serta tidak dapat diedit oleh owner. Login web
+admin langsung membuka halaman APK. Menu pengelolaan toko tetap khusus owner.
+
+Untuk menyiapkan server setelah kode di-deploy:
+
+```sh
+php artisan migrate --force
+php artisan db:seed --class=AdminSeeder --force
+php artisan config:cache
+php artisan queue:restart
+```
+
+AdminSeeder juga dijalankan oleh DatabaseSeeder untuk instalasi baru. Pada server
+yang sudah berisi data, jalankan AdminSeeder saja; jangan menjalankan seeder akun
+demo/pengguna lainnya. Username awal `admin`, dapat diubah lewat `ADMIN_USERNAME`.
+Password awal acak atau dari `ADMIN_INITIAL_PASSWORD`; seeder tidak mengganti
+password akun admin yang sudah ada. Password acak pertama tersimpan di
+`storage/app/private/admin-initial-password.txt`. Ganti password melalui halaman
+admin; file kredensial awal dihapus setelah perubahan berhasil. Jangan commit
+file ini maupun file APK ke Git.
+
+Upload menerima APK sampai 100 MiB. Server memerlukan ekstensi PHP zip dan
+mbstring. Sesuaikan `upload_max_filesize`, `post_max_size`, serta batas body
+Nginx/proxy agar sesuai ukuran file, termasuk overhead multipart. Batas proxy
+seperti Cloudflare dapat lebih rendah daripada batas aplikasi.
+
+Web membaca package, versionName, dan versionCode langsung dari binary manifest
+APK. APK utama `com.malahlaundry.app` dan QA `com.malahlaundry.app.qa` diterbitkan
+terpisah. Version code baru harus lebih besar dari rilis sebelumnya untuk package
+yang sama. APK tersimpan privat; endpoint unduh hanya menyajikan file, bukan
+menjalankannya. Riwayat rilis lama dipertahankan. Tidak ada pengiriman ke Play Store.
+
+Endpoint publik Android:
+
+- `GET /api/v1/app-release?package=com.malahlaundry.app`: metadata versi terbaru;
+  `release: null` bila belum ada APK.
+- `GET /api/v1/app-releases/{id}/download`: file APK.
+
+Android memeriksa versi saat aplikasi dibuka/kembali aktif (maksimal sekali tiap
+5 menit), dan menyediakan tombol Cek pembaruan. Jika versionCode lebih besar,
+dialog menampilkan catatan rilis dan ukuran unduhan. Pengguna dapat memilih Nanti.
+Unduhan memakai HTTPS dari server tetap, lalu memeriksa ukuran, SHA-256, package,
+versionCode, dan kompatibilitas sertifikat dengan aplikasi yang terpasang.
+Pemasang Android memverifikasi tanda tangan dan meminta konfirmasi pengguna.
+Izin pemasangan dari aplikasi ini dapat diminta sekali lewat pengaturan Android.
+Tidak ada uninstall, reset database, atau penghapusan antrean sinkronisasi.
+
+Pakai sertifikat/keystore yang sama untuk setiap pembaruan. QA tidak menggantikan
+aplikasi utama. Jangan mengunggah APK release tanpa tanda tangan. APK yang dibuat
+di mesin berbeda dengan debug keystore berbeda tidak dapat memperbarui instalasi
+yang sudah ada; gunakan kunci penandatanganan distribusi yang konsisten.
+
+Instalasi lama yang belum mempunyai pemeriksa pembaruan harus memasang versi
+1.7.0 ini secara manual sekali. Setelah itu aplikasi dapat menemukan rilis baru
+dari web. Koneksi gagal atau pembaruan ditunda tidak menghalangi penggunaan POS
+offline. Verifikasi pemasangan pada HP dilakukan setelah endpoint produksi tersedia.

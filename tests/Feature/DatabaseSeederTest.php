@@ -19,7 +19,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
         $this->assertDatabaseCount('transaction_items', 0);
         $this->assertDatabaseCount('customers', 0);
-        $this->assertDatabaseCount('users', 2);
+        $this->assertDatabaseCount('users', 3);
         $this->assertDatabaseCount('services', 4);
         $this->assertDatabaseCount('store_settings', 1);
     }

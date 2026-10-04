@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'branch' => \App\Http\Middleware\SelectBranch::class,
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

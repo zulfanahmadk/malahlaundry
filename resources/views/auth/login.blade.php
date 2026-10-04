@@ -31,7 +31,7 @@
             </section>
             <section class="login-form-panel">
                 <h2>Masuk ke Malah Laundry</h2>
-                <p class="intro">Gunakan akun owner yang telah terdaftar.</p>
+                <p class="intro">Gunakan akun owner atau admin yang telah terdaftar.</p>
                 @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
                 <form action="{{ url('/login') }}" method="POST">@csrf
                     <div class="form-group">

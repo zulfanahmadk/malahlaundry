@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 class FeatureLog
 {
     public const ROUTES = [
+        'admin' => 'versi-apk', 'app-release' => 'versi-apk', 'app-releases' => 'versi-apk',
         'login' => 'autentikasi', 'logout' => 'autentikasi', 'auth' => 'autentikasi',
         'sync' => 'sinkronisasi', 'synchronization' => 'sinkronisasi',
         'transactions' => 'transaksi', 'customers' => 'pelanggan', 'services' => 'layanan',

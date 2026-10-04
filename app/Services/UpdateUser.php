@@ -11,6 +11,7 @@ class UpdateUser
 {
     public function handle(Request $request, User $user): User
     {
+        abort_if($user->isAdmin(), 403, 'Akun admin sistem tidak dapat diubah oleh owner.');
         $data = $request->validate([
             'branch_id' => 'sometimes|required|exists:branches,id',
             'name' => 'required|string|max:255',

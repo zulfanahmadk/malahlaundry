@@ -126,7 +126,7 @@ class DashboardController extends Controller
     public function users(Request $request): View
     {
         $filters = $request->validate(['q' => 'nullable|string|max:255', 'role' => 'nullable|in:owner,cashier', 'active' => 'nullable|in:0,1']);
-        $query = User::where('branch_id', $request->attributes->get('branch_id'));
+        $query = User::where('branch_id', $request->attributes->get('branch_id'))->where('role', '!=', 'admin');
         $stats = ['total' => (clone $query)->count(), 'active' => (clone $query)->where('active', true)->count(), 'devices' => \App\Models\DeviceSyncState::count(), 'inactive' => (clone $query)->where('active', false)->count()];
         $users = $query->when($filters['q'] ?? null, fn ($q, $term) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('username', 'like', '%'.$term.'%')))
             ->when($filters['role'] ?? null, fn ($q, $role) => $q->where('role', $role))
@@ -159,6 +159,7 @@ class DashboardController extends Controller
     public function toggleUser(int $id): RedirectResponse
     {
         $user = User::findOrFail($id);
+        abort_if($user->isAdmin(), 403);
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
         }
@@ -175,6 +176,7 @@ class DashboardController extends Controller
 
     public function editUser(User $user): View
     {
+        abort_if($user->isAdmin(), 403);
         return view('dashboard.user-edit', compact('user'));
     }
 

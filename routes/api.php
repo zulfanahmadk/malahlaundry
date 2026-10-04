@@ -14,6 +14,8 @@ use App\Http\Controllers\StoreSettingsController;
 */
 
 Route::prefix('v1')->group(function () {
+    Route::get('/app-release', [\App\Http\Controllers\Web\ApkReleaseController::class, 'latest'])->middleware('throttle:60,1');
+    Route::get('/app-releases/{id}/download', [\App\Http\Controllers\Web\ApkReleaseController::class, 'download'])->whereNumber('id')->middleware('throttle:20,1');
     // Public Auth
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 

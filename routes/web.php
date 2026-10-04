@@ -15,7 +15,7 @@ use App\Http\Controllers\StoreSettingsController;
 
 // Redirect root to dashboard
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return redirect()->route(auth()->user()?->isAdmin() ? 'admin.apk.index' : 'dashboard');
 });
 
 // Authentication Web
@@ -23,6 +23,12 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/store/logo', [StoreSettingsController::class, 'logo'])->name('store.logo');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'index'])->name('apk.index');
+    Route::post('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'upload'])->name('apk.upload');
+    Route::post('/password', [\App\Http\Controllers\Web\ApkReleaseController::class, 'password'])->name('password');
+});
 
 // Public Paperless Digital Receipt (Tanpa Auth, UUIDv4)
 Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])

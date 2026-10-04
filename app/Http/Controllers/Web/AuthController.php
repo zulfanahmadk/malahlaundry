@@ -13,8 +13,8 @@ class AuthController extends Controller
     public function showLogin(Request $request): View|RedirectResponse
     {
         if (Auth::check()) {
-            if ($request->user()->active && $request->user()->isOwner()) {
-                return redirect()->route('dashboard');
+            if ($request->user()->active && ($request->user()->isOwner() || $request->user()->isAdmin())) {
+                return redirect()->route($request->user()->isAdmin() ? 'admin.apk.index' : 'dashboard');
             }
 
             Auth::logout();
@@ -31,14 +31,15 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'active' => true, 'role' => 'owner'], $request->boolean('remember'))) {
+        if (Auth::attemptWhen(['username' => $credentials['username'], 'password' => $credentials['password'], 'active' => true], fn ($user) => $user->isOwner() || $user->isAdmin(), $request->boolean('remember'))) {
             $request->session()->regenerate();
             $request->user()->forceFill(['last_login_at' => now()])->save();
-            return redirect()->intended(route('dashboard'));
+            return $request->user()->isAdmin()
+                ? redirect()->route('admin.apk.index') : redirect()->intended(route('dashboard'));
         }
 
         return back()->withErrors([
-            'username' => 'Login gagal. Gunakan akun owner yang aktif dengan username dan password yang sesuai.',
+            'username' => 'Login gagal. Gunakan akun owner atau admin yang aktif dengan username dan password yang sesuai.',
         ])->onlyInput('username');
     }
 

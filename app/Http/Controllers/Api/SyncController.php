@@ -321,7 +321,7 @@ class SyncController extends Controller
     public function pull(): JsonResponse
     {
         return response()->json([
-            'users' => User::where('branch_id', request()->attributes->get('branch_id'))->select('id', 'name', 'username', 'role', 'active', 'branch_id')->get(),
+            'users' => User::where('branch_id', request()->attributes->get('branch_id'))->where('role', '!=', 'admin')->select('id', 'name', 'username', 'role', 'active', 'branch_id')->get(),
             'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active', 'speed', 'duration_hours', 'branch_id')->get(),
             'wa_templates' => collect(app(\App\Services\StoreConfiguration::class)->read()['templates'])->map(fn ($content, $type) => ['type' => $type, 'content' => $content])->values(),
             'store' => app(\App\Services\StoreConfiguration::class)->read(true),

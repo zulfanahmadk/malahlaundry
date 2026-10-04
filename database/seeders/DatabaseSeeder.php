@@ -86,5 +86,6 @@ class DatabaseSeeder extends Seeder
         );
 
         // Data transaksi dan pelanggan diisi melalui aplikasi, tanpa data demo.
+        $this->call(AdminSeeder::class);
     }
 }

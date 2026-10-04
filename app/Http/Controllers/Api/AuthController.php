@@ -58,6 +58,10 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if ($user->isAdmin()) {
+            return response()->json(['status' => 'error', 'message' => 'Akun admin sistem hanya digunakan di web.'], 403);
+        }
+
         if (!$user->active) {
             return response()->json([
                 'status' => 'error',
