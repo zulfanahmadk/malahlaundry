@@ -1,6 +1,19 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-ticket-status-form]').forEach(form => {
+        const status = form.querySelector('[name="status"]');
+        const group = form.querySelector('[data-ticket-progress]');
+        const progress = form.querySelector('[name="progress"]');
+        const update = () => {
+            const working = status.value === 'IN_PROGRESS';
+            group.hidden = !working;
+            progress.disabled = !working;
+            progress.required = working;
+        };
+        status.addEventListener('change', update);
+        update();
+    });
     document.querySelectorAll('[data-admin-user-form]').forEach(form => {
         const role = form.querySelector('[name="role"]');
         const branchGroup = form.querySelector('[data-staff-branch]');

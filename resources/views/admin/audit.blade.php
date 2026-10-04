@@ -3,8 +3,8 @@
 @section('page_title', 'Log Audit')
 @section('content')
     <p style="margin-bottom:16px">Riwayat aktivitas sistem. Waktu ditampilkan dalam WIB.</p>
-    <section class="card" style="margin-bottom:20px">
-        <form method="GET" action="{{ route('admin.audit.index') }}">
+    <section class="card">
+        <form method="GET" action="{{ route('admin.audit.index') }}" class="stack">
             <div class="stats-grid">
                 <div class="form-group"><label for="from">Tanggal mulai</label><input id="from" type="date" name="from" value="{{ $filters['from'] ?? '' }}"></div>
                 <div class="form-group"><label for="to">Tanggal akhir</label><input id="to" type="date" name="to" value="{{ $filters['to'] ?? '' }}"></div>

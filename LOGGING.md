@@ -7,7 +7,8 @@ File dibuat saat fitur menulis log, bukan semuanya sekaligus.
 
 Fitur yang tersedia: autentikasi, sinkronisasi, transaksi, pelanggan, layanan,
 pengguna, presensi, laporan, nota, pengaturan-toko, cabang, jam-buka,
-template-whatsapp, profil, notifikasi, dashboard, admin-sistem, versi-apk, dan aplikasi.
+template-whatsapp, profil, notifikasi, dashboard, admin-sistem, versi-apk,
+tiket-bantuan, dan aplikasi.
 Web dan API dengan fitur yang sama masuk ke file yang sama.
 Sinkronisasi batch masuk ke sinkronisasi; rincian transaksi dalam batch tidak
 dipecah menjadi log terpisah. CLI dan proses tanpa konteks fitur masuk ke aplikasi.

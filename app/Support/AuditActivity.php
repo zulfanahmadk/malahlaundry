@@ -7,6 +7,9 @@ class AuditActivity
     public static function label(string $action, string $method): string
     {
         return match (true) {
+            $action === 'tickets' && $method === 'POST' => 'Kirim tiket bantuan',
+            $action === 'admin/tickets/{ticket}' && $method === 'POST' => 'Perbarui progres tiket',
+            str_contains($action, 'tickets/') && str_ends_with($action, '/reply') => 'Kirim tanggapan tiket',
             in_array($action, ['login', 'api/v1/auth/login'], true) => 'Masuk akun',
             in_array($action, ['logout', 'api/v1/auth/logout'], true) => 'Keluar akun',
             $action === 'admin/audit' => 'Lihat log audit',

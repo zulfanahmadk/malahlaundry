@@ -6,6 +6,7 @@
         <title>@yield('title', 'Beranda') · {{ $store['name'] }}</title>
         <link rel="icon" type="image/svg+xml" href="{{ asset('figma/e5cb0.svg') }}">
         <link rel="stylesheet" href="{{ asset('css/workspace.css').'?v='.filemtime(public_path('css/workspace.css')) }}">
+        <link rel="stylesheet" href="{{ asset('css/support.css').'?v='.filemtime(public_path('css/support.css')) }}">
         @stack('styles')
     </head>
     <body class="workspace-page">
@@ -13,9 +14,11 @@
             $isAdmin = auth()->user()->isAdmin();
             $homeRoute = $isAdmin ? 'admin.dashboard' : 'dashboard';
             $navGroups = $isAdmin ? [
+                ['Dukungan', 'imgSidebarIconNotifikasi', [['Tiket masuk','admin.tickets.*','admin.tickets.index','imgSidebarIconTemplatePesan']]],
                 ['Manajemen', 'imgSidebarIconManajemen', [['Pengguna','admin.users.*','admin.users.index','imgSidebarIconPengguna'],['Cabang','admin.branches.*','admin.branches.index','imgSidebarIconCabang']]],
                 ['Sistem', 'imgSidebarIconPengaturan', [['Versi APK','admin.apk.*','admin.apk.index','imgSidebarIconSinkronisasi'],['Log Audit','admin.audit.*','admin.audit.index','imgSidebarIconLaporan']]],
             ] : [
+                ['Dukungan', 'imgSidebarIconNotifikasi', [['Tiket bantuan','tickets.*','tickets.index','imgSidebarIconTemplatePesan']]],
                 ['Operasional', 'imgSidebarIconOperasional', [['Cucian','transactions.*','transactions.index','imgSidebarIconCucian'],['Pelanggan','customers.*','customers.index','imgSidebarIconPelanggan'],['Laporan','reports.*','reports.index','imgSidebarIconLaporan']]],
                 ['Manajemen', 'imgSidebarIconManajemen', [['Layanan','services.*','services.index','imgSidebarIconLayanan'],['Cabang','branches.*','branches.index','imgSidebarIconCabang'],['Pengguna','users.*','users.index','imgSidebarIconPengguna'],['Presensi','attendances.*','attendances.index','imgSidebarIconPresensi']]],
                 ['Pengaturan', 'imgSidebarIconPengaturan', [['Toko & Nota','settings.*','settings.edit','imgSidebarIconTokoNota'],['Jam Buka','hours.*','hours.edit','imgSidebarIconJamBuka'],['Template Pesan','templates.*','templates.edit','imgSidebarIconTemplatePesan'],['Profil','profile.*','profile.edit','imgSidebarIconProfil'],['Sinkronisasi','sync.*','sync.index','imgSidebarIconSinkronisasi'],['APK Android','apk.*','apk.index','imgIconDevice'],['Notifikasi','notifications.*','notifications.index','imgSidebarIconNotifikasi']]],
@@ -51,7 +54,7 @@
                     </summary>
                     <div class="nav-group-links">
                         @foreach($links as [$label, $pattern, $route, $navIcon])<a class="nav-link {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($route) }}" @if(request()->routeIs($pattern)) aria-current="page" @endif>
-                            <x-figma-icon :name="$navIcon" />{{ $label }}</a>@endforeach
+                            <x-figma-icon :name="$navIcon" />{{ $label }}@if($route === 'admin.tickets.index' && ($newTicketCount ?? 0) > 0)<span class="nav-ticket-count" aria-label="{{ $newTicketCount }} tiket menunggu keputusan">{{ $newTicketCount }}</span>@endif</a>@endforeach
                     </div>
                 </details>
                 @endforeach

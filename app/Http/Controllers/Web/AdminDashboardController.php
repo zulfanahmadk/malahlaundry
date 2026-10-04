@@ -22,7 +22,7 @@ class AdminDashboardController extends Controller
         $branches = Branch::selectRaw('COUNT(*) AS total, SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) AS active')->first();
         $services = Service::withoutGlobalScope('branch')->selectRaw('COUNT(*) AS total, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS active')->first();
 
-        return view('admin.dashboard', ['summary' => [
+        return view('admin.dashboard', ['pendingTickets' => \App\Models\SupportTicket::where('status', 'SUBMITTED')->count(), 'summary' => [
             'users' => (int) $users->total,
             'active_users' => (int) $users->active,
             'owners' => (int) $users->owners,

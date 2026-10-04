@@ -30,7 +30,7 @@ class Workspace
     {
         static $manifest;
         $manifest ??= json_decode(file_get_contents(public_path('figma/manifest.json')), true);
-        $file = $manifest[$node][$name] ?? null;
+        $file = $manifest[$node][$name] ?? $manifest['127-1725'][$name] ?? $manifest['127-45'][$name] ?? null;
         return $file ? asset('figma/'.$file) : null;
     }
 }

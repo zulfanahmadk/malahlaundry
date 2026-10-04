@@ -8,6 +8,7 @@ class FeatureLog
 {
     public const ROUTES = [
         'admin' => 'admin-sistem', 'apk' => 'versi-apk', 'app-release' => 'versi-apk', 'app-releases' => 'versi-apk',
+        'tickets' => 'tiket-bantuan',
         'login' => 'autentikasi', 'logout' => 'autentikasi', 'auth' => 'autentikasi',
         'sync' => 'sinkronisasi', 'synchronization' => 'sinkronisasi',
         'transactions' => 'transaksi', 'customers' => 'pelanggan', 'services' => 'layanan',
@@ -40,6 +41,9 @@ class FeatureLog
 
         $uri = $request->route()?->uri() ?? $request->path();
         $uri = preg_replace('#^api/v1/#', '', $uri);
+        if ($uri === 'admin/tickets' || str_starts_with($uri, 'admin/tickets/')) {
+            return 'tiket-bantuan';
+        }
         if ($uri === 'admin/apk') {
             return 'versi-apk';
         }
