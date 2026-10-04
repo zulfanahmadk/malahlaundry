@@ -83,6 +83,7 @@ class FeatureLoggingTest extends TestCase
             '/api/v1/auth/profile' => 'profil', '/n/receipt-id' => 'nota',
             '/api/v1/sync/push' => 'sinkronisasi', '/opening-hours' => 'jam-buka',
             '/reports/export' => 'laporan', '/api/v1/settings' => 'pengaturan-toko',
+            '/admin' => 'admin-sistem', '/admin/apk' => 'versi-apk', '/admin/password' => 'autentikasi',
         ] as $uri => $feature) {
             $this->assertSame($feature, FeatureLog::resolve(Request::create($uri)));
         }

@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Versi APK · Admin Sistem</title>
-    <link rel="stylesheet" href="{{ asset('css/workspace.css').'?v='.filemtime(public_path('css/workspace.css')) }}">
-</head>
-<body>
-<main class="content-body" style="max-width:1100px;margin:auto">
-    <div class="section-head"><div><h1>Versi APK</h1><p>Admin sistem · {{ auth()->user()->name }}</p></div><form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-secondary">Keluar</button></form></div>
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if($errors->any())<div class="alert alert-danger" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+@extends('layouts.admin')
+@section('title', 'Versi APK')
+@section('page_title', 'Versi APK')
+@section('content')
     <section class="card">
         <h2>Upload APK baru</h2>
         <p class="form-help">Versi dan package dibaca otomatis dari APK. APK utama dan QA dikelola terpisah. Gunakan APK bertanda tangan sama dengan aplikasi yang sudah terpasang.</p>
@@ -29,6 +21,4 @@
         <div class="form-group"><label for="confirm-password">Konfirmasi password baru</label><input id="confirm-password" type="password" name="password_confirmation" minlength="12" maxlength="72" autocomplete="new-password" required></div>
         <button class="btn btn-primary">Simpan password</button>
     </form></section>
-</main>
-<script src="{{ asset('js/workspace.js').'?v='.filemtime(public_path('js/workspace.js')) }}" defer></script>
-</body></html>
+@endsection

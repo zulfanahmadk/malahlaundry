@@ -15,7 +15,7 @@ use App\Http\Controllers\StoreSettingsController;
 
 // Redirect root to dashboard
 Route::get('/', function () {
-    return redirect()->route(auth()->user()?->isAdmin() ? 'admin.apk.index' : 'dashboard');
+    return redirect()->route(auth()->user()?->isAdmin() ? 'admin.dashboard' : 'dashboard');
 });
 
 // Authentication Web
@@ -25,6 +25,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Web\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'index'])->name('apk.index');
     Route::post('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'upload'])->name('apk.upload');
     Route::post('/password', [\App\Http\Controllers\Web\ApkReleaseController::class, 'password'])->name('password');
@@ -35,7 +36,7 @@ Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])
     ->where('uuid', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}')
     ->name('nota.public');
 
-// Web Dashboard Owner & Admin (Protected)
+// Owner store operations (Protected)
 Route::middleware(['auth:web', 'active', 'owner', 'branch'])->group(function () {
     Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'ownerIndex'])->name('apk.index');
     Route::get('/apk/{id}/download', [\App\Http\Controllers\Web\ApkReleaseController::class, 'ownerDownload'])->whereNumber('id')->name('apk.download');

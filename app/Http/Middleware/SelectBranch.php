@@ -11,6 +11,7 @@ class SelectBranch
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
+        abort_if($user->isAdmin(), 403, 'Admin sistem tidak memiliki akses operasional cabang.');
         $branchId = $request->is('api/*')
             ? $request->header('X-Branch-Id', $user->branch_id)
             : $request->session()->get('branch_id', $user->branch_id);

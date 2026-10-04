@@ -8,7 +8,12 @@ hanya tersedia dalam pemanggilan repository untuk fixture pengujian, bukan UI.
 
 Role `admin` mengelola APK melalui `/admin/apk`. Role ini terpisah dari owner dan
 kasir, tidak dapat login Android, serta tidak dapat diedit oleh owner. Login web
-admin langsung membuka halaman APK. Menu pengelolaan toko tetap khusus owner.
+admin membuka ringkasan sistem `/admin`: jumlah pengguna toko (owner/kasir),
+cabang, layanan, dan rilis APK, termasuk jumlah aktif/nonaktif. Ringkasan hanya
+berisi angka agregat seluruh sistem tanpa identitas pengguna, rincian cabang,
+pelanggan, transaksi, atau laporan keuangan. Admin tidak dapat memilih atau
+masuk ke cabang owner melalui web maupun API, termasuk dengan token lama.
+Menu admin hanya Ringkasan dan Versi APK. Pengelolaan toko tetap khusus owner.
 
 Owner dapat membuka menu Pengaturan → APK Android (`/apk`) untuk mengecek versi
 terbaru aplikasi utama, catatan rilis, tanggal penerbitan, dan ukuran APK, lalu

@@ -14,7 +14,7 @@ class AuthController extends Controller
     {
         if (Auth::check()) {
             if ($request->user()->active && ($request->user()->isOwner() || $request->user()->isAdmin())) {
-                return redirect()->route($request->user()->isAdmin() ? 'admin.apk.index' : 'dashboard');
+                return redirect()->route($request->user()->isAdmin() ? 'admin.dashboard' : 'dashboard');
             }
 
             Auth::logout();
@@ -35,7 +35,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $request->user()->forceFill(['last_login_at' => now()])->save();
             return $request->user()->isAdmin()
-                ? redirect()->route('admin.apk.index') : redirect()->intended(route('dashboard'));
+                ? redirect()->route('admin.dashboard') : redirect()->intended(route('dashboard'));
         }
 
         return back()->withErrors([

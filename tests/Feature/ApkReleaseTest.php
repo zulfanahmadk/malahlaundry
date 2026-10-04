@@ -32,10 +32,10 @@ class ApkReleaseTest extends TestCase
         $this->get('/admin/apk')->assertOk()->assertSee('Upload APK baru');
     }
 
-    public function test_admin_login_redirects_to_apk_page_and_is_rejected_by_android_login(): void
+    public function test_admin_login_redirects_to_system_summary_and_is_rejected_by_android_login(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->post('/login', ['username' => $admin->username, 'password' => 'password'])->assertRedirect('/admin/apk');
+        $this->withSession(['url.intended' => url('/dashboard')])->post('/login', ['username' => $admin->username, 'password' => 'password'])->assertRedirect('/admin');
         $this->post('/logout')->assertRedirect('/login');
         $this->postJson('/api/v1/auth/login', ['username' => $admin->username, 'password' => 'password'])->assertForbidden();
         $this->assertSame(0, $admin->tokens()->count());

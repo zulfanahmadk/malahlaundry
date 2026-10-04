@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class FeatureLog
 {
     public const ROUTES = [
-        'admin' => 'versi-apk', 'apk' => 'versi-apk', 'app-release' => 'versi-apk', 'app-releases' => 'versi-apk',
+        'admin' => 'admin-sistem', 'apk' => 'versi-apk', 'app-release' => 'versi-apk', 'app-releases' => 'versi-apk',
         'login' => 'autentikasi', 'logout' => 'autentikasi', 'auth' => 'autentikasi',
         'sync' => 'sinkronisasi', 'synchronization' => 'sinkronisasi',
         'transactions' => 'transaksi', 'customers' => 'pelanggan', 'services' => 'layanan',
@@ -40,6 +40,12 @@ class FeatureLog
 
         $uri = $request->route()?->uri() ?? $request->path();
         $uri = preg_replace('#^api/v1/#', '', $uri);
+        if ($uri === 'admin/apk') {
+            return 'versi-apk';
+        }
+        if ($uri === 'admin/password') {
+            return 'autentikasi';
+        }
         if ($uri === 'auth/profile') {
             return 'profil';
         }
