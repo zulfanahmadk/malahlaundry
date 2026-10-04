@@ -61,7 +61,7 @@ Browser memverifikasi **45 kasus** pada halaman dan viewport desktop/ponsel, ter
 
 Pipeline frontend juga diverifikasi: `npm ci` dan `npm run build` selesai dengan exit code 0, menghasilkan manifest serta bundle CSS/JavaScript produksi. `package-lock.json` ditambahkan karena sebelumnya tidak tersedia, sehingga pemasangan ulang memakai versi yang sama; versi mayor pada `package.json` tetap. Dashboard menggunakan aset CSS/JavaScript lokal yang terpisah dari bundle Vite. Overflow horizontal halaman detail pelanggan/cucian pada ponsel diperbaiki dengan membatasi kolom grid, sehingga tabel bergulir di dalam kontainernya. Foto dialog presensi disembunyikan sampai sumber foto dipilih.
 
-Hasil lokal tidak membuktikan API produksi sudah diperbarui. SSH produksi menolak autentikasi yang tersedia sehingga deployment belum dapat dilakukan. API produksi masih perlu menerima kode/middleware terbaru sebelum sinkronisasi tablet dapat dinyatakan pulih. Tidak ada commit atau push pada pekerjaan ini.
+Hasil lokal tidak membuktikan API produksi sudah diperbarui. SSH produksi menolak autentikasi yang tersedia sehingga deployment belum dapat dilakukan. API produksi masih perlu menerima kode/middleware terbaru sebelum sinkronisasi tablet dapat dinyatakan pulih. Seluruh perubahan web dan pekerjaan selanjutnya dipusatkan pada branch `qa-master`, sesuai instruksi pengguna.
 
 ## Perapihan lanjutan 4 Oktober 2026
 
@@ -81,4 +81,4 @@ Sepuluh regresi sinkronisasi baru memverifikasi presensi cabang 1 dan ACK retry,
 
 Pemeriksaan read-only MySQL lokal memastikan 1 cabang aktif, 2 akun aktif pada cabang 1, 4 layanan, serta 0 pelanggan/transaksi/item/presensi. Tidak ada reset atau seeding database bisnis. Seluruh endpoint autentikasi terlindungi, pengaturan, cabang, push/pull, records, upload foto dan laporan perangkat menggunakan middleware akun aktif dan pemilihan cabang.
 
-Antrean tablet memakai cabang yang benar tetapi API produksi belum sejalan dengan seluruh kode lokal. Bukti diagnosis dan langkah pembaruan lengkap ada di `docs/SYNC_REVIEW_2026_10_04.md` pada root workspace. API produksi belum diperbarui karena autentikasi SSH belum berhasil.
+Antrean tablet memakai cabang yang benar tetapi API produksi belum sejalan dengan seluruh kode lokal. Bukti diagnosis, hasil pengujian Android/web, dan langkah pembaruan lengkap tersedia dalam [laporan pemeriksaan bersama](SYNC_REVIEW_2026_10_04.md). API produksi belum diperbarui karena autentikasi SSH belum berhasil.
