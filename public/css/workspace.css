@@ -664,7 +664,7 @@ td:first-child {
     font-weight: 600;
 }
 
-td:last-child,th:last-child {
+td:not([colspan]):last-child,th:last-child {
     text-align: right;
 }
 
@@ -748,6 +748,10 @@ td .muted {
     padding: 40px 20px;
     text-align: center;
     color: #667085;
+}
+
+td.empty {
+    font-weight: 400;
 }
 
 .pagination {
@@ -1425,6 +1429,9 @@ input[type=file]::file-selector-button {
 }
 
 @media(max-width:600px) {
+    table:has(td.empty):not(:has(td:not([colspan]))) thead {
+        display: none;
+    }
     .content-body {
         padding: 16px;
         gap: 14px;

@@ -104,3 +104,9 @@ Kode nota, tanggal penting dan nominal tabel mempertahankan satu baris. Teks pan
 Verifikasi akhir: **95 pemeriksaan halaman** (19 halaman pada lebar 320, 390, 768, 1024 dan 1440 px) lulus, begitu juga login tanpa scroll pada lima ukuran, dialog layanan, sidebar/dropdown, keselarasan filter, ikon yang terlihat dalam ukuran asli dan petunjuk tabel. Empat ukuran tambahan memverifikasi panel notifikasi tetap di dalam viewport, Escape dan gulir tabel melalui keyboard. Tidak ada error JavaScript, HTTP/aset gagal atau overflow halaman. **67 tes Laravel / 494 assertion**, Pint, pemeriksaan sintaks JavaScript dan `git diff --check` lulus. Database/browser fixture tetap terisolasi dari database bisnis.
 
 Screenshot dan laporan geometri lokal tersedia pada direktori workspace `docs/ui-review/web-polish`. Perubahan dikerjakan dan dipush ke `qa-master`; tidak ada perubahan Android, database bisnis, `master` maupun deployment produksi dalam perapihan ini.
+
+## Koreksi tabel kosong dari screenshot pengguna
+
+Screenshot dashboard tanpa transaksi memperlihatkan pesan kosong rata kanan. Aturan `td:last-child` lebih spesifik daripada `.empty`, sehingga sel `colspan` menerima perataan nominal. Aturan kolom terakhir kini mengecualikan sel `colspan`; pesan kosong rata tengah dengan font-weight 400. Pada ponsel, header tabel yang seluruh datanya kosong disembunyikan agar pesan mendapat lebar kartu penuh. Header desktop dan tabel yang berisi data tetap ditampilkan.
+
+Verifikasi Chrome pada fixture cabang tanpa transaksi lulus **44 kasus**: 11 halaman pada lebar 1536, 1440, 390 dan 320 px. Pengukuran memastikan pesan berada di tengah, font normal, tidak terpotong dan halaman tidak meluber; header desktop tetap terlihat. Nominal pada cabang berisi transaksi tetap rata kanan. Screenshot `empty-dashboard-1536.png`, `empty-dashboard-390.png` dan `empty-table-report.json` tersedia di direktori bukti lokal yang sama. Database bisnis tidak diubah.
