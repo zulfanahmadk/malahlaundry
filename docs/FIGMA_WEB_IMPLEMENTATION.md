@@ -82,3 +82,13 @@ Sepuluh regresi sinkronisasi baru memverifikasi presensi cabang 1 dan ACK retry,
 Pemeriksaan read-only MySQL lokal memastikan 1 cabang aktif, 2 akun aktif pada cabang 1, 4 layanan, serta 0 pelanggan/transaksi/item/presensi. Tidak ada reset atau seeding database bisnis. Seluruh endpoint autentikasi terlindungi, pengaturan, cabang, push/pull, records, upload foto dan laporan perangkat menggunakan middleware akun aktif dan pemilihan cabang.
 
 Antrean tablet memakai cabang yang benar tetapi API produksi belum sejalan dengan seluruh kode lokal. Bukti diagnosis, hasil pengujian Android/web, dan langkah pembaruan lengkap tersedia dalam [laporan pemeriksaan bersama](SYNC_REVIEW_2026_10_04.md). API produksi belum diperbarui karena autentikasi SSH belum berhasil.
+
+## Pemeriksaan terbaru setelah pembaruan produksi
+
+Pengguna mengonfirmasi dashboard kembali dapat dibuka. Hash aset produksi yang diperiksa sudah cocok dengan sumber lokal, dan POST `/api/v1/sync/device` kini merespons 401 tanpa autentikasi. Pernyataan produksi belum diperbarui di bagian sebelumnya merupakan hasil pemeriksaan historis. Dashboard terautentikasi produksi belum diuji langsung melalui sesi owner dan SSH otomatis masih ditolak autentikasinya.
+
+Pemeriksaan lanjutan lulus **67 tes Laravel / 494 assertion**, Pint, **45 kasus browser**, serta **4 kasus nota/not-found desktop/ponsel**, tanpa error JavaScript, aset font/favicon gagal atau overflow. Login tanpa scroll dan buka/tutup sidebar/dropdown tetap tercakup. Nota memakai Inter lokal dan empat template memakai favicon SVG yang sudah ada; favicon ICO kosong dan tes scaffold `assertTrue(true)` beserta suite Unit kosong dihapus. Direktori kosong `tests/Unit` dan `app/Console/Commands` berhasil dibersihkan; penghapusan parent kosong `app/Console` ditolak kebijakan otomatis.
+
+Regresi API tambahan memastikan layanan yang hilang/cabang lain tetap ditolak, sedangkan referensi valid mempertahankan harga, nama, satuan dan kuantitas historis tanpa duplikasi pada retry. Pemulihan UUID lama di Android tidak mengubah aturan validasi web atau skema database. Seluruh perubahan berada di `qa-master`; perubahan web lanjutan ini belum dideploy otomatis. Bukti perangkat, cadangan dan batas verifikasi produksi tersedia dalam [laporan pemeriksaan bersama](SYNC_REVIEW_2026_10_04.md).
+
+API produksi telah mengakui transaksi nyata tablet setelah pemulihan referensi layanan: antrean 0, revision dan syncedRevision sama-sama 2, total tetap Rp155.000. Bukti ini memverifikasi jalur sinkronisasi akun kasir tersebut; hasil dashboard produksi masih berdasarkan konfirmasi pengguna, sementara dashboard berisi data diuji terautentikasi pada lingkungan lokal.
