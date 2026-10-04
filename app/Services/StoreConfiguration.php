@@ -75,8 +75,12 @@ class StoreConfiguration
             ]);
             $changes = collect($data)->except(['name', 'branch_name', 'logo', 'logo_base64', 'remove_logo'])->all();
             $changes['store_name'] = $data['name'];
-            if (isset($changes['receipt_preferences'])) $changes['receipt_preferences'] = array_map(fn ($value) => (bool) $value, $changes['receipt_preferences']);
-            if (isset($data['branch_name'])) $changes['name'] = $data['branch_name'];
+            if (isset($changes['receipt_preferences'])) {
+                $changes['receipt_preferences'] = array_map(fn ($value) => (bool) $value, $changes['receipt_preferences']);
+            }
+            if (isset($data['branch_name'])) {
+                $changes['name'] = $data['branch_name'];
+            }
             if ($request->boolean('remove_logo')) {
                 $changes['logo_data'] = null;
             } elseif ($request->hasFile('logo') || ! empty($data['logo_base64'])) {
@@ -88,7 +92,9 @@ class StoreConfiguration
             DB::transaction(function () use ($branch, $changes): void {
                 $record = \App\Models\Branch::whereKey($branch->id)->lockForUpdate()->firstOrFail();
                 foreach (['templates', 'receipt_preferences'] as $key) {
-                    if (isset($changes[$key])) $changes[$key] = array_replace($record->$key ?? [], $changes[$key]);
+                    if (isset($changes[$key])) {
+                        $changes[$key] = array_replace($record->$key ?? [], $changes[$key]);
+                    }
                 }
                 $record->fill($changes)->save();
             });

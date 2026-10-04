@@ -33,9 +33,13 @@ class WorkspaceController extends Controller
         ]);
         $query = Customer::withCount('transactions')->withSum('transactions', 'total')->withMax('transactions', 'created_at')
             ->when($filters['q'] ?? null, fn ($q, $term) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('phone', 'like', '%'.$term.'%')));
-        if (($filters['segment'] ?? '') === 'archived') $query->whereNotNull('archived_at');
-        elseif (($filters['segment'] ?? '') === 'active') $query->whereNull('archived_at')->whereHas('transactions');
-        elseif (($filters['segment'] ?? '') === 'new') $query->whereNull('archived_at')->whereDoesntHave('transactions');
+        if (($filters['segment'] ?? '') === 'archived') {
+            $query->whereNotNull('archived_at');
+        } elseif (($filters['segment'] ?? '') === 'active') {
+            $query->whereNull('archived_at')->whereHas('transactions');
+        } elseif (($filters['segment'] ?? '') === 'new') {
+            $query->whereNull('archived_at')->whereDoesntHave('transactions');
+        }
         $column = match ($filters['sort'] ?? 'newest') {
             'spend' => 'transactions_sum_total', 'visits' => 'transactions_count', default => 'created_at',
         };
@@ -203,9 +207,13 @@ class WorkspaceController extends Controller
             'notify_login' => 'required|boolean', 'revoke_web' => 'sometimes|boolean',
         ]);
         $sensitive = $user->username !== $data['username'] || ! empty($data['password']);
-        if (empty($data['password'])) unset($data['password']);
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
         $user->fill(collect($data)->except(['current_password', 'revoke_tokens', 'revoke_web'])->all())->save();
-        if ($sensitive || $request->boolean('revoke_tokens')) $user->tokens()->delete();
+        if ($sensitive || $request->boolean('revoke_tokens')) {
+            $user->tokens()->delete();
+        }
         if ($sensitive || $request->boolean('revoke_web')) {
             $user->forceFill(['remember_token' => \Illuminate\Support\Str::random(60)])->save();
             if (config('session.driver') === 'database') {
@@ -220,8 +228,12 @@ class WorkspaceController extends Controller
     {
         $filters = $request->validate(['q' => 'nullable|string|max:255', 'status' => 'nullable|in:attention,current']);
         $devices = DeviceSyncState::with('user')->when($filters['q'] ?? null, fn ($q, $term) => $q->where('name', 'like', '%'.$term.'%'))->latest('last_seen_at')->get();
-        if (($filters['status'] ?? '') === 'attention') $devices = $devices->filter(fn ($d) => $d->attention || $d->pending_count);
-        if (($filters['status'] ?? '') === 'current') $devices = $devices->filter(fn ($d) => ! $d->attention && ! $d->pending_count);
+        if (($filters['status'] ?? '') === 'attention') {
+            $devices = $devices->filter(fn ($d) => $d->attention || $d->pending_count);
+        }
+        if (($filters['status'] ?? '') === 'current') {
+            $devices = $devices->filter(fn ($d) => ! $d->attention && ! $d->pending_count);
+        }
         $all = DeviceSyncState::get();
         $stats = ['devices' => $all->count(), 'last' => $all->max('last_synced_at'), 'pending' => $all->sum('pending_count'), 'attention' => $all->filter(fn ($d) => $d->attention || $d->pending_count)->count()];
         return view('dashboard.sync', compact('devices', 'stats'));

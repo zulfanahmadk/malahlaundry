@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 
 class Attendance extends Model
 {
-    use HasFactory, \App\Models\Concerns\BelongsToBranch;
+    use HasFactory;
+    use \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'attendances';
 

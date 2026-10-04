@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 
 class Service extends Model
 {
-    use HasFactory, \App\Models\Concerns\BelongsToBranch;
+    use HasFactory;
+    use \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'services';
     protected $primaryKey = 'uuid';

@@ -55,7 +55,13 @@ Untuk lingkungan lain, cadangkan database kemudian jalankan `php artisan migrate
 
 ## Batas verifikasi
 
-Konteks seluruh 17 node dan aset lokal sudah diinspeksi. Route, model, penyimpanan preferensi, metadata SVG dan pemanggilan aset ditinjau dari sumber. Pemeriksaan lanjutan mencakup sintaks PHP/JavaScript, struktur CSS, keseimbangan directive Blade, route dan manifest aset. **Testing, build, kompilasi aplikasi dan verifikasi visual runtime tidak dijalankan**, sesuai instruksi pengguna. Tidak ada deployment, commit atau push pada pekerjaan ini.
+Konteks seluruh 17 node dan aset lokal sudah diinspeksi. Setelah pengguna mengizinkan testing dan build, seluruh suite Laravel dijalankan pada SQLite `:memory:`: **66 test, 464 assertion, semuanya lulus**. Konfigurasi PHPUnit memaksa database pengujian terisolasi, dan bootstrap pengujian menolak konfigurasi database bisnis sebelum migrasi pengujian berjalan. Pint seluruh repositori juga lulus.
+
+Browser memverifikasi **45 kasus** pada halaman dan viewport desktop/ponsel, termasuk login tanpa scroll, buka/tutup sidebar dan dropdown, dialog layanan, serta tampilan form pengaturan. Pengujian tambahan memverifikasi validasi login, pembukaan kembali dialog layanan/pengguna yang ditolak beserta pesan error dan nilai input, persistensi pergantian cabang, serta pembaruan pratinjau template. Pengujian memakai database terpisah. Pemeriksaan sumber dan manifest 103 aset tetap tersedia sebagai pelengkap pengujian runtime.
+
+Pipeline frontend juga diverifikasi: `npm ci` dan `npm run build` selesai dengan exit code 0, menghasilkan manifest serta bundle CSS/JavaScript produksi. `package-lock.json` ditambahkan karena sebelumnya tidak tersedia, sehingga pemasangan ulang memakai versi yang sama; versi mayor pada `package.json` tetap. Dashboard menggunakan aset CSS/JavaScript lokal yang terpisah dari bundle Vite. Overflow horizontal halaman detail pelanggan/cucian pada ponsel diperbaiki dengan membatasi kolom grid, sehingga tabel bergulir di dalam kontainernya. Foto dialog presensi disembunyikan sampai sumber foto dipilih.
+
+Hasil lokal tidak membuktikan API produksi sudah diperbarui. SSH produksi menolak autentikasi yang tersedia sehingga deployment belum dapat dilakukan. API produksi masih perlu menerima kode/middleware terbaru sebelum sinkronisasi tablet dapat dinyatakan pulih. Tidak ada commit atau push pada pekerjaan ini.
 
 ## Perapihan lanjutan 4 Oktober 2026
 
@@ -65,8 +71,14 @@ Konteks seluruh 17 node dan aset lokal sudah diinspeksi. Route, model, penyimpan
 - Monitor tidak menyebut perangkat tersinkron hanya karena antreannya kosong. Laporan awal tanpa konfirmasi selesai, error terakhir, antrean gagal, dan perangkat yang lama tidak melapor memerlukan perhatian. Waktu sinkron terakhir tetap hanya berasal dari konfirmasi selesai perangkat.
 - Halaman Laravel `welcome`, skrip password lama yang tidak dirujuk, dua log pemeriksaan, serta empat skrip sekali pakai pengunduh/perapihan Figma di direktori workspace dihapus. Konteks desain, aset, database, backup, migrasi dan file build yang masih dirujuk tetap tersedia.
 
-Hasil pemeriksaan sumber: 71 file PHP tanpa error sintaks, JavaScript utama tanpa error sintaks, 28 template Blade tanpa block tidak berpasangan, CSS tanpa error grammar, route template tanpa referensi hilang, dan seluruh 103 aset web tidak kosong serta tersedia. Ini tidak menggantikan pengujian browser atau aplikasi.
+Hasil pemeriksaan sumber: file PHP dan JavaScript utama tanpa error sintaks, 28 template Blade tanpa block tidak berpasangan, CSS tanpa error grammar, route template tanpa referensi hilang, dan seluruh 103 aset web tidak kosong serta tersedia. Pemeriksaan ini dilengkapi hasil PHPUnit dan browser di atas.
 
 ## Pemeriksaan API lanjutan
 
-Validasi API sekarang memberikan pesan konfigurasi apabila konteks middleware cabang hilang. Tanggal arsip pelanggan diserialisasi ISO8601; ACK menyertakan UUID data dan identitas unggahan foto. Retry item identik mempertahankan item, sedangkan perubahan item/nominal/pengambilan menaikkan versi. Antrean tablet memakai cabang yang benar tetapi API produksi belum sejalan dengan seluruh kode lokal. Bukti diagnosis dan langkah pembaruan lengkap ada di `docs/SYNC_REVIEW_2026_10_04.md` pada root workspace. API produksi belum diperbarui pada pekerjaan ini.
+Validasi API sekarang memberikan pesan konfigurasi apabila konteks middleware cabang hilang. Tanggal arsip pelanggan diserialisasi ISO8601; ACK menyertakan UUID data dan identitas unggahan foto. Retry item identik mempertahankan item, sedangkan perubahan item/nominal/pengambilan menaikkan versi. Referensi UUID pelanggan dinormalisasi sebelum lookup; pelanggan yang belum tersinkron memberi error validasi 422 yang jelas dan seluruh batch dibatalkan.
+
+Sepuluh regresi sinkronisasi baru memverifikasi presensi cabang 1 dan ACK retry, penolakan cabang berbeda, middleware cabang yang hilang, metadata arsip yang dikirim ulang kasir, proteksi path foto cache, timestamp ISO yang dapat dibaca Android, versi transaksi pada retry, referensi pelanggan yang hilang/huruf besar, laporan perangkat selesai, dan pembatasan cabang akun kasir. Pengujian foto lain tetap memverifikasi pemilik, jenis/ukuran berkas, penggantian foto, serta pembersihan berkas lama. Kepemilikan presensi dan batas cabang tidak dilonggarkan.
+
+Pemeriksaan read-only MySQL lokal memastikan 1 cabang aktif, 2 akun aktif pada cabang 1, 4 layanan, serta 0 pelanggan/transaksi/item/presensi. Tidak ada reset atau seeding database bisnis. Seluruh endpoint autentikasi terlindungi, pengaturan, cabang, push/pull, records, upload foto dan laporan perangkat menggunakan middleware akun aktif dan pemilihan cabang.
+
+Antrean tablet memakai cabang yang benar tetapi API produksi belum sejalan dengan seluruh kode lokal. Bukti diagnosis dan langkah pembaruan lengkap ada di `docs/SYNC_REVIEW_2026_10_04.md` pada root workspace. API produksi belum diperbarui karena autentikasi SSH belum berhasil.

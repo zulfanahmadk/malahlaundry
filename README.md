@@ -54,6 +54,8 @@ php vendor/bin/pint --test app/Http/Controllers app/Http/Middleware app/Http/Req
 
 Pint memakai preset PSR-12 dari `pint.json`. Tes menggunakan `RefreshDatabase` dengan SQLite `:memory:` pada `phpunit.xml`, bukan database pada .env. GD diperlukan untuk tes decode QR dan pembuatan gambar uji.
 
+Untuk memeriksa pipeline frontend opsional, jalankan `npm ci` kemudian `npm run build`. Lockfile disertakan agar versi dependensi konsisten. Hasil Vite berada di `public/build`; halaman dashboard memakai CSS dan JavaScript lokal di `public/css` dan `public/js`.
+
 API lokal berada di `/api/v1`, bukan `/v1`. Untuk perangkat Android nyata gunakan alamat server yang dapat dijangkau perangkat; konfigurasi jaringan/Cloudflare Tunnel belum disertakan.
 
 ## Pengaturan toko

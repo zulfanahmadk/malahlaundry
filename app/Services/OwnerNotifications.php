@@ -41,7 +41,9 @@ class OwnerNotifications
         }
         $branch = request()->attributes->get('branch');
         foreach (Attendance::with('user')->where('check_in_time', '>=', today()->subDays(6))->latest('check_in_time')->limit(200)->get() as $attendance) {
-            if (app(BranchHours::class)->attendance($branch, $attendance->check_in_time) !== 'TERLAMBAT') continue;
+            if (app(BranchHours::class)->attendance($branch, $attendance->check_in_time) !== 'TERLAMBAT') {
+                continue;
+            }
             $date = $attendance->check_in_time->copy()->timezone('Asia/Jakarta')->toDateString();
             $rows->push([
                 'key' => 'attendance:'.$attendance->uuid, 'category' => 'PRESENSI', 'time' => $attendance->check_in_time,
