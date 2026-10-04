@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>@yield('title', 'Beranda') · {{ $store['name'] }}</title>
+        <link rel="icon" type="image/svg+xml" href="{{ asset('figma/e5cb0.svg') }}">
         <link rel="stylesheet" href="{{ asset('css/workspace.css').'?v='.filemtime(public_path('css/workspace.css')) }}">
         @stack('styles')
     </head>

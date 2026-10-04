@@ -6,10 +6,16 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="no-referrer">
     <title>Nota Digital - {{ $transaction->transaction_number }} - {{ $store['name'] }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('figma/e5cb0.svg') }}">
     <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('{{ asset('fonts/inter.ttf') }}') format('truetype');
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }
+
         :root {
             --primary: #0284C7;
             --primary-dark: #0369A1;

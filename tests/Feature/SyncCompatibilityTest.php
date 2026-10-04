@@ -177,4 +177,49 @@ class SyncCompatibilityTest extends TestCase
         $this->withHeader('X-Branch-Id', (string) $branch->id)->postJson('/api/v1/sync/push', [])->assertForbidden();
         $this->getJson('/api/v1/sync/records?type=customers')->assertForbidden();
     }
+
+    public function test_offline_order_recovery_requires_existing_branch_services_and_preserves_original_prices(): void
+    {
+        $customer = Customer::create(['name' => 'Pelanggan offline', 'phone' => '6281234567890']);
+        $pieceService = Service::create(['name' => 'Layanan satuan baru', 'unit' => 'pcs', 'price' => 45000]);
+        $weightService = Service::create(['name' => 'Layanan kg nonaktif', 'unit' => 'kg', 'price' => 7000, 'is_active' => false]);
+        $otherBranch = Branch::create(['name' => 'Cabang lain', 'code' => 'ML-OTHER']);
+        $foreignService = Service::create(['branch_id' => $otherBranch->id, 'name' => 'Layanan cabang lain', 'unit' => 'pcs', 'price' => 25000]);
+        Sanctum::actingAs(User::factory()->create());
+        $uuid = (string) Str::uuid();
+        $payload = ['transactions' => [[
+            'uuid' => $uuid, 'customer_uuid' => $customer->uuid, 'branch_id' => 1,
+            'laundry_status' => 'DITERIMA', 'payment_status' => 'BELUM', 'expected_total' => 155000,
+            'items' => [
+                ['service_uuid' => (string) Str::uuid(), 'service_name' => 'Nama satuan saat diterima', 'unit' => 'pcs', 'qty' => 5, 'price' => 25000],
+                ['service_uuid' => (string) Str::uuid(), 'service_name' => 'Nama kg saat diterima', 'unit' => 'kg', 'qty' => 6, 'price' => 5000],
+            ],
+        ]]];
+
+        $this->postJson('/api/v1/sync/push', $payload)->assertUnprocessable()
+            ->assertJsonValidationErrors(['transactions.0.items.0.service_uuid', 'transactions.0.items.1.service_uuid']);
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertDatabaseCount('transaction_items', 0);
+
+        $payload['transactions'][0]['items'][0]['service_uuid'] = $foreignService->uuid;
+        $payload['transactions'][0]['items'][1]['service_uuid'] = $weightService->uuid;
+        $this->postJson('/api/v1/sync/push', $payload)->assertUnprocessable()
+            ->assertJsonValidationErrors('transactions.0.items.0.service_uuid');
+        $this->assertDatabaseCount('transactions', 0);
+
+        $payload['transactions'][0]['items'][0]['service_uuid'] = $pieceService->uuid;
+        $this->postJson('/api/v1/sync/push', $payload)->assertOk()->assertJsonPath('acknowledged.transactions', [$uuid]);
+        $this->postJson('/api/v1/sync/push', $payload)->assertOk();
+        $this->assertDatabaseHas('transactions', ['uuid' => $uuid, 'branch_id' => 1, 'total' => 155000, 'subtotal' => 155000]);
+        $this->assertDatabaseCount('transactions', 1);
+        $this->assertDatabaseCount('transaction_items', 2);
+        $this->assertDatabaseHas('transaction_items', [
+            'transaction_uuid' => $uuid, 'service_uuid' => $pieceService->uuid,
+            'service_name' => 'Nama satuan saat diterima', 'unit' => 'pcs', 'qty' => 5, 'price' => 25000,
+        ]);
+        $this->assertDatabaseHas('transaction_items', [
+            'transaction_uuid' => $uuid, 'service_uuid' => $weightService->uuid,
+            'service_name' => 'Nama kg saat diterima', 'unit' => 'kg', 'qty' => 6, 'price' => 5000,
+        ]);
+    }
 }
