@@ -43,8 +43,14 @@ class DashboardController extends Controller
             'ready_pickup_count' => Transaction::where('laundry_status', 'SIAP_DIAMBIL')->count(),
             'unpaid_count' => Transaction::where('payment_status', 'BELUM')->count(),
         ];
+        $stats['average'] = $stats['today_transactions_count'] ? Transaction::whereDate('created_at', $today)->avg('total') : 0;
+        $weekly = collect(range(6, 0))->map(function ($offset) {
+            $day = today()->subDays($offset);
+            return ['label' => $day->locale('id')->translatedFormat('D'), 'value' => Transaction::whereDate('created_at', $day)->where('payment_status', 'LUNAS')->sum('total')];
+        });
+        $overdue = Transaction::where('laundry_status', 'SIAP_DIAMBIL')->whereNotNull('ready_at')->where('ready_at', '<=', now()->subDays(3))->count();
 
-        $recentTransactions = Transaction::with(['customer', 'user'])
+        $recentTransactions = Transaction::with(['customer', 'user', 'items'])
             ->latest()
             ->take(8)
             ->get();
@@ -54,24 +60,29 @@ class DashboardController extends Controller
             ->latest('check_in_time')
             ->get();
 
-        return view('dashboard.index', compact('stats', 'recentTransactions', 'todayAttendances'));
+        return view('dashboard.index', compact('stats', 'recentTransactions', 'todayAttendances', 'weekly', 'overdue'));
     }
 
     /**
      * Manajemen Master Layanan
      */
-    public function services(): View
+    public function services(Request $request): View
     {
-        $services = Service::latest()->get();
-        return view('dashboard.services', compact('services'));
+        $filters = $request->validate(['q' => 'nullable|string|max:255', 'unit' => 'nullable|in:kg,pcs,m2', 'speed' => 'nullable|in:REGULER,EXPRESS']);
+        $services = Service::when($filters['q'] ?? null, fn ($q, $term) => $q->where('name', 'like', '%'.$term.'%'))
+            ->when($filters['unit'] ?? null, fn ($q, $unit) => $q->where('unit', $unit))
+            ->when($filters['speed'] ?? null, fn ($q, $speed) => $q->where('speed', $speed))->latest()->get();
+        $stats = ['total' => Service::count(), 'kg' => Service::where('unit', 'kg')->count(), 'pcs' => Service::where('unit', 'pcs')->count(), 'devices' => \App\Models\DeviceSyncState::where('last_synced_at', '>=', Service::max('updated_at') ?? now())->count()];
+        return view('dashboard.services', compact('services', 'stats'));
     }
 
     public function storeService(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'unit' => 'required|in:kg,pcs',
+            'unit' => 'required|in:kg,pcs,m2',
             'price' => 'required|integer|min:0|max:1000000000',
+            'speed' => 'required|in:REGULER,EXPRESS', 'duration_hours' => 'required|integer|between:1,8760',
         ]);
 
         Service::create([
@@ -80,6 +91,7 @@ class DashboardController extends Controller
             'unit' => $validated['unit'],
             'price' => (int) $validated['price'],
             'is_active' => true,
+            'speed' => $validated['speed'], 'duration_hours' => $validated['duration_hours'],
         ]);
 
         return back()->with('success', 'Layanan berhasil ditambahkan.');
@@ -91,9 +103,10 @@ class DashboardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'unit' => 'required|in:kg,pcs',
+            'unit' => 'required|in:kg,pcs,m2',
             'price' => 'required|integer|min:0|max:1000000000',
             'is_active' => 'required|boolean',
+            'speed' => 'required|in:REGULER,EXPRESS', 'duration_hours' => 'required|integer|between:1,8760',
         ]);
 
         $service->update([
@@ -101,6 +114,7 @@ class DashboardController extends Controller
             'unit' => $validated['unit'],
             'price' => (int) $validated['price'],
             'is_active' => $validated['is_active'],
+            'speed' => $validated['speed'], 'duration_hours' => $validated['duration_hours'],
         ]);
 
         return back()->with('success', 'Layanan berhasil diperbarui.');
@@ -109,10 +123,15 @@ class DashboardController extends Controller
     /**
      * Manajemen User (Kasir & Owner)
      */
-    public function users(): View
+    public function users(Request $request): View
     {
-        $users = User::latest()->get();
-        return view('dashboard.users', compact('users'));
+        $filters = $request->validate(['q' => 'nullable|string|max:255', 'role' => 'nullable|in:owner,cashier', 'active' => 'nullable|in:0,1']);
+        $query = User::where('branch_id', $request->attributes->get('branch_id'));
+        $stats = ['total' => (clone $query)->count(), 'active' => (clone $query)->where('active', true)->count(), 'devices' => \App\Models\DeviceSyncState::count(), 'inactive' => (clone $query)->where('active', false)->count()];
+        $users = $query->when($filters['q'] ?? null, fn ($q, $term) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('username', 'like', '%'.$term.'%')))
+            ->when($filters['role'] ?? null, fn ($q, $role) => $q->where('role', $role))
+            ->when(isset($filters['active']), fn ($q) => $q->where('active', $filters['active']))->latest()->get();
+        return view('dashboard.users', compact('users', 'stats'));
     }
 
     public function storeUser(Request $request): RedirectResponse
@@ -122,6 +141,7 @@ class DashboardController extends Controller
             'username' => 'required|string|max:50|unique:users,username',
             'role' => 'required|in:owner,cashier',
             'password' => 'required|string|min:8|max:72',
+            'branch_id' => 'required|integer|exists:branches,id',
         ]);
 
         User::create([
@@ -130,6 +150,7 @@ class DashboardController extends Controller
             'role' => $validated['role'],
             'password' => Hash::make($validated['password']),
             'active' => true,
+            'branch_id' => $validated['branch_id'],
         ]);
 
         return back()->with('success', 'Pengguna baru berhasil didaftarkan.');
@@ -171,7 +192,8 @@ class DashboardController extends Controller
         $transactions = Transaction::with(['customer', 'user', 'items.service'])
             ->filter($request->validated())->latest()->orderBy('uuid')->paginate(15)->withQueryString();
 
-        return view('dashboard.transactions', compact('transactions'));
+        $stats = ['total' => Transaction::count(), 'received' => Transaction::where('laundry_status', 'DITERIMA')->count(), 'ready' => Transaction::where('laundry_status', 'SIAP_DIAMBIL')->count(), 'unpaid' => Transaction::where('payment_status', 'BELUM')->count()];
+        return view('dashboard.transactions', compact('transactions', 'stats'));
     }
 
     /**
@@ -196,8 +218,16 @@ class DashboardController extends Controller
             ->latest('check_in_time')
             ->orderByDesc('id')->paginate(15)->withQueryString();
 
-        $users = User::orderBy('name')->get(['id', 'name']);
-        return view('dashboard.attendances', compact('attendances', 'users'));
+        $users = User::where('branch_id', $request->attributes->get('branch_id'))->orderBy('name')->get(['id', 'name']);
+        $today = Attendance::whereDate('check_in_time', today())->get();
+        $hours = app(\App\Services\BranchHours::class);
+        $branch = $request->attributes->get('branch');
+        $onTime = $today->filter(fn ($row) => $hours->attendance($branch, $row->check_in_time) === 'TEPAT WAKTU')->pluck('user_id')->unique()->count();
+        $late = $today->filter(fn ($row) => $hours->attendance($branch, $row->check_in_time) === 'TERLAMBAT')->pluck('user_id')->unique()->count();
+        $present = $today->pluck('user_id')->unique()->count();
+        $staff = User::where('branch_id', $branch->id)->where('role', 'cashier')->where('active', true)->count();
+        $stats = ['present' => $present, 'on_time' => $onTime, 'late' => $late, 'missing' => max(0, $staff - $present), 'staff' => $staff];
+        return view('dashboard.attendances', compact('attendances', 'users', 'stats', 'hours', 'branch'));
     }
 
     public function attendancePhoto(string $uuid, string $type): StreamedResponse

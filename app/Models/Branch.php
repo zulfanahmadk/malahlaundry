@@ -10,6 +10,9 @@ class Branch extends Model
 
     protected function casts(): array
     {
-        return ['active' => 'boolean', 'show_branch' => 'boolean', 'opening_hours' => 'array', 'templates' => 'array'];
+        return [
+            'active' => 'boolean', 'show_branch' => 'boolean', 'opening_hours' => 'array', 'templates' => 'array',
+            'receipt_preferences' => 'array', 'opening_exceptions' => 'array', 'operational_preferences' => 'array', 'message_preferences' => 'array',
+        ];
     }
 }

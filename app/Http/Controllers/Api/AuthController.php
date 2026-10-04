@@ -66,6 +66,7 @@ class AuthController extends Controller
         }
 
         $deviceName = $request->input('device_name', 'Android-Device');
+        $user->forceFill(['last_login_at' => now()])->save();
         $token = $user->createToken($deviceName)->plainTextToken;
 
         return response()->json([

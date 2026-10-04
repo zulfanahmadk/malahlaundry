@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Notification button">
+<rect x="0.5" y="0.5" width="39" height="39" rx="9.5" fill="white"/>
+<rect x="0.5" y="0.5" width="39" height="39" rx="9.5" stroke="#D9E1EA"/>
+<g id="Icon / bell">
+<path id="Vector" d="M14.375 23.9375H25.625L24.275 21.9125V18.3125C24.275 17.1787 23.8246 16.0913 23.0229 15.2896C22.2212 14.4879 21.1338 14.0375 20 14.0375C18.8662 14.0375 17.7788 14.4879 16.9771 15.2896C16.1754 16.0913 15.725 17.1787 15.725 18.3125V21.9125L14.375 23.9375Z" stroke="#475467" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M18.0312 25.85C18.1377 26.292 18.3897 26.6853 18.7468 26.9667C19.104 27.248 19.5454 27.401 20 27.401C20.4546 27.401 20.896 27.248 21.2532 26.9667C21.6103 26.6853 21.8623 26.292 21.9688 25.85" stroke="#475467" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<circle id="Unread indicator" cx="32" cy="8" r="3.25" fill="#E5484D" stroke="white" stroke-width="1.5"/>
+</g>
+</svg>

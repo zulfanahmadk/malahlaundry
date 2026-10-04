@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\WorkspaceController;
 use App\Http\Controllers\Web\NotaPublicController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StoreSettingsController;
@@ -49,9 +50,29 @@ Route::middleware(['auth:web', 'active', 'owner', 'branch'])->group(function () 
 
     // Transactions History
     Route::get('/transactions', [DashboardController::class, 'transactions'])->name('transactions.index');
+    Route::get('/transactions/{uuid}', [WorkspaceController::class, 'transaction'])->name('transactions.show');
+    Route::get('/customers', [WorkspaceController::class, 'customers'])->name('customers.index');
+    Route::get('/customers/export', [WorkspaceController::class, 'exportCustomers'])->name('customers.export');
+    Route::get('/customers/{uuid}', [WorkspaceController::class, 'customer'])->name('customers.show');
+    Route::get('/reports', [WorkspaceController::class, 'reports'])->name('reports.index');
+    Route::get('/branches', [WorkspaceController::class, 'branches'])->name('branches.index');
+    Route::get('/branches/create', [WorkspaceController::class, 'branchForm'])->name('branches.create');
+    Route::post('/branches', [WorkspaceController::class, 'saveBranch'])->name('branches.store');
+    Route::get('/branches/{branch}/edit', [WorkspaceController::class, 'branchForm'])->name('branches.edit');
+    Route::post('/branches/{branch}', [WorkspaceController::class, 'saveBranch'])->name('branches.update');
+    Route::get('/opening-hours', [WorkspaceController::class, 'hours'])->name('hours.edit');
+    Route::post('/opening-hours', [WorkspaceController::class, 'saveHours'])->name('hours.update');
+    Route::get('/message-templates', [WorkspaceController::class, 'templates'])->name('templates.edit');
+    Route::post('/message-templates', [WorkspaceController::class, 'saveTemplates'])->name('templates.update');
+    Route::get('/profile', [WorkspaceController::class, 'profile'])->name('profile.edit');
+    Route::post('/profile', [WorkspaceController::class, 'saveProfile'])->name('profile.update');
+    Route::get('/synchronization', [WorkspaceController::class, 'sync'])->name('sync.index');
+    Route::get('/notifications', [WorkspaceController::class, 'notifications'])->name('notifications.index');
+    Route::post('/notifications/read', [WorkspaceController::class, 'readNotifications'])->name('notifications.read');
 
     // Attendances & Selfie Monitoring
     Route::get('/attendances', [DashboardController::class, 'attendances'])->name('attendances.index');
+    Route::get('/attendances/export', [WorkspaceController::class, 'exportAttendances'])->name('attendances.export');
     Route::get('/attendances/{uuid}/photo/{type}', [DashboardController::class, 'attendancePhoto'])->whereIn('type', ['check_in', 'check_out'])->name('attendances.photo');
 
     // Web-Exclusive DLP Export (Excel/CSV)

@@ -1,149 +1,92 @@
 @extends('layouts.app')
-
-@section('title', 'Riwayat Transaksi')
-@section('page_title', 'Riwayat Transaksi Laundry')
-
+@section('figma_node', '127-255')
+@section('title', 'Cucian')
+@section('page_title', 'Daftar cucian')
+@section('page_subtitle', 'Pantau transaksi cabang aktif dari aplikasi Android')
 @section('content')
-<style>
-    .filter-bar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
-        background: var(--surface);
-        padding: 1rem;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-    }
-    .filter-input {
-        flex: 1 1 160px;
-        min-width: 0;
-        max-width: 100%;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        outline: none;
-        background: #FFFFFF;
-    }
-    .filter-input:focus {
-        border-color: var(--primary);
-    }
-    .filter-search {
-        flex: 2 1 240px;
-    }
-    .filter-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    .filter-date {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex: 1 1 210px;
-        min-width: 0;
-        font-size: 0.85rem;
-    }
-</style>
-
-<div class="card" style="padding: 0; overflow: hidden;">
-    <!-- Filter -->
-    <form action="{{ route('transactions.index') }}" method="GET" class="filter-bar" style="margin: 0; border: none; border-bottom: 1px solid var(--border); border-radius: 0;">
-        <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari No. TRX, nama pelanggan, atau HP..." class="filter-input filter-search" aria-label="Cari transaksi atau pelanggan">
-        <select name="status" class="filter-input" aria-label="Status cucian">
-            <option value="">Semua Status Cucian</option>
-            <option value="DITERIMA" {{ request('status') === 'DITERIMA' ? 'selected' : '' }}>DITERIMA</option>
-            <option value="SIAP_DIAMBIL" {{ request('status') === 'SIAP_DIAMBIL' ? 'selected' : '' }}>SIAP DIAMBIL</option>
-            <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }}>SELESAI</option>
-        </select>
-        <select name="payment" class="filter-input" aria-label="Status pembayaran">
-            <option value="">Semua Status Bayar</option>
-            <option value="LUNAS" {{ request('payment') === 'LUNAS' ? 'selected' : '' }}>LUNAS</option>
-            <option value="BELUM" {{ request('payment') === 'BELUM' ? 'selected' : '' }}>BELUM LUNAS</option>
-        </select>
-        <label class="filter-date">Dari <input type="date" name="from" value="{{ request('from') }}" class="filter-input"></label>
-        <label class="filter-date">Sampai <input type="date" name="to" value="{{ request('to') }}" class="filter-input"></label>
-        <div class="filter-actions">
-            <a href="{{ route('reports.export', request()->only(['q', 'status', 'payment', 'from', 'to'])) }}" class="btn btn-secondary">Ekspor Hasil (Excel)</a>
-            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
-            @if(request()->anyFilled(['q', 'status', 'payment', 'from', 'to']))
-                <a href="{{ route('transactions.index') }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem;">Reset</a>
-            @endif
-        </div>
-    </form>
-
-    <div class="table-responsive">
-        <table style="min-width: 1060px;">
+<div class="stats-grid">
+    <x-workspace-stat label="Semua" :value="$stats['total']" note="Transaksi tercatat" icon="imgIconCheck" />
+    <x-workspace-stat label="Diterima" :value="$stats['received']" note="Sedang dikerjakan" icon="imgIconActivity" tone="teal" />
+    <x-workspace-stat label="Siap diambil" :value="$stats['ready']" note="Menunggu pelanggan" icon="imgIconCheck1" tone="green" />
+    <x-workspace-stat label="Belum lunas" :value="$stats['unpaid']" note="Belum lunas" icon="imgIconAlert" tone="orange" />
+</div>
+<form class="toolbar" method="GET">
+    <div class="search-field">
+        <x-figma-icon name="imgIconSearch" />
+        <input name="q" type="search" placeholder="Cari daftar cucian" aria-label="Cari kode, nama, atau WhatsApp" value="{{ request('q') }}">
+    </div>
+    <div class="form-group">
+        <span class="select-field">
+            <select name="status" aria-label="Status cucian">
+                <option value="">Semua status cucian</option>@foreach(['DITERIMA'=>'Diterima','SIAP_DIAMBIL'=>'Siap diambil','SELESAI'=>'Selesai'] as $key=>$label)<option value="{{ $key }}" @selected(request('status') === $key)>{{ $label }}</option>@endforeach</select>
+            <x-figma-icon name="imgIconChevron" />
+        </span>
+    </div>
+    <div class="form-group">
+        <span class="select-field">
+            <select name="payment" aria-label="Status pembayaran">
+                <option value="">Semua pembayaran</option>
+                <option value="BELUM" @selected(request('payment') === 'BELUM')>Belum lunas</option>
+                <option value="LUNAS" @selected(request('payment') === 'LUNAS')>Lunas</option>
+            </select>
+            <x-figma-icon name="imgIconChevron" />
+        </span>
+    </div>
+    <div class="form-group">
+        <label for="from">Dari tanggal</label>
+        <input id="from" type="date" name="from" value="{{ request('from') }}">
+    </div>
+    <div class="form-group">
+        <label for="to">Sampai tanggal</label>
+        <input id="to" type="date" name="to" value="{{ request('to') }}">
+    </div>
+    <button class="btn btn-secondary">Terapkan</button>
+    <a class="btn btn-small" href="{{ route('transactions.index') }}">Reset</a>
+    <span class="count">{{ $transactions->total() }} data</span>
+</form>
+<div class="card table-card">
+    <div class="table-container">
+        <table>
             <thead>
                 <tr>
-                    <th>No. Transaksi</th>
-                    <th>Waktu (WIB)</th>
-                    <th>Tanggal Pengambilan (WIB)</th>
+                    <th>Kode</th>
                     <th>Pelanggan</th>
-                    <th>Layanan &amp; Qty</th>
-                    <th>Total</th>
-                    <th>Status Cucian</th>
+                    <th>Layanan</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
                     <th>Pembayaran</th>
-                    <th>Kasir</th>
-                    <th>Nota Digital</th>
+                    <th>Total</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($transactions as $trx)
-                    <tr>
-                        <td><strong>{{ $trx->transaction_number }}</strong></td>
-                        <td>{{ $trx->created_at->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }}</td>
-                        <td>{{ $trx->picked_up_at?->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') ?? '-' }}</td>
-                        <td>
-                            <div>{{ $trx->customer->name ?? 'Pelanggan Umum' }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $trx->customer->phone ?? '-' }}</div>
-                        </td>
-                        <td>
-                            @foreach($trx->items as $item)
-                                <div style="font-size: 0.8rem;">
-                                    {{ $item->service_name ?? $item->service->name ?? 'Layanan' }} ({{ $item->qty }} {{ $item->unit ?? $item->service->unit ?? '' }})
-                                </div>
-                            @endforeach
-                        </td>
-                        <td><strong>Rp{{ number_format($trx->total, 0, ',', '.') }}</strong></td>
-                        <td>
-                            @if($trx->laundry_status === 'SELESAI')
-                                <span class="badge badge-success">Selesai</span>
-                            @elseif($trx->laundry_status === 'SIAP_DIAMBIL')
-                                <span class="badge badge-success">Siap Diambil</span>
-                            @else
-                                <span class="badge badge-primary">Diterima</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($trx->payment_status === 'LUNAS')
-                                <span class="badge badge-success">Lunas</span>
-                            @else
-                                <span class="badge badge-danger">Belum Lunas</span>
-                            @endif
-                        </td>
-                        <td><span style="font-size: 0.8rem; color: var(--text-muted);">{{ $trx->user->name ?? '-' }}</span></td>
-                        <td>
-                            <a href="{{ $trx->public_receipt_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                                Buka Nota &amp; QR
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">Tidak ada transaksi ditemukan.</td>
-                    </tr>
-                @endforelse
+                @forelse($transactions as $trx)<tr>
+                    <td>
+                        <a href="{{ route('transactions.show', $trx->uuid) }}">{{ $trx->transaction_number }}</a>
+                        <small class="muted">{{ \App\Support\Workspace::date($trx->created_at) }}</small>
+                    </td>
+                    <td>@if($trx->customer)<a href="{{ route('customers.show', $trx->customer_uuid) }}">{{ $trx->customer->name }}</a>@else Pelanggan @endif</td>
+                    <td>{{ $trx->items->map(fn ($i) => $i->service_name ?? $i->service?->name ?? 'Layanan')->join(', ') }}</td>
+                    <td>{{ $trx->items->map(fn ($i) => \App\Support\Workspace::number($i->qty, 2).' '.(($i->unit ?? $i->service?->unit) === 'm2' ? 'm²' : ($i->unit ?? $i->service?->unit)))->join(', ') }}</td>
+                    <td>
+                        <span class="badge {{ $trx->laundry_status === 'SIAP_DIAMBIL' ? 'badge-success' : ($trx->laundry_status === 'DITERIMA' ? 'badge-teal' : '') }}">{{ str_replace('_', ' ', $trx->laundry_status) }}</span>
+                    </td>
+                    <td>
+                        <span class="badge {{ $trx->isPaid() ? 'badge-success' : 'badge-warning' }}">{{ $trx->isPaid() ? 'LUNAS' : 'BELUM LUNAS' }}</span>
+                    </td>
+                    <td>{{ \App\Support\Workspace::money($trx->total) }}</td>
+                </tr>@empty<tr>
+                    <td colspan="7" class="empty">Tidak ada cucian yang sesuai filter.</td>
+                </tr>@endforelse
             </tbody>
         </table>
     </div>
-
-    @if($transactions->hasPages())
-        <div style="padding: 1rem;">
-            {{ $transactions->links('components.pagination') }}
-        </div>
-    @endif
+</div>{{ $transactions->links('components.pagination') }}
+<div class="insights">
+    <div class="insight">
+        <h3>Transaksi aktif</h3>
+        <p>{{ $stats['received'] + $stats['ready'] }} transaksi sedang dipantau pada cabang ini.</p>
+    </div>
+    <div class="notice orange">
+        <x-figma-icon name="imgIconAlert" />Pembuatan, pembayaran, pemindaian, dan penyelesaian transaksi tersedia di aplikasi Android. Rincian transaksi di web hanya dapat dibaca.</div>
 </div>
 @endsection

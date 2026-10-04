@@ -23,3 +23,7 @@ API baru: `GET /api/v1/branches`, `POST /api/v1/branches`, `POST /api/v1/branche
 WhatsApp nota dan reminder dibuka melalui aplikasi WhatsApp, lalu **dikirim manual oleh kasir/user**. Tidak memerlukan gateway, token WhatsApp, cron, atau scheduler pengiriman. Tidak ada pesan WhatsApp dikirim selama implementasi. Tabel percobaan gateway yang sempat dibuat saat pengerjaan telah dihapus setelah dipastikan kosong; migrasi final tidak memuat integrasi tersebut.
 
 Testing dan build tidak dijalankan sesuai instruksi pengguna.
+
+## Tambahan workspace web (4 Oktober 2026)
+
+Migrasi `2026_10_04_000001_add_owner_workspace.php` sudah diterapkan secara lokal setelah backup `storage/app/private/backups/before-owner-workspace-20261004-090836.sql`. Menambahkan preferensi nota/pesan, jam khusus, preferensi operasional cabang, telepon/login/preferensi notifikasi pengguna, laporan perangkat dan status baca notifikasi. Satuan layanan mendukung `m2`. Data utama tetap utuh; tidak ada reset. Rincian 17 desain dan integrasi ada di [FIGMA_WEB_IMPLEMENTATION.md](FIGMA_WEB_IMPLEMENTATION.md).

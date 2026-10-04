@@ -45,6 +45,11 @@ class NotaPublicController extends Controller
             : '-';
 
         $store = app(\App\Services\StoreConfiguration::class)->read(false, $transaction->branch_id);
+        if (! ($store['receipt_preferences']['show_phone'] ?? true)) $store['phone'] = '';
+        if (! ($store['receipt_preferences']['show_terms'] ?? true)) $store['receipt_terms'] = '';
+        $branch = \App\Models\Branch::find($transaction->branch_id);
+        $store['opening_status'] = $branch && ($branch->operational_preferences['show_open_status'] ?? true)
+            ? app(\App\Services\BranchHours::class)->status($branch) : null;
         $store['receipt_terms'] = strtr($store['receipt_terms'], [
             '{nama_toko}' => $store['store_name'] ?? $store['name'], '{cabang}' => $store['branch_name'] ?? '',
             '{nomor_nota}' => $transaction->transaction_number, '{hari_komplain}' => (string) ($store['complaint_days'] ?? 3),

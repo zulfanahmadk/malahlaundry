@@ -424,6 +424,7 @@
                 </p>
             @endif
             <div class="badge-paperless">Nota Digital</div>
+            @if($store['opening_status'] ?? null)<p class="brand-sub" style="margin-top:8px">{{ $store['opening_status'] }} · WIB</p>@endif
         </div>
 
         <!-- QR Code Section -->
@@ -443,12 +444,15 @@
             </div>
             <div class="meta-row">
                 <span class="meta-label">Tanggal Diterima</span>
-                <span class="meta-val">{{ $transaction->created_at->timezone('Asia/Jakarta')->locale('id')->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }} WIB</span>
+                <span class="meta-val">{{ \App\Support\Workspace::date($transaction->created_at) }} WIB</span>
             </div>
             <div class="meta-row">
                 <span class="meta-label">Nama Pelanggan</span>
                 <span class="meta-val">{{ $customer->name ?? 'Pelanggan Umum' }}</span>
             </div>
+            @foreach(['estimated_at' => 'Estimasi Selesai', 'ready_at' => 'Siap Diambil', 'paid_at' => 'Tanggal Pembayaran'] as $field => $label)
+                @if($transaction->$field)<div class="meta-row"><span class="meta-label">{{ $label }}</span><span class="meta-val">{{ \App\Support\Workspace::date($transaction->$field) }} WIB</span></div>@endif
+            @endforeach
             <div class="meta-row">
                 <span class="meta-label">Nomor WhatsApp</span>
                 <span class="meta-val">{{ $maskedPhone }}</span>
@@ -468,7 +472,7 @@
             @if($transaction->picked_up_at)
                 <div class="meta-row">
                     <span class="meta-label">Tanggal Pengambilan</span>
-                    <span class="meta-val">{{ $transaction->picked_up_at->timezone('Asia/Jakarta')->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }} WIB</span>
+                    <span class="meta-val">{{ \App\Support\Workspace::date($transaction->picked_up_at) }} WIB</span>
                 </div>
             @endif
             @php

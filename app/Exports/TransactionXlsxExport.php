@@ -29,8 +29,8 @@ class TransactionXlsxExport
             foreach ($transactions as $transaction) {
                 $this->row($stream, $row++, [
                     $transaction->transaction_number,
-                    $transaction->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
-                    $transaction->picked_up_at?->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') ?? '',
+                    \App\Support\Workspace::date($transaction->created_at),
+                    $transaction->picked_up_at ? \App\Support\Workspace::date($transaction->picked_up_at) : '',
                     $transaction->customer?->name ?? '-', $transaction->customer?->phone ?? '-',
                     $transaction->user?->name ?? '-',
                     $transaction->items->map(fn ($item) => ($item->service_name ?? $item->service?->name ?? 'Layanan').' ('.$item->qty.' '.($item->unit ?? $item->service?->unit).')')->join('; '),

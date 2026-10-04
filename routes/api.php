@@ -34,5 +34,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/sync/upload', [SyncController::class, 'upload']);
         Route::get('/sync/pull', [SyncController::class, 'pull']);
         Route::get('/sync/records', [RecordsController::class, 'index']);
+        Route::post('/sync/device', [\App\Http\Controllers\Api\DeviceSyncController::class, 'report']);
     });
 });

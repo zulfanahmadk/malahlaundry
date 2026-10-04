@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 class StoreConfiguration
 {
     public const TEMPLATES = [
+        'WA_REMINDER' => "Halo {nama}, cucian {no_transaksi} sudah siap diambil sejak {tanggal_siap}. Silakan mampir ke {outlet}.\nSisa tagihan: Rp{sisa_bayar}\nNota: {url_nota}",
         'WA_DITERIMA' => "Halo {nama}, cucian Anda sudah diterima di {outlet}.\nNo. nota: {no_transaksi}\n{items}\nTotal: Rp{total}\nPembayaran: {status_bayar}\nNota: {url_nota}\n{alamat_outlet}\nHubungi: {telepon_outlet}",
         'WA_SIAP_DIAMBIL' => "Halo {nama}, cucian {no_transaksi} sudah siap diambil di {outlet}.\nSisa tagihan: Rp{sisa_bayar}\nNota: {url_nota}\n{alamat_outlet}\nHubungi: {telepon_outlet}",
         'WA_SELESAI' => "Terima kasih {nama}, cucian {no_transaksi} telah diambil.\nTerima kasih telah menggunakan {outlet}.\nNota: {url_nota}\nHubungi: {telepon_outlet}",
@@ -50,6 +51,8 @@ class StoreConfiguration
                 'receipt_terms' => $branch->receipt_terms ?? '',
                 'templates' => array_replace($data['templates'], $branch->templates ?? []),
                 'show_branch' => $branch->show_branch, 'complaint_days' => $branch->complaint_days,
+                'receipt_preferences' => array_replace(['show_phone' => true, 'show_terms' => true], $branch->receipt_preferences ?? []),
+                'message_preferences' => array_replace(['WA_DITERIMA' => true, 'WA_SIAP_DIAMBIL' => true, 'WA_REMINDER' => true], $branch->message_preferences ?? []),
             ]);
         }
         return $data;
@@ -57,6 +60,41 @@ class StoreConfiguration
 
     public function save(Request $request): void
     {
+        $branch = $request->attributes->get('branch');
+        if ($branch) {
+            $data = $request->validate([
+                'name' => 'required|string|max:100', 'branch_name' => 'sometimes|required|string|max:100',
+                'phone' => 'nullable|string|max:40', 'address' => 'nullable|string|max:1000',
+                'receipt_terms' => 'nullable|string|max:5000', 'show_branch' => 'sometimes|boolean',
+                'complaint_days' => 'sometimes|integer|between:0,365',
+                'receipt_preferences' => 'sometimes|array:show_phone,show_terms', 'receipt_preferences.*' => 'boolean',
+                'logo' => 'nullable|image|mimes:jpeg,png,webp|max:1024|dimensions:max_width=4096,max_height=4096',
+                'logo_base64' => 'nullable|string|max:1400000', 'remove_logo' => 'sometimes|boolean',
+                'templates' => 'sometimes|array:WA_DITERIMA,WA_SIAP_DIAMBIL,WA_SELESAI,WA_REMINDER',
+                'templates.*' => 'required|string|max:4000',
+            ]);
+            $changes = collect($data)->except(['name', 'branch_name', 'logo', 'logo_base64', 'remove_logo'])->all();
+            $changes['store_name'] = $data['name'];
+            if (isset($changes['receipt_preferences'])) $changes['receipt_preferences'] = array_map(fn ($value) => (bool) $value, $changes['receipt_preferences']);
+            if (isset($data['branch_name'])) $changes['name'] = $data['branch_name'];
+            if ($request->boolean('remove_logo')) {
+                $changes['logo_data'] = null;
+            } elseif ($request->hasFile('logo') || ! empty($data['logo_base64'])) {
+                $changes['logo_data'] = app(BranchLogo::class)->normalize($request->hasFile('logo')
+                    ? base64_encode($request->file('logo')->get()) : $data['logo_base64']);
+            }
+            // Merge JSON preferences against the locked row so partial API updates
+            // do not erase settings saved in the web workspace.
+            DB::transaction(function () use ($branch, $changes): void {
+                $record = \App\Models\Branch::whereKey($branch->id)->lockForUpdate()->firstOrFail();
+                foreach (['templates', 'receipt_preferences'] as $key) {
+                    if (isset($changes[$key])) $changes[$key] = array_replace($record->$key ?? [], $changes[$key]);
+                }
+                $record->fill($changes)->save();
+            });
+            $request->attributes->set('branch', $branch->fresh());
+            return;
+        }
         $rules = [
             'name' => 'required|string|max:100',
             'phone' => 'nullable|string|max:40',
@@ -65,7 +103,7 @@ class StoreConfiguration
             'logo' => 'nullable|image|mimes:jpeg,png,webp|max:1024|dimensions:max_width=4096,max_height=4096',
             'logo_base64' => 'nullable|string|max:1400000',
             'remove_logo' => 'sometimes|boolean',
-            'templates' => 'required|array:WA_DITERIMA,WA_SIAP_DIAMBIL,WA_SELESAI',
+            'templates' => 'required|array:WA_DITERIMA,WA_SIAP_DIAMBIL,WA_SELESAI,WA_REMINDER',
         ];
         foreach (array_keys(self::TEMPLATES) as $type) {
             $rules['templates.'.$type] = 'required|string|max:4000';

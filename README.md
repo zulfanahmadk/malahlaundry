@@ -24,7 +24,7 @@ php artisan storage:link
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-Buka http://127.0.0.1:8000/login. Document root Apache harus diarahkan ke `web/public`. Tampilan dashboard saat ini menggunakan Blade dan CSS inline; tidak membutuhkan Vite untuk dijalankan. Jangan menimpa konfigurasi/database yang sudah digunakan.
+Buka http://127.0.0.1:8000/login. Document root Apache harus diarahkan ke `web/public`. Dashboard menggunakan Blade, `public/css/workspace.css` dan `public/js/workspace.js`; tidak membutuhkan Vite untuk dijalankan. Pemetaan 17 halaman dan rincian pengaturan tersedia di [dokumentasi Figma web](docs/FIGMA_WEB_IMPLEMENTATION.md). Jangan menimpa konfigurasi/database yang sudah digunakan.
 
 Untuk database pengembangan/demo saja:
 

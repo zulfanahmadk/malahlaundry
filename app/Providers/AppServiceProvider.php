@@ -25,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
             }
         });
         \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
-            $view->with('branches', \App\Models\Branch::orderBy('name')->get(['id', 'name', 'active']));
+            $view->with('branches', \App\Models\Branch::orderBy('name')->get(['id', 'name', 'store_name', 'active']));
+            $view->with('workspaceNotifications', app(\App\Services\OwnerNotifications::class)->all());
         });
     }
 }

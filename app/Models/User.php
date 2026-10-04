@@ -19,6 +19,8 @@ class User extends Authenticatable
         'name',
         'username',
         'email',
+        'phone',
+        'notify_login',
         'role',
         'password',
         'active',
@@ -35,6 +37,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'active' => 'boolean',
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'notify_login' => 'boolean',
         ];
     }
 

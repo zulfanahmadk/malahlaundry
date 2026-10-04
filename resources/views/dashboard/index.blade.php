@@ -1,198 +1,77 @@
 @extends('layouts.app')
-
-@section('title', 'Dashboard Ringkasan')
-@section('page_title', 'Ringkasan & Analitik Bisnis')
-
+@section('figma_node', '127-45')
+@section('title', 'Beranda')
+@section('page_title', 'Ringkasan toko')
+@section('page_subtitle', \App\Support\Workspace::date(now()).' WIB · Data yang diterima server')
 @section('content')
-<style>
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-        gap: 1.25rem;
-        margin-bottom: 1.75rem;
-    }
-    .stat-card {
-        min-width: 0;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 1.25rem;
-    }
-    .stat-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
-    }
-    .stat-val {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-main);
-        overflow-wrap: anywhere;
-    }
-    .stat-sub {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin-top: 0.25rem;
-    }
-
-    .selfie-thumb {
-        width: 36px;
-        height: 36px;
-        border-radius: 6px;
-        object-fit: cover;
-        border: 1px solid var(--border);
-    }
-</style>
-
-<!-- Statistik Cards -->
 <div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-label">Omzet Hari Ini</div>
-        <div class="stat-val" style="color: var(--primary);">Rp{{ number_format($stats['today_omzet'], 0, ',', '.') }}</div>
-        <div class="stat-sub">{{ $stats['today_transactions_count'] }} transaksi hari ini</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Omzet Bulan Ini</div>
-        <div class="stat-val">Rp{{ number_format($stats['month_omzet'], 0, ',', '.') }}</div>
-        <div class="stat-sub">Bulan {{ now()->translatedFormat('F Y') }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Cucian Aktif</div>
-        <div class="stat-val" style="color: var(--warning);">{{ $stats['active_laundry_count'] }}</div>
-        <div class="stat-sub">Diterima, diproses, dan siap diambil</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Siap Diambil</div>
-        <div class="stat-val" style="color: var(--success);">{{ $stats['ready_pickup_count'] }}</div>
-        <div class="stat-sub">Menunggu pelanggan datang</div>
-    </div>
+    <x-workspace-stat label="Omzet hari ini" :value="\App\Support\Workspace::money($stats['today_omzet'])" note="Transaksi lunas yang masuk hari ini" icon="imgIconWallet" tone="green" />
+    <x-workspace-stat label="Transaksi aktif" :value="$stats['active_laundry_count']" :note="$stats['ready_pickup_count'].' siap diambil'" icon="imgIconCheck" tone="teal" />
+    <x-workspace-stat label="Rata-rata nota" :value="\App\Support\Workspace::money($stats['average'])" note="Transaksi hari ini" icon="imgIconReceipt" />
+    <x-workspace-stat label="Belum lunas" :value="$stats['unpaid_count']" note="Transaksi menunggu pembayaran" icon="imgIconAlert" tone="orange" />
 </div>
-
-<!-- Transaksi Terbaru -->
-<div class="card">
-    <div class="section-header">
-        <h2 class="section-title">Transaksi Terkini (Paperless POS)</h2>
-        <div class="section-actions">
-            <a href="{{ route('reports.export') }}" class="btn btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Ekspor Laporan (Excel)
-            </a>
-            <a href="{{ route('transactions.index') }}" class="btn btn-primary">Lihat Semua</a>
+<div class="two-column">
+    <section class="card">
+        <div class="section-head">
+            <h2>Omzet 7 hari</h2>
+            <span class="chart-note">{{ \App\Support\Workspace::money($weekly->sum('value')) }}</span>
+        </div>
+        <x-workspace-chart :points="$weekly" />
+    </section>
+    <div class="stack">
+        <div class="insight">
+            <h3>Perlu perhatian</h3>
+            <p>{{ $overdue }} cucian sudah siap diambil lebih dari 3 hari.</p>
+            <a class="btn btn-small" href="{{ route('notifications.index') }}">Lihat pemberitahuan</a>
+        </div>
+        <div class="insight">
+            <h3>Kinerja cabang</h3>
+            <p>Omzet bulan ini {{ \App\Support\Workspace::money($stats['month_omzet']) }}.</p>
+            <a class="btn btn-small" href="{{ route('reports.index') }}">Lihat laporan toko</a>
+        </div>
+        <div class="insight">
+            <h3>Operasional</h3>
+            <p>{{ $todayAttendances->unique('user_id')->count() }} staf tercatat masuk hari ini. {{ $stats['today_transactions_count'] }} transaksi diterima server hari ini.</p>
         </div>
     </div>
-
-    <div class="table-responsive">
-        <table style="min-width: 800px;">
-            <thead>
-                <tr>
-                    <th>No Transaksi</th>
-                    <th>Waktu (WIB)</th>
-                    <th>Pelanggan</th>
-                    <th>Total</th>
-                    <th>Status Cucian</th>
-                    <th>Pembayaran</th>
-                    <th>Nota Digital</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($recentTransactions as $trx)
-                    <tr>
-                        <td><strong>{{ $trx->transaction_number }}</strong></td>
-                        <td>{{ $trx->created_at->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i') }}</td>
-                        <td>
-                            <div>{{ $trx->customer->name ?? 'Pelanggan Umum' }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $trx->customer->phone ?? '-' }}</div>
-                        </td>
-                        <td><strong>Rp{{ number_format($trx->total, 0, ',', '.') }}</strong></td>
-                        <td>
-                            @if($trx->laundry_status === 'SELESAI')
-                                <span class="badge badge-success">Selesai</span>
-                            @elseif($trx->laundry_status === 'SIAP_DIAMBIL')
-                                <span class="badge badge-success">Siap Diambil</span>
-                            @else
-                                <span class="badge badge-primary">Diterima</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($trx->payment_status === 'LUNAS')
-                                <span class="badge badge-success">Lunas</span>
-                            @else
-                                <span class="badge badge-danger">Belum Lunas</span>
-                            @endif
-                        </td>
-                        <td>
-                            <a href="{{ $trx->public_receipt_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                                Buka Nota &amp; QR
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Belum ada transaksi tercatat.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
 </div>
-
-<!-- Absensi Kasir Hari Ini -->
-<div class="card">
-    <div class="section-header">
-        <h2 class="section-title">Absensi Kasir Hari Ini (Selfie Check-In)</h2>
-        <a href="{{ route('attendances.index') }}" class="btn btn-secondary">Riwayat Lengkap</a>
-    </div>
-
-    <div class="table-responsive">
-        <table style="min-width: 560px;">
-            <thead>
-                <tr>
-                    <th>Kasir</th>
-                    <th>Waktu Masuk</th>
-                    <th>Foto Masuk</th>
-                    <th>Waktu Keluar</th>
-                    <th>Foto Keluar</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($todayAttendances as $att)
-                    <tr>
-                        <td><strong>{{ $att->user->name ?? 'Kasir' }}</strong></td>
-                        <td>{{ $att->check_in_time ? $att->check_in_time->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i').' WIB' : '-' }}</td>
-                        <td>
-                            @if($att->check_in_photo_path)
-                                <a href="{{ Storage::disk('public')->url($att->check_in_photo_path) }}" target="_blank">
-                                    <img src="{{ Storage::disk('public')->url($att->check_in_photo_path) }}" class="selfie-thumb" alt="Selfie Masuk">
-                                </a>
-                            @else
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">-</span>
-                            @endif
-                        </td>
-                        <td>{{ $att->check_out_time ? $att->check_out_time->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i').' WIB' : 'Belum Keluar' }}</td>
-                        <td>
-                            @if($att->check_out_photo_path)
-                                <a href="{{ Storage::disk('public')->url($att->check_out_photo_path) }}" target="_blank">
-                                    <img src="{{ Storage::disk('public')->url($att->check_out_photo_path) }}" class="selfie-thumb" alt="Selfie Keluar">
-                                </a>
-                            @else
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">-</span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Belum ada data absensi kasir hari ini.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+<div class="two-column">
+    <section>
+        <div class="section-head">
+            <h2>Aktivitas cucian terbaru</h2>
+            <a href="{{ route('transactions.index') }}">Lihat semua</a>
+        </div>
+        <div class="card table-card">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Pelanggan</th>
+                            <th>Layanan</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentTransactions as $trx)<tr>
+                            <td>
+                                <a href="{{ route('transactions.show', $trx->uuid) }}">{{ $trx->transaction_number }}</a>
+                                <small class="muted">{{ \App\Support\Workspace::date($trx->created_at) }}</small>
+                            </td>
+                            <td>{{ $trx->customer?->name ?? 'Pelanggan' }}</td>
+                            <td>{{ $trx->items->pluck('service_name')->filter()->join(', ') ?: 'Layanan' }}</td>
+                            <td>
+                                <span class="badge {{ $trx->laundry_status === 'SIAP_DIAMBIL' ? 'badge-success' : ($trx->laundry_status === 'DITERIMA' ? 'badge-teal' : '') }}">{{ str_replace('_', ' ', $trx->laundry_status) }}</span>
+                            </td>
+                            <td>{{ \App\Support\Workspace::money($trx->total) }}</td>
+                        </tr>@empty<tr>
+                            <td colspan="5" class="empty">Belum ada transaksi tersinkron pada cabang ini.</td>
+                        </tr>@endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </div>
 @endsection
