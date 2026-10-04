@@ -50,5 +50,6 @@
                 <p class="login-form-footer">Malah Laundry Web Admin · v1.6.0</p>
             </section>
         </main>
+        <script src="{{ asset('js/workspace.js').'?v='.filemtime(public_path('js/workspace.js')) }}" defer></script>
     </body>
 </html>

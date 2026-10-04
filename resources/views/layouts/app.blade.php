@@ -90,10 +90,10 @@
                         </noscript>
                     </form>
                     @endif
-                    @php($hasBellAsset = \App\Support\Workspace::asset(trim($__env->yieldContent('figma_node', '127-45')), 'imgNotificationButton'))
-                    <button class="bell-button {{ $hasBellAsset ? 'asset-button' : '' }}" id="notification-toggle" aria-label="Buka pemberitahuan" aria-expanded="false" aria-controls="notification-popover">
-                        <x-figma-icon :name="$hasBellAsset ? 'imgNotificationButton' : 'imgIconBell'" />@if($workspaceNotifications->where('read', false)->isNotEmpty())<span class="unread-dot">
-                        </span>@endif</button>
+                    <button type="button" class="bell-button" id="notification-toggle" aria-label="Buka pemberitahuan" aria-expanded="false" aria-controls="notification-popover">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+                        @if($workspaceNotifications->where('read', false)->isNotEmpty())<span class="unread-dot" aria-label="Ada notifikasi belum dibaca"></span>@endif
+                    </button>
                     <span class="online">Web aktif</span>
                 </div>
                 <section class="notifications-popover" id="notification-popover" hidden aria-label="Notifikasi terbaru">

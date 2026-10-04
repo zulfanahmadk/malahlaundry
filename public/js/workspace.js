@@ -1,6 +1,29 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('input[type="password"]').forEach(input => {
+        const wrapper = document.createElement('span');
+        wrapper.className = 'password-field';
+        input.before(wrapper);
+        wrapper.append(input);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'password-toggle';
+        const render = () => {
+            const visible = input.type === 'text';
+            button.setAttribute('aria-label', visible ? 'Sembunyikan password' : 'Tampilkan password');
+            button.setAttribute('aria-pressed', String(visible));
+            button.title = button.getAttribute('aria-label');
+            button.disabled = input.disabled;
+            button.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>' + (visible ? '<path d="m3 3 18 18"/>' : '') + '</svg>';
+        };
+        button.addEventListener('click', () => {
+            input.type = input.type === 'password' ? 'text' : 'password';
+            render();
+        });
+        render();
+        wrapper.append(button);
+    });
     const readPreference = key => {
         try {
             return localStorage.getItem(`laundry.${key}`);

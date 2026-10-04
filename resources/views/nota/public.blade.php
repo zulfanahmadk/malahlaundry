@@ -416,8 +416,9 @@
             @if($store['logo_url'])
                 <img class="brand-logo" src="{{ $store['logo_url'] }}" alt="Logo {{ $store['name'] }}" width="80" height="80">
             @endif
+            <div class="badge-paperless">Nota Digital</div>
             @if($store['address'] || $store['phone'])
-                <p class="brand-sub store-contact">
+                <p class="brand-sub store-contact" style="margin-top:8px">
                     @if($store['address'])
                         <span>{{ $store['address'] }}</span>
                     @endif
@@ -429,8 +430,6 @@
                     @endif
                 </p>
             @endif
-            <div class="badge-paperless">Nota Digital</div>
-            @if($store['opening_status'] ?? null)<p class="brand-sub" style="margin-top:8px">{{ $store['opening_status'] }} · WIB</p>@endif
         </div>
 
         <!-- QR Code Section -->
@@ -541,17 +540,17 @@
 
         <!-- Footer -->
         <div class="receipt-footer">
+            <p class="footer-note">
+                Terima kasih atas kepercayaan Anda menggunakan <strong>{{ $store['name'] }}</strong>.<br>
+                Simpan link atau tangkapan layar halaman ini untuk bukti pengambilan.
+                Jaga kerahasiaan tautan nota Anda.
+            </p>
             @if($store['receipt_terms'])
                 <section class="receipt-terms" aria-labelledby="receipt-terms-title">
                     <h2 id="receipt-terms-title">Syarat dan Ketentuan</h2>
                     <p>{{ $store['receipt_terms'] }}</p>
                 </section>
             @endif
-            <p class="footer-note">
-                Terima kasih atas kepercayaan Anda menggunakan <strong>{{ $store['name'] }}</strong>.<br>
-                Simpan link atau tangkapan layar halaman ini untuk bukti pengambilan.
-                Jaga kerahasiaan tautan nota Anda.
-            </p>
         </div>
     </main>
 </body>

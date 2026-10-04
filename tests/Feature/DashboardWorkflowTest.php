@@ -86,7 +86,13 @@ class DashboardWorkflowTest extends TestCase
             ->assertSee('Pelanggan hari ini')->assertSee('Pelanggan terlambat ambil')->assertSee('Rp7.000')
             ->assertSee('Tablet perlu sinkron')->assertSee('1 data gagal disinkronkan.')
             ->assertSee('masuk setelah jam buka cabang.')->assertSee('Login akun '.$owner->username.' berhasil.')
-            ->assertDontSee('Pelanggan cabang lain')->assertDontSee('Tablet cabang lain')->assertDontSee('Rp999.000');
+            ->assertDontSee('Pelanggan cabang lain')->assertDontSee('Tablet cabang lain')->assertDontSee('Rp999.000')
+            ->assertSee('class="unread-dot"', false)
+            ->assertDontSee('b3bda.svg', false);
+        $this->post('/notifications/read')->assertRedirect();
+        $this->get('/dashboard')->assertOk()->assertDontSee('class="unread-dot"', false);
+        $owner->forceFill(['last_login_at' => now()->addSecond()])->save();
+        $this->actingAs($owner->fresh())->get('/dashboard')->assertOk()->assertSee('class="unread-dot"', false);
         $this->travelBack();
     }
 
