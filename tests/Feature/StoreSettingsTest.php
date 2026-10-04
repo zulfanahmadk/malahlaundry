@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Branch;
 use App\Models\StoreSetting;
 use App\Models\User;
 use App\Services\StoreConfiguration;
@@ -32,13 +33,12 @@ class StoreSettingsTest extends TestCase
         $this->actingAs($owner)->get('/settings')->assertOk();
         $this->post('/settings', [...$this->settings(), 'logo' => UploadedFile::fake()->image('brand.png', 600, 300)])
             ->assertRedirect('/settings')->assertSessionHasNoErrors();
-        $record = StoreSetting::findOrFail(1);
-        Storage::disk('public')->assertExists($record->logo_path);
-        $image = getimagesizefromstring(Storage::disk('public')->get($record->logo_path));
+        $record = Branch::findOrFail(1);
+        $image = getimagesizefromstring(base64_decode($record->logo_data));
         $this->assertSame(384, $image[0]);
         $this->assertSame(192, $image[1]);
-        $this->get('/store/logo')->assertOk()->assertHeader('Content-Type', 'image/png');
-        $this->get('/dashboard')->assertSee('Laundry Bintang')->assertSee('Pengaturan Toko');
+        $this->get('/store/logo?branch=1')->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->get('/dashboard')->assertSee('Laundry Bintang')->assertSee('Toko &amp; Nota', false);
         $this->get('/n/'.$transaction->uuid)->assertOk()
             ->assertSee('Laundry Bintang')->assertSee('081234567890')->assertSee('Syarat dan Ketentuan')
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
@@ -53,21 +53,22 @@ class StoreSettingsTest extends TestCase
         Sanctum::actingAs($owner);
         $logo = UploadedFile::fake()->image('brand.png')->get();
         $this->postJson('/api/v1/settings', [...$this->settings(), 'logo_base64' => base64_encode($logo)])
-            ->assertOk()->assertJsonPath('store.name', 'Laundry Bintang');
-        $previous = StoreSetting::findOrFail(1)->logo_path;
+            ->assertOk()->assertJsonPath('store.store_name', 'Laundry Bintang');
+        $previous = Branch::findOrFail(1)->logo_data;
         $this->postJson('/api/v1/settings', [...$this->settings(), 'logo_base64' => base64_encode('not an image')])
             ->assertUnprocessable();
-        $this->assertSame($previous, StoreSetting::findOrFail(1)->logo_path);
+        $this->assertSame($previous, Branch::findOrFail(1)->logo_data);
         $this->postJson('/api/v1/settings', [...$this->settings(), 'templates' => ['WA_DITERIMA' => 'Hi']])
-            ->assertUnprocessable();
+            ->assertOk()->assertJsonPath('store.templates.WA_DITERIMA', 'Hi')
+            ->assertJsonPath('store.templates.WA_SELESAI', StoreConfiguration::TEMPLATES['WA_SELESAI']);
         $this->postJson('/api/v1/settings', [...$this->settings(), 'remove_logo' => true])
             ->assertOk()->assertJsonPath('store.logo_data', '');
-        Storage::disk('public')->assertMissing($previous);
+        $this->assertNull(Branch::findOrFail(1)->logo_data);
         $cashier = User::factory()->create(['role' => 'cashier']);
         Sanctum::actingAs($cashier);
         $this->postJson('/api/v1/settings', $this->settings())->assertForbidden();
         $this->getJson('/api/v1/sync/pull')->assertOk()
-            ->assertJsonPath('store.name', 'Laundry Bintang')
+            ->assertJsonPath('store.store_name', 'Laundry Bintang')
             ->assertJsonPath('store.templates.WA_SELESAI', StoreConfiguration::TEMPLATES['WA_SELESAI']);
         $this->actingAs($cashier, 'web')->get('/settings')->assertForbidden();
     }

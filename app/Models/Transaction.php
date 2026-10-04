@@ -11,7 +11,8 @@ use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
-    use HasFactory, \App\Models\Concerns\BelongsToBranch;
+    use HasFactory;
+    use \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'transactions';
     protected $primaryKey = 'uuid';
@@ -52,7 +53,7 @@ class Transaction extends Model
                 do {
                     $number = 'KL'.$time->format('ymdHisv');
                     $time->addMillisecond();
-                } while (static::where('transaction_number', $number)->exists());
+                } while (static::withoutGlobalScope('branch')->where('transaction_number', $number)->exists());
                 $transaction->transaction_number = $number;
             }
         });

@@ -28,7 +28,10 @@ class RecordsController extends Controller
         $page = $records->take(200);
         $values = $page->map(function ($record) use ($data) {
             if ($data['type'] === 'customers') {
-                return $record->only(['uuid', 'name', 'phone', 'address', 'created_at', 'branch_id', 'notes', 'archived_at']);
+                return array_merge($record->only(['uuid', 'name', 'phone', 'address', 'branch_id', 'notes']), [
+                    'created_at' => $record->created_at->toIso8601String(),
+                    'archived_at' => $record->archived_at?->toIso8601String(),
+                ]);
             }
             return [
                 'branch_id' => $record->branch_id, 'version' => $record->version,

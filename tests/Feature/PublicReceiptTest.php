@@ -49,7 +49,7 @@ class PublicReceiptTest extends TestCase
             ->assertDontSee('Alamat pribadi pelanggan')
             ->assertSee('Cucian Anda siap diambil.')
             ->assertSee('BELUM LUNAS')
-            ->assertSee('10 Agt 2026, 09:30')
+            ->assertSee('10 Agustus 2026, 09.30')
             ->assertSee('aria-current="step"', false)
             ->assertSee(QrCodeService::generateDataUri($transaction->public_receipt_url), false)
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow')

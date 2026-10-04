@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!preview) return;
         event.preventDefault();
         preview.src = link.href;
+        preview.hidden = false;
         photo.showModal();
     }));
 });

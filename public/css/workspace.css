@@ -53,7 +53,7 @@ a {
     text-decoration: none;
 }
 
-a: hover {
+a:hover {
     text-decoration: underline;
 }
 
@@ -637,11 +637,11 @@ td {
     vertical-align: middle;
 }
 
-td: first-child {
+td:first-child {
     font-weight: 600;
 }
 
-td: last-child,th:last-child {
+td:last-child,th:last-child {
     text-align: right;
 }
 
@@ -753,7 +753,7 @@ td .muted {
     color: #172033;
 }
 
-input: :placeholder,textarea::placeholder {
+input::placeholder,textarea::placeholder {
     color: #98a2b3;
 }
 
@@ -853,6 +853,8 @@ textarea {
 
 .stack {
     display: grid;
+    grid-template-columns: minmax(0,1fr);
+    min-width: 0;
     gap: 16px;
 }
 

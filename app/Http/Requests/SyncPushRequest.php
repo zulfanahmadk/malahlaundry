@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class SyncPushRequest extends FormRequest
 {
@@ -16,7 +17,13 @@ class SyncPushRequest extends FormRequest
 
     public function messages(): array
     {
+        $branchId = $this->attributes->get('branch_id');
+
         return [
+            'customers.*.branch_id.in' => "Cabang pelanggan berbeda dari cabang aktif ($branchId). Data tetap tersimpan di perangkat.",
+            'services.*.branch_id.in' => "Cabang layanan berbeda dari cabang aktif ($branchId). Data tetap tersimpan di perangkat.",
+            'transactions.*.branch_id.in' => "Cabang transaksi berbeda dari cabang aktif ($branchId). Data tetap tersimpan di perangkat.",
+            'attendances.*.branch_id.in' => "Cabang presensi berbeda dari cabang aktif ($branchId). Data tetap tersimpan di perangkat.",
             'array' => ':attribute harus berupa kumpulan data JSON yang valid.',
             'list' => ':attribute harus berupa daftar JSON, bukan objek tunggal.',
             'required' => ':attribute wajib diisi.',
@@ -35,6 +42,12 @@ class SyncPushRequest extends FormRequest
 
     public function authorize(): bool
     {
+        if (! $this->attributes->has('branch_id') || ! $this->attributes->get('branch')) {
+            throw ValidationException::withMessages([
+                'server' => 'API belum menyediakan konteks cabang. Perbarui API web dan middleware cabang sebelum sinkronisasi.',
+            ]);
+        }
+
         return $this->user()->isOwner()
             || (empty($this->input('users')) && empty($this->input('services')));
     }

@@ -125,7 +125,7 @@ class SyncApiTest extends TestCase
         Sanctum::actingAs($this->user(['role' => 'owner']));
         $customerUuid = (string) Str::uuid();
         $this->postJson('/api/v1/sync/push', [
-            'customers' => [['uuid' => $customerUuid, 'name' => 'Batch', 'phone' => '08123']],
+            'customers' => [['uuid' => $customerUuid, 'name' => 'Batch', 'phone' => '081234567891']],
             'services' => [['uuid' => (string) Str::uuid(), 'name' => 'Cuci', 'price' => 7000]],
             'transactions' => [[
                 'uuid' => (string) Str::uuid(),
@@ -253,7 +253,7 @@ class SyncApiTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_partial_master_updates_preserve_fields_and_deactivation_revokes_tokens(): void
+    public function test_partial_master_updates_preserve_fields_and_user_api_deactivation_revokes_tokens(): void
     {
         Sanctum::actingAs($this->user(['role' => 'owner']));
         $user = $this->user();
@@ -262,11 +262,13 @@ class SyncApiTest extends TestCase
         $service = Service::create(['name' => 'Cuci', 'unit' => 'pcs', 'price' => 17000, 'is_active' => true]);
         $customer = Customer::create(['name' => 'Pelanggan', 'phone' => '081234', 'address' => 'Alamat lama']);
         $this->postJson('/api/v1/sync/push', [
-            'users' => [['username' => $user->username, 'active' => false]],
             'services' => [['uuid' => $service->uuid, 'is_active' => false]],
             'customers' => [['uuid' => $customer->uuid, 'address' => null]],
         ])->assertOk();
 
+        $this->postJson('/api/v1/users/'.$user->id, [
+            'name' => $user->name, 'username' => $user->username, 'role' => 'cashier', 'active' => false,
+        ])->assertOk();
         $this->assertSame($originalPassword, $user->fresh()->password);
         $this->assertSame($user->name, $user->fresh()->name);
         $this->assertFalse($user->fresh()->active);
@@ -292,20 +294,25 @@ class SyncApiTest extends TestCase
         $this->assertTrue($owner->fresh()->active);
     }
 
-    public function test_replayed_master_password_does_not_revoke_a_token_unless_password_changes(): void
+    public function test_replayed_user_creation_preserves_tokens_and_requires_user_api_to_change_password(): void
     {
         Sanctum::actingAs($this->user(['role' => 'owner']));
         $user = $this->user();
         $password = $user->password;
         $user->createToken('Android');
         $this->postJson('/api/v1/sync/push', ['users' => [[
-            'username' => $user->username, 'password' => 'password',
+            'username' => $user->username, 'name' => $user->name, 'password' => 'password',
         ]]])->assertOk();
         $this->assertSame($password, $user->fresh()->password);
         $this->assertDatabaseCount('personal_access_tokens', 1);
         $this->postJson('/api/v1/sync/push', ['users' => [[
             'username' => $user->username, 'password' => 'new-password',
-        ]]])->assertOk();
+        ]]])->assertUnprocessable()->assertJsonValidationErrors('users.0.username');
+        $this->assertSame($password, $user->fresh()->password);
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+        $this->postJson('/api/v1/users/'.$user->id, [
+            'name' => $user->name, 'username' => $user->username, 'role' => 'cashier', 'active' => true, 'password' => 'new-password',
+        ])->assertOk();
         $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
@@ -455,7 +462,7 @@ class SyncApiTest extends TestCase
         $response = $this->getJson('/api/v1/sync/pull')->assertOk();
         $users = $response->json('users');
         $this->assertCount(2, $users);
-        $this->assertEqualsCanonicalizing(['id', 'name', 'username', 'role', 'active'], array_keys($users[0]));
+        $this->assertEqualsCanonicalizing(['id', 'name', 'username', 'role', 'active', 'branch_id'], array_keys($users[0]));
         $this->assertFalse(collect($users)->firstWhere('id', $inactive->id)['active']);
         $this->assertFalse(collect($response->json('services'))->firstWhere('uuid', $service->uuid)['is_active']);
     }
@@ -476,6 +483,7 @@ class SyncApiTest extends TestCase
     private function user(array $attributes = []): User
     {
         return User::create(array_replace([
+            'branch_id' => 1,
             'name' => 'Kasir',
             'username' => 'user-'.Str::uuid(),
             'email' => 'user-'.Str::uuid().'@example.test',

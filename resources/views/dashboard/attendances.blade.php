@@ -91,6 +91,6 @@
         <h2>Selfie presensi</h2>
         <button class="btn btn-small btn-secondary" data-close-dialog type="button">Tutup</button>
     </div>
-    <img class="photo-preview" alt="Selfie presensi staf">
+    <img class="photo-preview" alt="Selfie presensi staf" hidden>
 </dialog>
 @endsection

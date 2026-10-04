@@ -66,3 +66,7 @@ Konteks seluruh 17 node dan aset lokal sudah diinspeksi. Route, model, penyimpan
 - Halaman Laravel `welcome`, skrip password lama yang tidak dirujuk, dua log pemeriksaan, serta empat skrip sekali pakai pengunduh/perapihan Figma di direktori workspace dihapus. Konteks desain, aset, database, backup, migrasi dan file build yang masih dirujuk tetap tersedia.
 
 Hasil pemeriksaan sumber: 71 file PHP tanpa error sintaks, JavaScript utama tanpa error sintaks, 28 template Blade tanpa block tidak berpasangan, CSS tanpa error grammar, route template tanpa referensi hilang, dan seluruh 103 aset web tidak kosong serta tersedia. Ini tidak menggantikan pengujian browser atau aplikasi.
+
+## Pemeriksaan API lanjutan
+
+Validasi API sekarang memberikan pesan konfigurasi apabila konteks middleware cabang hilang. Tanggal arsip pelanggan diserialisasi ISO8601; ACK menyertakan UUID data dan identitas unggahan foto. Retry item identik mempertahankan item, sedangkan perubahan item/nominal/pengambilan menaikkan versi. Antrean tablet memakai cabang yang benar tetapi API produksi belum sejalan dengan seluruh kode lokal. Bukti diagnosis dan langkah pembaruan lengkap ada di `docs/SYNC_REVIEW_2026_10_04.md` pada root workspace. API produksi belum diperbarui pada pekerjaan ini.

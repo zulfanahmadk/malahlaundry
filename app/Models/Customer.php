@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 
 class Customer extends Model
 {
-    use HasFactory, \App\Models\Concerns\BelongsToBranch;
+    use HasFactory;
+    use \App\Models\Concerns\BelongsToBranch;
 
     protected $table = 'customers';
     protected $primaryKey = 'uuid';
@@ -23,6 +24,11 @@ class Customer extends Model
         'phone',
         'address',
     ];
+
+    protected function casts(): array
+    {
+        return ['archived_at' => 'datetime'];
+    }
 
     protected static function booted(): void
     {

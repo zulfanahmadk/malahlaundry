@@ -67,19 +67,21 @@ class DashboardWorkflowTest extends TestCase
     public function test_owner_can_edit_service_and_validation_errors_are_visible(): void
     {
         $this->actingAs(User::factory()->owner()->create());
-        $this->post('/services', ['name' => 'Cuci', 'unit' => 'kg', 'price' => 7000])->assertSessionHasNoErrors();
+        $this->post('/services', ['name' => 'Cuci', 'unit' => 'kg', 'price' => 7000, 'speed' => 'REGULER', 'duration_hours' => 48])->assertSessionHasNoErrors();
         $service = Service::firstOrFail();
 
         $this->post('/services/'.$service->uuid, [
-            'name' => 'Cuci Express', 'unit' => 'pcs', 'price' => 12000, 'is_active' => 0,
+            'name' => 'Cuci Express', 'unit' => 'pcs', 'price' => 12000, 'is_active' => 0, 'speed' => 'EXPRESS', 'duration_hours' => 24,
         ])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('services', ['uuid' => $service->uuid, 'name' => 'Cuci Express', 'price' => 12000, 'is_active' => 0]);
-        $this->get('/services')->assertOk()->assertSee('Edit Layanan')->assertSee('Cuci Express');
+        $this->get('/services')->assertOk()->assertSee('Edit layanan')->assertSee('Cuci Express');
 
         $this->from('/services')->post('/services', [
-            'name' => 'Cuci Baru', 'unit' => 'kg', 'price' => 12.5,
+            'name' => 'Cuci Baru', 'unit' => 'kg', 'price' => 12.5, 'speed' => 'REGULER', 'duration_hours' => 48, '_workspace_dialog' => 'service-create',
         ])->assertRedirect('/services')->assertSessionHasErrors('price');
-        $this->get('/services')->assertSee('Periksa kembali data yang diisi.')->assertSee('Cuci Baru');
+        $priceError = session('errors')->first('price');
+        $this->get('/services')->assertSee($priceError)->assertSee('Cuci Baru')
+            ->assertSee('data-reopen-dialog="service-create"', false);
         $this->assertDatabaseCount('services', 1);
     }
 
@@ -89,7 +91,7 @@ class DashboardWorkflowTest extends TestCase
         $this->actingAs($owner)->get('/dashboard')->assertOk();
         $owner->update(['active' => false]);
         $this->get('/dashboard')->assertForbidden();
-        $this->get('/login')->assertOk()->assertSee('Masuk ke Web Dashboard Owner');
+        $this->get('/login')->assertOk()->assertSee('Masuk ke Malah Laundry');
         $this->assertGuest();
     }
 
@@ -192,8 +194,7 @@ class DashboardWorkflowTest extends TestCase
 
     private function worksheet($response): string
     {
-        $file = tempnam(sys_get_temp_dir(), 'test-xlsx-');
-        file_put_contents($file, $response->streamedContent());
+        $file = $response->baseResponse->getFile()->getPathname();
         $zip = new \ZipArchive();
         $this->assertTrue($zip->open($file));
         try {

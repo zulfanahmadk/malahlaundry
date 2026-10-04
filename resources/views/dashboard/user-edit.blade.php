@@ -5,7 +5,7 @@
 @section('content')
 <div class="card" style="max-width: 680px;">
     <h2 class="section-title" style="margin-bottom: 1.25rem;">Edit {{ $user->name }}</h2>
-    <form action="{{ route('users.update', $user) }}" method="POST">
+    <form action="{{ route('users.update', $user) }}" method="POST" class="stack">
         @csrf
         <div class="form-group">
             <label for="name">Nama lengkap</label>

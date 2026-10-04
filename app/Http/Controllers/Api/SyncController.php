@@ -9,7 +9,6 @@ use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\WhatsAppTemplate;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,8 +38,12 @@ class SyncController extends Controller
                 }
                 if (isset($data['phone'])) {
                     $phone = preg_replace('/\D/', '', $data['phone']);
-                    if (str_starts_with($phone, '0')) $phone = '62'.substr($phone, 1);
-                    if (str_starts_with($phone, '8')) $phone = '62'.$phone;
+                    if (str_starts_with($phone, '0')) {
+                        $phone = '62'.substr($phone, 1);
+                    }
+                    if (str_starts_with($phone, '8')) {
+                        $phone = '62'.$phone;
+                    }
                     if (!preg_match('/^62[0-9]{8,13}$/', $phone)) {
                         throw ValidationException::withMessages(["customers.$index.phone" => 'Nomor telepon Indonesia tidak valid.']);
                     }
@@ -50,10 +53,14 @@ class SyncController extends Controller
                     $data['phone'] = $phone;
                 }
                 if (array_key_exists('archived_at', $data)) {
-                    abort_unless($actor->isOwner(), 403, 'Hanya owner dapat mengarsipkan pelanggan.');
-                    if ($data['archived_at'] && $customer->transactions()->where('laundry_status', '!=', 'SELESAI')->exists()) {
+                    $archivedAt = $data['archived_at'] !== null
+                        ? Carbon::parse($data['archived_at'])->setTimezone(config('app.timezone')) : null;
+                    $archiveChanged = $archivedAt?->getTimestamp() !== $customer->archived_at?->getTimestamp();
+                    abort_if(! $actor->isOwner() && $archiveChanged, 403, 'Hanya owner dapat mengarsipkan pelanggan.');
+                    if ($archiveChanged && $archivedAt && $customer->transactions()->where('laundry_status', '!=', 'SELESAI')->exists()) {
                         throw ValidationException::withMessages(['customer' => 'Selesaikan cucian aktif sebelum mengarsipkan pelanggan.']);
                     }
+                    $data['archived_at'] = $archivedAt;
                 }
                 $customer->fill(Arr::only($data, ['name', 'phone', 'address', 'notes', 'archived_at']))->save();
             }
@@ -69,26 +76,23 @@ class SyncController extends Controller
             foreach ($payload['users'] ?? [] as $index => $data) {
                 $user = User::firstOrNew(['username' => $data['username']]);
                 if ($user->exists) {
+                    // A lost response may cause the same creation to be sent again.
+                    // A replay never changes an existing account or its tokens.
+                    $matches = isset($data['name'], $data['password'])
+                        && $user->name === $data['name']
+                        && Hash::check($data['password'], $user->password)
+                        && $user->role === ($data['role'] ?? 'cashier')
+                        && $user->active === (bool) ($data['active'] ?? true)
+                        && (int) $user->branch_id === (int) ($data['branch_id'] ?? request()->attributes->get('branch_id'));
+                    if ($matches) {
+                        continue;
+                    }
                     throw ValidationException::withMessages(["users.$index.username" => 'Username sudah terdaftar. Gunakan Edit pengguna untuk mengubah akun.']);
                 }
-                if (! $user->exists) {
-                    $this->validateRecord($data, ['name' => 'required', 'password' => 'required'], "users.$index");
-                }
-                if ($user->id === $actor->id
-                    && (($data['role'] ?? $user->role) !== 'owner' || ! ($data['active'] ?? $user->active))) {
-                    throw ValidationException::withMessages([
-                        "users.$index.username" => 'Owner tidak dapat menonaktifkan atau menurunkan peran akun sendiri.',
-                    ]);
-                }
-                if ($user->exists && isset($data['password']) && Hash::check($data['password'], $user->password)) {
-                    unset($data['password']);
-                }
+                $this->validateRecord($data, ['name' => 'required', 'password' => 'required'], "users.$index");
+                $data['branch_id'] ??= request()->attributes->get('branch_id');
                 $user->fill(Arr::only($data, ['name', 'role', 'active', 'password', 'branch_id']));
-                $revokeTokens = $user->exists && ($user->isDirty('password') || $user->isDirty('active') && ! $user->active);
                 $user->save();
-                if ($revokeTokens) {
-                    $user->tokens()->delete();
-                }
             }
 
             foreach ($payload['attendances'] ?? [] as $index => $data) {
@@ -149,6 +153,13 @@ class SyncController extends Controller
                 if ($transaction->exists && isset($data['expected_total']) && (int) $data['expected_total'] !== (int) $transaction->total) {
                     abort(409, 'Nominal transaksi di server berubah. Tinjau versi server sebelum mencatat pembayaran.');
                 }
+                if (isset($data['customer_uuid'])) {
+                    $data['customer_uuid'] = strtolower($data['customer_uuid']);
+                }
+                $this->validateRecord($data, [
+                    'customer_uuid' => ['sometimes', Rule::exists('customers', 'uuid')->where('branch_id', request()->attributes->get('branch_id'))],
+                    'transaction_number' => ['sometimes', Rule::unique('transactions', 'transaction_number')->ignore($uuid, 'uuid')],
+                ], "transactions.$index");
                 if (!$transaction->exists) {
                     abort_unless(request()->attributes->get('branch')->active, 422, 'Cabang nonaktif tidak menerima transaksi baru.');
                     $customer = Customer::where('uuid', $data['customer_uuid'])->firstOrFail();
@@ -167,13 +178,6 @@ class SyncController extends Controller
                         "transactions.$index.payment_status" => 'Transaksi yang sudah lunas tidak dapat diubah menjadi belum lunas.',
                     ]);
                 }
-                if (isset($data['customer_uuid'])) {
-                    $data['customer_uuid'] = strtolower($data['customer_uuid']);
-                }
-                $this->validateRecord($data, [
-                    'customer_uuid' => ['sometimes', Rule::exists('customers', 'uuid')->where('branch_id', request()->attributes->get('branch_id'))],
-                    'transaction_number' => ['sometimes', Rule::unique('transactions', 'transaction_number')->ignore($uuid, 'uuid')],
-                ], "transactions.$index");
                 // The creator remains unchanged when another cashier handles pickup.
                 $transaction->fill(Arr::only($data, ['customer_uuid', 'transaction_number', 'payment_status', 'laundry_status']));
                 if ($transaction->laundry_status === 'SELESAI' && $transaction->payment_status !== 'LUNAS') {
@@ -182,14 +186,15 @@ class SyncController extends Controller
                     ]);
                 }
 
-                if ($transaction->laundry_status === 'SIAP_DIAMBIL' && !$transaction->ready_at) {
-                    $transaction->ready_at = isset($data['ready_at']) ? Carbon::parse($data['ready_at']) : now();
+                if (! $transaction->ready_at && $transaction->laundry_status !== 'DITERIMA' && isset($data['ready_at'])) {
+                    $transaction->ready_at = Carbon::parse($data['ready_at'])->setTimezone(config('app.timezone'));
+                } elseif ($transaction->laundry_status === 'SIAP_DIAMBIL' && ! $transaction->ready_at) {
+                    $transaction->ready_at = now();
                 }
                 if ($transaction->payment_status === 'LUNAS' && !$transaction->paid_at) {
-                    $transaction->paid_at = isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : now();
+                    $transaction->paid_at = isset($data['paid_at']) ? Carbon::parse($data['paid_at'])->setTimezone(config('app.timezone')) : now();
                     $transaction->payment_method = $data['payment_method'] ?? null;
                 }
-                if ($transaction->exists && $transaction->isDirty()) $transaction->version++;
                 if ($transaction->laundry_status === 'SELESAI' && ! $transaction->picked_up_at) {
                     $pickup = isset($data['picked_up_at'])
                         ? Carbon::parse($data['picked_up_at'])->setTimezone(config('app.timezone')) : now();
@@ -225,17 +230,16 @@ class SyncController extends Controller
                             ]);
                         }
                     }
-                    if ($wasPaid) {
-                        $previousItems = $transaction->items()->get()->map(fn ($item) => [
-                            'service_uuid' => $item->service_uuid,
-                            'qty' => $item->qty,
-                            'price' => $item->price,
-                        ])->all();
-                        if ($this->itemSnapshot($items) !== $this->itemSnapshot($previousItems)) {
-                            throw ValidationException::withMessages([
-                                "transactions.$index.items" => 'Item transaksi yang sudah lunas tidak dapat diubah.',
-                            ]);
-                        }
+                    $previousItems = $transaction->exists ? $transaction->items()->get()->map(fn ($item) => [
+                        'service_uuid' => $item->service_uuid,
+                        'qty' => $item->qty,
+                        'price' => $item->price,
+                    ])->all() : [];
+                    $itemsChanged = $this->itemSnapshot($items) !== $this->itemSnapshot($previousItems);
+                    if ($wasPaid && $itemsChanged) {
+                        throw ValidationException::withMessages([
+                            "transactions.$index.items" => 'Item transaksi yang sudah lunas tidak dapat diubah.',
+                        ]);
                     }
                     // Snapshot prices retain the amount charged by the offline cashier.
                     $subtotal = array_sum(array_map(fn (array $item) => (int) round($item['qty'] * $item['price']), $items));
@@ -245,10 +249,18 @@ class SyncController extends Controller
                     }
                     $transaction->subtotal = $subtotal;
                     $transaction->total = $subtotal;
+                    if ($transaction->exists && ($transaction->isDirty() || $itemsChanged)) {
+                        $transaction->version++;
+                    }
                     $transaction->save();
-                    $transaction->items()->delete();
-                    $transaction->items()->createMany($items);
+                    if ($itemsChanged) {
+                        $transaction->items()->delete();
+                        $transaction->items()->createMany($items);
+                    }
                 } else {
+                    if ($transaction->exists && $transaction->isDirty()) {
+                        $transaction->version++;
+                    }
                     $transaction->save();
                 }
             }
@@ -258,6 +270,11 @@ class SyncController extends Controller
             'status' => 'success',
             'message' => 'Sinkronisasi push berhasil diproses.',
             'synced_at' => now()->toIso8601String(),
+            'acknowledged' => collect(['customers', 'services', 'users', 'attendances', 'transactions'])
+                ->mapWithKeys(fn (string $group) => [$group => collect($payload[$group] ?? [])
+                    ->pluck($group === 'users' ? 'username' : 'uuid')
+                    ->map(fn (string $identifier) => $group === 'users' ? $identifier : strtolower($identifier))
+                    ->values()->all()])->all(),
         ]);
     }
 
@@ -296,6 +313,8 @@ class SyncController extends Controller
             'message' => 'Berkas berhasil diunggah.',
             'file_path' => $path,
             'url' => Storage::disk('public')->url($path),
+            'entity_uuid' => $attendance->uuid,
+            'photo_type' => $data['photo_type'],
         ]);
     }
 

@@ -273,7 +273,8 @@ class WorkspaceController extends Controller
             ->when($filters['user_id'] ?? null, fn ($q, $id) => $q->where('user_id', $id))
             ->when($filters['q'] ?? null, fn ($q, $term) => $q->whereHas('user', fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('username', 'like', '%'.$term.'%'))))
             ->when(($filters['status'] ?? '') === 'active', fn ($q) => $q->whereNull('check_out_time'))
-            ->when(($filters['status'] ?? '') === 'finished', fn ($q) => $q->whereNotNull('check_out_time'))->latest('check_in_time');
+            ->when(($filters['status'] ?? '') === 'finished', fn ($q) => $q->whereNotNull('check_out_time'))
+            ->latest('check_in_time')->orderByDesc('id');
         $rows = $query->lazy(500)->map(fn ($a) => [$a->user?->name, Workspace::date($a->check_in_time), Workspace::date($a->check_out_time), $a->check_out_time ? round($a->check_in_time->diffInMinutes($a->check_out_time)) : '', $a->check_out_time ? 'Selesai' : 'Berjalan']);
         return $this->csv('presensi-'.now()->format('Ymd').'.csv', ['Nama', 'Masuk (WIB)', 'Pulang (WIB)', 'Durasi menit', 'Status'], $rows);
     }
