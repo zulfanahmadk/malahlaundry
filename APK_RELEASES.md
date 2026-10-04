@@ -10,6 +10,12 @@ Role `admin` mengelola APK melalui `/admin/apk`. Role ini terpisah dari owner da
 kasir, tidak dapat login Android, serta tidak dapat diedit oleh owner. Login web
 admin langsung membuka halaman APK. Menu pengelolaan toko tetap khusus owner.
 
+Owner dapat membuka menu Pengaturan → APK Android (`/apk`) untuk mengecek versi
+terbaru aplikasi utama, catatan rilis, tanggal penerbitan, dan ukuran APK, lalu
+mengunduh melalui `/apk/{id}/download`. Menu owner selalu menampilkan APK utama;
+rilis QA tidak ditawarkan untuk perangkat kasir. Owner tidak dapat mengunggah
+atau mengubah rilis. Tombol Cek versi terbaru memuat kembali metadata dari server.
+
 Untuk menyiapkan server setelah kode di-deploy:
 
 ```sh

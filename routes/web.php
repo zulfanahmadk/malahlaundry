@@ -37,6 +37,8 @@ Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])
 
 // Web Dashboard Owner & Admin (Protected)
 Route::middleware(['auth:web', 'active', 'owner', 'branch'])->group(function () {
+    Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'ownerIndex'])->name('apk.index');
+    Route::get('/apk/{id}/download', [\App\Http\Controllers\Web\ApkReleaseController::class, 'ownerDownload'])->whereNumber('id')->name('apk.download');
     Route::post('/branches/select', [DashboardController::class, 'selectBranch'])->name('branches.select');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/settings', [StoreSettingsController::class, 'edit'])->name('settings.edit');

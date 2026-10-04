@@ -70,6 +70,39 @@ class ApkReleaseTest extends TestCase
         $this->assertCount(0, Storage::disk('local')->allFiles('apk-releases'));
     }
 
+    public function test_owner_can_check_latest_main_apk_and_download_but_cannot_upload_or_download_qa_from_owner_page(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->create(['role' => 'admin']);
+        $owner = User::factory()->owner()->create();
+        $this->actingAs($admin)->post('/admin/apk', ['apk' => $this->apk(10, '1.7.0')])->assertSessionHasNoErrors();
+        $old = DB::table('apk_releases')->where('package_name', 'com.malahlaundry.app')->first();
+        $this->post('/admin/apk', ['apk' => $this->apk(11, '1.7.1'), 'notes' => 'Perbaikan transaksi offline'])->assertSessionHasNoErrors();
+        $this->post('/admin/apk', ['apk' => $this->apk(99, '9.9.9-qa', 'com.malahlaundry.app.qa')])->assertSessionHasNoErrors();
+        $main = DB::table('apk_releases')->where('package_name', 'com.malahlaundry.app')->orderByDesc('version_code')->first();
+        $qa = DB::table('apk_releases')->where('package_name', 'com.malahlaundry.app.qa')->first();
+        $this->actingAs($owner)->get('/apk')->assertOk()->assertSee('APK Android')->assertSee('Cek versi terbaru')
+            ->assertSee('Unduh APK 1.7.1')->assertSee('Perbaikan transaksi offline')
+            ->assertDontSee('Unduh APK 1.7.0')->assertDontSee('9.9.9-qa')->assertDontSee('Upload APK baru');
+        $this->get('/apk/'.$main->id.'/download')->assertOk()->assertDownload('MalahLaundry-11.apk');
+        $this->get('/apk/'.$qa->id.'/download')->assertNotFound();
+        $this->post('/admin/apk', [])->assertForbidden();
+        Storage::disk('local')->delete($main->path);
+        $this->get('/apk')->assertOk()->assertSee('File APK belum tersedia.')->assertDontSee('Unduh APK 1.7.1');
+        $this->get('/apk/'.$main->id.'/download')->assertNotFound();
+        $this->assertNotNull($old);
+    }
+
+    public function test_owner_apk_page_handles_empty_releases_and_requires_owner_session(): void
+    {
+        $this->get('/apk')->assertRedirect('/login');
+        $this->get('/apk/1/download')->assertRedirect('/login');
+        $this->actingAs(User::factory()->create())->get('/apk')->assertForbidden();
+        $this->get('/apk/1/download')->assertForbidden();
+        $this->actingAs(User::factory()->owner()->create())->get('/apk')->assertOk()
+            ->assertSee('Admin belum menerbitkan APK untuk aplikasi toko.')->assertDontSee('Unduh APK');
+    }
+
     private function apk(int $code, string $version, string $package = 'com.malahlaundry.app'): UploadedFile
     {
         $strings = ['manifest', 'package', 'versionCode', 'versionName', $package, $version];

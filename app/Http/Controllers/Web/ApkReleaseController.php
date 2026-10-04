@@ -18,6 +18,19 @@ class ApkReleaseController extends Controller
         return view('admin.apk', ['releases' => DB::table('apk_releases')->orderByDesc('id')->paginate(20)]);
     }
 
+    public function ownerIndex()
+    {
+        $release = DB::table('apk_releases')->where('package_name', 'com.malahlaundry.app')->orderByDesc('version_code')->first();
+        $downloadAvailable = $release && Storage::disk('local')->exists($release->path);
+        return view('dashboard.apk', compact('release', 'downloadAvailable'));
+    }
+
+    public function ownerDownload(int $id)
+    {
+        abort_unless(DB::table('apk_releases')->where('id', $id)->where('package_name', 'com.malahlaundry.app')->exists(), 404);
+        return $this->download($id);
+    }
+
     public function upload(Request $request, ApkManifest $manifest)
     {
         $request->validate(['apk' => 'required|file|max:102400', 'notes' => 'nullable|string|max:4000']);
