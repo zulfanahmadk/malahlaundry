@@ -13,7 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: ['127.0.0.1', '::1']);
-        $middleware->prepend(\App\Http\Middleware\ReceiptDomain::class);
+        $middleware->prepend([
+            \App\Http\Middleware\LogFeatureRequest::class,
+            \App\Http\Middleware\ReceiptDomain::class,
+        ]);
         $middleware->alias([
             'branch' => \App\Http\Middleware\SelectBranch::class,
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,

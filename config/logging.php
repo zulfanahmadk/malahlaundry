@@ -5,6 +5,17 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
+$featureChannels = [];
+foreach (\App\Logging\FeatureLog::features() as $feature) {
+    $featureChannels[$feature] = [
+        'driver' => 'custom',
+        'via' => \App\Logging\CreateFeatureLogger::class,
+        'feature' => $feature,
+        'level' => env('LOG_LEVEL', 'debug'),
+        'days' => env('LOG_DAILY_DAYS', 14),
+    ];
+}
+
 return [
 
     /*
@@ -59,15 +70,15 @@ return [
         ],
 
         'single' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
+            'driver' => 'custom',
+            'via' => \App\Logging\CreateFeatureLogger::class,
             'level' => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders' => true,
+            'days' => env('LOG_DAILY_DAYS', 14),
         ],
 
         'daily' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
+            'driver' => 'custom',
+            'via' => \App\Logging\CreateFeatureLogger::class,
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
@@ -126,6 +137,8 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        ...$featureChannels,
 
     ],
 
