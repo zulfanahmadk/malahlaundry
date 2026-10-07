@@ -56,7 +56,7 @@
                     <td>{{ ['kg'=>'Kiloan','pcs'=>'Satuan','m2'=>'Luas'][$service->unit] ?? $service->unit }}</td>
                     <td>{{ ucfirst(strtolower($service->speed)) }}</td>
                     <td class="table-nowrap">{{ \App\Support\Workspace::money($service->price) }}/{{ $service->unit === 'm2' ? 'm²' : $service->unit }}</td>
-                    <td class="table-nowrap">{{ $service->duration_hours }} jam</td>
+                    <td class="table-nowrap">{{ $service->duration_unit === 'DAY' ? ($service->duration_hours / 24).' hari' : $service->duration_hours.' jam' }}</td>
                     <td>
                         <div class="table-actions">
                             <span class="badge {{ $service->is_active ? 'badge-success' : '' }}">{{ $service->is_active ? 'AKTIF' : 'NONAKTIF' }}</span>
@@ -117,9 +117,11 @@
                 </label>
             </div>
             <div class="form-group">
-                <label>Estimasi (jam)<input type="number" name="duration_hours" min="1" max="8760" value="{{ $formValue('duration_hours', $service?->duration_hours ?? 48) }}" required>
+                <label>Estimasi durasi<input type="number" name="duration_value" min="1" max="8760" value="{{ $formValue('duration_value', $service?->duration_unit === 'DAY' ? $service->duration_hours / 24 : ($service?->duration_hours ?? 48)) }}" required>
                 </label>
-            </div>@if($service)<div class="form-group">
+            </div>
+            <div class="form-group"><label>Satuan estimasi<select name="duration_unit"><option value="HOUR" @selected($formValue('duration_unit', $service?->duration_unit) !== 'DAY')>Jam</option><option value="DAY" @selected($formValue('duration_unit', $service?->duration_unit) === 'DAY')>Hari</option></select></label></div>
+            @if($service)<div class="form-group">
                 <label>Status<span class="select-field">
                         <select name="is_active">
                             <option value="1" @selected((int) $formValue('is_active', $service->is_active) === 1)>Aktif</option>

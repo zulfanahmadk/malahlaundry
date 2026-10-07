@@ -59,6 +59,7 @@ class SyncPushRequest extends FormRequest
             'customers.*.archived_at' => 'sometimes|nullable|date',
             'services.*.speed' => 'sometimes|in:REGULER,EXPRESS',
             'services.*.duration_hours' => 'sometimes|integer|between:1,8760',
+            'services.*.duration_unit' => 'sometimes|in:HOUR,DAY',
             'users.*.branch_id' => 'sometimes|integer|exists:branches,id',
             'transactions.*.estimated_at' => 'sometimes|nullable|date',
             'transactions.*.ready_at' => 'sometimes|nullable|date',

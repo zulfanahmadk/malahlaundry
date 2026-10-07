@@ -26,16 +26,21 @@ class FeatureLogHandler extends AbstractHandler
         if (! in_array($feature, FeatureLog::features(), true)) {
             $feature = 'aplikasi';
         }
-        $handler = $this->handlers[$feature] ??= new RotatingFileHandler(
-            ($this->config['directory'] ?? storage_path('logs')).'/'.$feature.'.log',
-            max(1, (int) ($this->config['days'] ?? 14)),
+        $branch = $request?->attributes->get('branch');
+        $suffix = $branch
+            ? (\Illuminate\Support\Str::slug($branch->name) ?: 'cabang-'.$branch->id).'_'.(\Illuminate\Support\Str::slug($branch->store_name) ?: 'toko')
+            : 'sistem_global';
+        $filename = $feature.'_'.$suffix;
+        $handler = $this->handlers[$filename] ??= new RotatingFileHandler(
+            ($this->config['directory'] ?? storage_path('logs')).'/'.$filename.'.log',
+            3,
             $this->getLevel(),
             true,
             null,
             true,
             timezone: new \DateTimeZone(config('app.timezone', 'Asia/Jakarta'))
         );
-        $context = ['feature' => $feature];
+        $context = ['feature' => $feature, 'branch_id' => $branch?->id, 'branch_name' => $branch?->name, 'store_name' => $branch?->store_name];
         if ($request) {
             $context += [
                 'request_id' => $request->attributes->get('log_request_id'),

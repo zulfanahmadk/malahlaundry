@@ -18,7 +18,7 @@ class Service extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'branch_id', 'speed', 'duration_hours',
+        'branch_id', 'speed', 'duration_hours', 'duration_unit',
         'uuid',
         'name',
         'unit',

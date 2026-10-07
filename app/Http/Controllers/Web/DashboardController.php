@@ -76,13 +76,22 @@ class DashboardController extends Controller
         return view('dashboard.services', compact('services', 'stats'));
     }
 
+    private function normalizeServiceDuration(Request $request): void
+    {
+        if ($request->filled('duration_value')) {
+            $data = $request->validate(['duration_value' => 'required|integer|between:1,8760', 'duration_unit' => 'required|in:HOUR,DAY']);
+            $request->merge(['duration_hours' => (int) $data['duration_value'] * ($data['duration_unit'] === 'DAY' ? 24 : 1)]);
+        }
+    }
+
     public function storeService(Request $request): RedirectResponse
     {
+        $this->normalizeServiceDuration($request);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'unit' => 'required|in:kg,pcs,m2',
             'price' => 'required|integer|min:0|max:1000000000',
-            'speed' => 'required|in:REGULER,EXPRESS', 'duration_hours' => 'required|integer|between:1,8760',
+            'speed' => 'required|in:REGULER,EXPRESS', 'duration_hours' => 'required|integer|between:1,8760', 'duration_unit' => 'sometimes|in:HOUR,DAY',
         ]);
 
         Service::create([
@@ -91,7 +100,7 @@ class DashboardController extends Controller
             'unit' => $validated['unit'],
             'price' => (int) $validated['price'],
             'is_active' => true,
-            'speed' => $validated['speed'], 'duration_hours' => $validated['duration_hours'],
+            'speed' => $validated['speed'], 'duration_hours' => $validated['duration_hours'], 'duration_unit' => $validated['duration_unit'] ?? 'HOUR',
         ]);
 
         return back()->with('success', 'Layanan berhasil ditambahkan.');
@@ -99,6 +108,7 @@ class DashboardController extends Controller
 
     public function updateService(Request $request, string $uuid): RedirectResponse
     {
+        $this->normalizeServiceDuration($request);
         $service = Service::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
@@ -106,7 +116,7 @@ class DashboardController extends Controller
             'unit' => 'required|in:kg,pcs,m2',
             'price' => 'required|integer|min:0|max:1000000000',
             'is_active' => 'required|boolean',
-            'speed' => 'required|in:REGULER,EXPRESS', 'duration_hours' => 'required|integer|between:1,8760',
+            'speed' => 'required|in:REGULER,EXPRESS', 'duration_hours' => 'required|integer|between:1,8760', 'duration_unit' => 'sometimes|in:HOUR,DAY',
         ]);
 
         $service->update([
@@ -114,7 +124,7 @@ class DashboardController extends Controller
             'unit' => $validated['unit'],
             'price' => (int) $validated['price'],
             'is_active' => $validated['is_active'],
-            'speed' => $validated['speed'], 'duration_hours' => $validated['duration_hours'],
+            'speed' => $validated['speed'], 'duration_hours' => $validated['duration_hours'], 'duration_unit' => $validated['duration_unit'] ?? 'HOUR',
         ]);
 
         return back()->with('success', 'Layanan berhasil diperbarui.');

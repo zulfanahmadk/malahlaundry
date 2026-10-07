@@ -70,7 +70,14 @@ class SyncController extends Controller
                 if (! $service->exists) {
                     $this->validateRecord($data, ['name' => 'required', 'price' => 'required'], "services.$index");
                 }
-                $service->fill(Arr::only($data, ['name', 'unit', 'price', 'is_active', 'speed', 'duration_hours']))->save();
+                $changes = Arr::only($data, ['name', 'unit', 'price', 'is_active', 'speed', 'duration_hours', 'duration_unit']);
+                // Older clients only understand hours; do not retain a stale DAY label on their edits.
+                $changes['duration_unit'] = $data['duration_unit'] ?? (isset($data['duration_hours']) ? 'HOUR' : ($service->duration_unit ?? 'HOUR'));
+                $hours = $data['duration_hours'] ?? $service->duration_hours ?? 48;
+                if ($changes['duration_unit'] === 'DAY' && $hours % 24 !== 0) {
+                    throw ValidationException::withMessages(["services.$index.duration_hours" => 'Estimasi hari harus berupa hari penuh.']);
+                }
+                $service->fill($changes)->save();
             }
 
             foreach ($payload['users'] ?? [] as $index => $data) {
@@ -290,7 +297,7 @@ class SyncController extends Controller
         $attendance = Attendance::where('uuid', strtolower($data['entity_uuid']))->firstOrFail();
         abort_unless($attendance->user_id === $request->user()->id, 403, 'Absensi ini milik pengguna lain.');
 
-        $path = $request->file('file')->store('attendances/'.now()->format('Y/m'), 'public');
+        $path = $request->file('file')->store(app(\App\Services\AttendancePhotoPath::class)->directory($attendance), 'public');
         abort_unless($path, 500, 'Foto gagal disimpan. Silakan coba lagi.');
         $column = $data['photo_type'].'_photo_path';
         $previousPath = null;
@@ -322,7 +329,7 @@ class SyncController extends Controller
     {
         return response()->json([
             'users' => User::where('branch_id', request()->attributes->get('branch_id'))->where('role', '!=', 'admin')->select('id', 'name', 'username', 'role', 'active', 'branch_id')->get(),
-            'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active', 'speed', 'duration_hours', 'branch_id')->get(),
+            'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active', 'speed', 'duration_hours', 'duration_unit', 'branch_id')->get(),
             'wa_templates' => collect(app(\App\Services\StoreConfiguration::class)->read()['templates'])->map(fn ($content, $type) => ['type' => $type, 'content' => $content])->values(),
             'store' => app(\App\Services\StoreConfiguration::class)->read(true),
             'branch' => request()->attributes->get('branch'),

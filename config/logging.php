@@ -12,7 +12,7 @@ foreach (\App\Logging\FeatureLog::features() as $feature) {
         'via' => \App\Logging\CreateFeatureLogger::class,
         'feature' => $feature,
         'level' => env('LOG_LEVEL', 'debug'),
-        'days' => env('LOG_DAILY_DAYS', 14),
+        'days' => 3,
     ];
 }
 
@@ -73,14 +73,14 @@ return [
             'driver' => 'custom',
             'via' => \App\Logging\CreateFeatureLogger::class,
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => env('LOG_DAILY_DAYS', 14),
+            'days' => 3,
         ],
 
         'daily' => [
             'driver' => 'custom',
             'via' => \App\Logging\CreateFeatureLogger::class,
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => env('LOG_DAILY_DAYS', 14),
+            'days' => 3,
             'replace_placeholders' => true,
         ],
 
