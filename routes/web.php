@@ -44,7 +44,8 @@ Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin
     Route::get('/branches', [\App\Http\Controllers\Web\AdminUserController::class, 'branches'])->name('branches.index');
     Route::get('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'index'])->name('apk.index');
     Route::post('/apk', [\App\Http\Controllers\Web\ApkReleaseController::class, 'upload'])->name('apk.upload');
-    Route::post('/password', [\App\Http\Controllers\Web\ApkReleaseController::class, 'password'])->name('password');
+    Route::get('/profile', [\App\Http\Controllers\Web\AdminProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/password', [\App\Http\Controllers\Web\AdminProfileController::class, 'password'])->name('password');
 });
 
 // Public Paperless Digital Receipt (Tanpa Auth, UUIDv4)

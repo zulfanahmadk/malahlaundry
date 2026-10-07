@@ -16,7 +16,7 @@
             $navGroups = $isAdmin ? [
                 ['Dukungan', 'imgSidebarIconNotifikasi', [['Tiket masuk','admin.tickets.*','admin.tickets.index','imgSidebarIconTemplatePesan'],['Notifikasi','admin.notifications.*','admin.notifications.index','imgSidebarIconNotifikasi']]],
                 ['Manajemen', 'imgSidebarIconManajemen', [['Pengguna','admin.users.*','admin.users.index','imgSidebarIconPengguna'],['Cabang','admin.branches.*','admin.branches.index','imgSidebarIconCabang']]],
-                ['Sistem', 'imgSidebarIconPengaturan', [['Versi APK','admin.apk.*','admin.apk.index','imgSidebarIconSinkronisasi'],['Log Audit','admin.audit.*','admin.audit.index','imgSidebarIconLaporan']]],
+                ['Sistem', 'imgSidebarIconPengaturan', [['Profil akun','admin.profile.*','admin.profile.edit','imgSidebarIconProfil'],['Versi APK','admin.apk.*','admin.apk.index','imgSidebarIconSinkronisasi'],['Log Audit','admin.audit.*','admin.audit.index','imgSidebarIconLaporan']]],
             ] : [
                 ['Dukungan', 'imgSidebarIconNotifikasi', [['Tiket bantuan','tickets.*','tickets.index','imgSidebarIconTemplatePesan']]],
                 ['Operasional', 'imgSidebarIconOperasional', [['Cucian','transactions.*','transactions.index','imgSidebarIconCucian'],['Pelanggan','customers.*','customers.index','imgSidebarIconPelanggan'],['Laporan','reports.*','reports.index','imgSidebarIconLaporan']]],
@@ -68,7 +68,7 @@
                         <br>
                         <small>{{ $isAdmin ? 'Admin' : 'Owner' }}</small>
                     </summary>
-                    <a href="{{ $isAdmin ? route('admin.users.edit', auth()->user()) : route('profile.edit') }}">Profil akun</a>
+                    <a href="{{ $isAdmin ? route('admin.profile.edit') : route('profile.edit') }}">Profil akun</a>
                     <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="logout">Keluar akun</button>
                     </form>
                 </details>
