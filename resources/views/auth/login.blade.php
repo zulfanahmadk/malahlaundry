@@ -6,6 +6,7 @@
         <title>Masuk · Malah Laundry</title>
         <link rel="icon" type="image/svg+xml" href="{{ asset('figma/e5cb0.svg') }}">
         <link rel="stylesheet" href="{{ asset('css/workspace.css').'?v='.filemtime(public_path('css/workspace.css')) }}">
+        <link rel="stylesheet" href="{{ asset('css/action-loading.css').'?v='.filemtime(public_path('css/action-loading.css')) }}">
     </head>
     <body class="login-page">
         <main class="login-shell">
@@ -51,5 +52,6 @@
             </section>
         </main>
         <script src="{{ asset('js/workspace.js').'?v='.filemtime(public_path('js/workspace.js')) }}" defer></script>
+        <script src="{{ asset('js/action-loading.js').'?v='.filemtime(public_path('js/action-loading.js')) }}" defer></script>
     </body>
 </html>

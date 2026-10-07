@@ -60,7 +60,12 @@ class ApkReleaseController extends Controller
             Storage::disk('local')->delete($path);
             throw $error;
         }
-        return back()->with('success', 'APK diterbitkan. Android akan menampilkan pembaruan jika version code lebih tinggi.');
+        $message = 'APK diterbitkan. Android akan menampilkan pembaruan jika version code lebih tinggi.';
+        if ($request->expectsJson()) {
+            $request->session()->flash('success', $message);
+            return response()->json(['message' => $message, 'redirect' => route('admin.apk.index')]);
+        }
+        return back()->with('success', $message);
     }
 
     public function latest(Request $request)

@@ -8,6 +8,7 @@
         <link rel="stylesheet" href="{{ asset('css/workspace.css').'?v='.filemtime(public_path('css/workspace.css')) }}">
         <link rel="stylesheet" href="{{ asset('css/support.css').'?v='.filemtime(public_path('css/support.css')) }}">
         @stack('styles')
+        <link rel="stylesheet" href="{{ asset('css/action-loading.css').'?v='.filemtime(public_path('css/action-loading.css')) }}">
     </head>
     <body class="workspace-page">
         @php
@@ -136,5 +137,6 @@
         <script src="{{ asset('js/workspace.js').'?v='.filemtime(public_path('js/workspace.js')) }}" defer>
         </script>
         @stack('scripts')
+        <script src="{{ asset('js/action-loading.js').'?v='.filemtime(public_path('js/action-loading.js')) }}" defer></script>
     </body>
 </html>
