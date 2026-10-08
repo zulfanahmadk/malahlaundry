@@ -18,7 +18,7 @@ class AdminUserController extends Controller
             'q' => 'nullable|string|max:255', 'role' => 'nullable|in:admin,owner,cashier',
             'active' => 'nullable|in:0,1', 'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
-        $query = User::with('branch:id,name,code,active');
+        $query = User::with(['branch:id,name,code,active', 'accessRole', 'latestLogin']);
         if ($request->filled('q')) {
             $query->where(fn ($q) => $q->where('name', 'like', '%'.$filters['q'].'%')->orWhere('username', 'like', '%'.$filters['q'].'%'));
         }
@@ -30,7 +30,7 @@ class AdminUserController extends Controller
         if ($request->filled('branch_id')) {
             $query->where('role', '!=', 'admin');
         }
-        $users = $query->orderBy('name')->orderBy('id')->paginate(30, ['id', 'branch_id', 'name', 'username', 'role', 'active', 'last_login_at'])->withQueryString();
+        $users = $query->orderBy('name')->orderBy('id')->paginate(30, ['id', 'branch_id', 'name', 'username', 'role', 'access_role_id', 'active', 'last_login_at'])->withQueryString();
         $counts = User::selectRaw("COUNT(*) AS total,
             SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) AS admins,
             SUM(CASE WHEN role = 'owner' THEN 1 ELSE 0 END) AS owners,
@@ -42,6 +42,12 @@ class AdminUserController extends Controller
     public function create(): View
     {
         return view('admin.user-form', ['user' => new User(['role' => 'cashier', 'active' => true]), 'branches' => $this->branchOptions()]);
+    }
+
+    public function logins(User $user): View
+    {
+        $logins = \App\Models\UserLogin::where('user_id', $user->id)->latest('id')->paginate(30);
+        return view('admin.user-logins', compact('user', 'logins'));
     }
 
     public function edit(User $user): View

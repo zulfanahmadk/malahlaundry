@@ -16,14 +16,21 @@
             $homeRoute = $isAdmin ? 'admin.dashboard' : 'dashboard';
             $navGroups = $isAdmin ? [
                 ['Dukungan', 'imgSidebarIconNotifikasi', [['Tiket masuk','admin.tickets.*','admin.tickets.index','imgSidebarIconTemplatePesan'],['Notifikasi','admin.notifications.*','admin.notifications.index','imgSidebarIconNotifikasi']]],
-                ['Manajemen', 'imgSidebarIconManajemen', [['Pengguna','admin.users.*','admin.users.index','imgSidebarIconPengguna'],['Cabang','admin.branches.*','admin.branches.index','imgSidebarIconCabang']]],
+                ['Manajemen', 'imgSidebarIconManajemen', [['Role & akses','admin.roles.*','admin.roles.index','imgSidebarIconPengguna'],['Pengguna','admin.users.*','admin.users.index','imgSidebarIconPengguna'],['Cabang','admin.branches.*','admin.branches.index','imgSidebarIconCabang']]],
                 ['Sistem', 'imgSidebarIconPengaturan', [['Profil akun','admin.profile.*','admin.profile.edit','imgSidebarIconProfil'],['Versi APK','admin.apk.*','admin.apk.index','imgSidebarIconSinkronisasi'],['Log Audit','admin.audit.*','admin.audit.index','imgSidebarIconLaporan']]],
             ] : [
                 ['Dukungan', 'imgSidebarIconNotifikasi', [['Tiket bantuan','tickets.*','tickets.index','imgSidebarIconTemplatePesan']]],
                 ['Operasional', 'imgSidebarIconOperasional', [['Cucian','transactions.*','transactions.index','imgSidebarIconCucian'],['Pelanggan','customers.*','customers.index','imgSidebarIconPelanggan'],['Laporan','reports.*','reports.index','imgSidebarIconLaporan']]],
-                ['Manajemen', 'imgSidebarIconManajemen', [['Layanan','services.*','services.index','imgSidebarIconLayanan'],['Cabang','branches.*','branches.index','imgSidebarIconCabang'],['Pengguna','users.*','users.index','imgSidebarIconPengguna'],['Presensi','attendances.*','attendances.index','imgSidebarIconPresensi']]],
+                ['Manajemen', 'imgSidebarIconManajemen', [['Layanan','services.*','services.index','imgSidebarIconLayanan'],['Cabang','branches.*','branches.index','imgSidebarIconCabang'],['Role & akses','roles.*','roles.index','imgSidebarIconPengguna'],['Pengguna','users.*','users.index','imgSidebarIconPengguna'],['Presensi','attendances.*','attendances.index','imgSidebarIconPresensi']]],
                 ['Pengaturan', 'imgSidebarIconPengaturan', [['Toko & Nota','settings.*','settings.edit','imgSidebarIconTokoNota'],['Jam Buka','hours.*','hours.edit','imgSidebarIconJamBuka'],['Template Pesan','templates.*','templates.edit','imgSidebarIconTemplatePesan'],['Profil','profile.*','profile.edit','imgSidebarIconProfil'],['Sinkronisasi','sync.*','sync.index','imgSidebarIconSinkronisasi'],['APK Android','apk.*','apk.index','imgIconDevice'],['Notifikasi','notifications.*','notifications.index','imgSidebarIconNotifikasi']]],
             ];
+            $navGroups = collect($navGroups)->map(function ($group) {
+                $group[2] = array_values(array_filter($group[2], fn ($link) => auth()->user()->canAccess(\App\Support\Access::routeFeature($link[2]) ?? 'dashboard')));
+                return $group;
+            })->filter(fn ($group) => count($group[2]))->all();
+            $pageFeature = \App\Support\Access::routeFeature(request()->route()->getName()) ?? 'dashboard';
+            $pageCanWrite = auth()->user()->canAccess($pageFeature, 'write');
+            $pageCanExport = auth()->user()->canAccess($pageFeature, 'export');
             $initials = \App\Support\Workspace::initials(auth()->user()->name);
             $currentBranch = request()->attributes->get('branch');
             $notificationUnreadCount = $isAdmin ? $adminNotificationSummary['unread'] : $workspaceNotifications->where('read', false)->count();
@@ -44,8 +51,10 @@
                 </button>
             </div>
             <nav>
+                @if(auth()->user()->canAccess('dashboard'))
                 <a class="nav-link {{ request()->routeIs($homeRoute) ? 'active' : '' }}" href="{{ route($homeRoute) }}" @if(request()->routeIs($homeRoute)) aria-current="page" @endif>
                     <x-figma-icon name="imgSidebarIconBeranda" />{{ $isAdmin ? 'Ringkasan' : 'Beranda' }}</a>
+                @endif
                 @foreach($navGroups as [$group, $icon, $links])
                 @php($activeGroup = collect($links)->contains(fn ($link) => request()->routeIs($link[1])))
                 <details class="nav-group {{ $activeGroup ? 'is-active' : '' }}" data-nav-group="{{ \Illuminate\Support\Str::slug($group) }}" open>
@@ -135,6 +144,29 @@
             </main>
         </div>
         <script src="{{ asset('js/workspace.js').'?v='.filemtime(public_path('js/workspace.js')) }}" defer>
+        </script>
+        @if(session('login_history_id'))
+        <script>
+        const locationKey = 'login-location-' + @json(session('login_history_id'));
+        if (navigator.geolocation && !sessionStorage.getItem(locationKey)) {
+            navigator.geolocation.getCurrentPosition(position => {
+                fetch(@json(route('login.location')), {method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@json(csrf_token())},
+                    body:JSON.stringify({login_id:@json(session('login_history_id')),latitude:position.coords.latitude,longitude:position.coords.longitude})
+                }).then(response => { if(response.ok) sessionStorage.setItem(locationKey,'1'); });
+            }, () => {}, {timeout:10000,maximumAge:60000});
+        }
+        </script>
+        @endif
+        <script>
+        (() => {
+            const canWrite = @json($pageCanWrite);
+            const canExport = @json($pageCanExport);
+            if (!canWrite) {
+                document.querySelectorAll('main form[method="POST"], main form[method="post"], [data-open-dialog]').forEach(el => el.hidden = true);
+                document.querySelectorAll('main a[href], .topbar-actions a[href]').forEach(el => { if (/\/(edit|create)(\/|$|\?)/.test(el.getAttribute('href'))) el.hidden = true; });
+            }
+            if (!canExport) document.querySelectorAll('a[href]').forEach(el => { if (/\/export(\/|$|\?)/.test(el.getAttribute('href'))) el.hidden = true; });
+        })();
         </script>
         @stack('scripts')
         <script src="{{ asset('js/action-loading.js').'?v='.filemtime(public_path('js/action-loading.js')) }}" defer></script>

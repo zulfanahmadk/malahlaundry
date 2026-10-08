@@ -17,6 +17,7 @@ class AdminUserManagement
     {
         abort_unless($request->user()?->isAdmin(), 403);
         $data = $request->validate([
+            'access_role_id' => 'nullable|integer|exists:access_roles,id',
             'name' => 'required|string|max:255',
             'username' => ['required', 'string', 'max:50', Rule::unique('users', 'username')->ignore($user?->id)],
             'role' => ['required', Rule::in(['admin', 'owner', 'cashier'])],
@@ -25,6 +26,7 @@ class AdminUserManagement
             'branch_id' => [Rule::requiredIf($request->input('role') !== 'admin'), 'nullable', 'integer', 'exists:branches,id'],
         ]);
 
+        \App\Support\Access::validateAssignment($request, $data, $user);
         return DB::transaction(function () use ($request, $user, $data) {
             $this->lockActor($request);
             $account = $user ? User::whereKey($user->id)->lockForUpdate()->firstOrFail() : new User();
@@ -36,12 +38,13 @@ class AdminUserManagement
                 // Admin has no operational branch access; retain the required internal FK.
                 $data['branch_id'] = $account->branch_id ?? Branch::orderBy('id')->value('id');
             }
+            \App\Support\Access::validateAssignment($request, $data, $user);
             if (empty($data['password'])) {
                 unset($data['password']);
             }
             $account->fill($data);
             $revoke = $account->exists && (
-                $account->isDirty(['branch_id', 'role', 'password', 'username'])
+                $account->isDirty(['branch_id', 'role', 'access_role_id', 'password', 'username'])
                 || ($account->isDirty('active') && ! $account->active)
             );
             $forgetCredentials = $account->isDirty(['username', 'password', 'role']);

@@ -16,6 +16,9 @@ class SelectBranch
             ? $request->header('X-Branch-Id', $user->branch_id)
             : $request->session()->get('branch_id', $user->branch_id);
         abort_unless(ctype_digit((string) $branchId), 422, 'Cabang tidak valid.');
+        if ($user->accessRole?->branch_id) {
+            abort_unless((int) $branchId === (int) $user->accessRole->branch_id, 403, 'Role Anda hanya berlaku pada cabang penempatan.');
+        }
         abort_if(! $user->isOwner() && (int) $branchId !== (int) $user->branch_id, 403, 'Cabang tidak sesuai penempatan akun.');
         $branch = Branch::findOrFail($branchId);
         $request->attributes->set('branch_id', $branch->id);

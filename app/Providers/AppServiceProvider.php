@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('newTicketCount', \App\Models\SupportTicket::where('status', 'SUBMITTED')->count());
                 return;
             }
-            $view->with('branches', \App\Models\Branch::orderBy('name')->get(['id', 'name', 'store_name', 'active']));
+            $view->with('branches', \App\Models\Branch::query()->when(auth()->user()?->accessRole?->branch_id, fn ($q, $id) => $q->whereKey($id))->orderBy('name')->get(['id', 'name', 'store_name', 'active']));
             $view->with('workspaceNotifications', app(\App\Services\OwnerNotifications::class)->all());
         });
     }

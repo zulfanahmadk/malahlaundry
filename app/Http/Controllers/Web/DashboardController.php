@@ -88,6 +88,7 @@ class DashboardController extends Controller
     {
         $this->normalizeServiceDuration($request);
         $validated = $request->validate([
+            'access_role_id' => 'nullable|integer|exists:access_roles,id',
             'name' => 'required|string|max:255',
             'unit' => 'required|in:kg,pcs,m2',
             'price' => 'required|integer|min:0|max:1000000000',
@@ -154,7 +155,9 @@ class DashboardController extends Controller
             'branch_id' => 'required|integer|exists:branches,id',
         ]);
 
+        \App\Support\Access::validateAssignment($request, $validated);
         User::create([
+            'access_role_id' => $validated['access_role_id'],
             'name' => $validated['name'],
             'username' => $validated['username'],
             'role' => $validated['role'],
@@ -170,6 +173,7 @@ class DashboardController extends Controller
     {
         $user = User::findOrFail($id);
         abort_if($user->isAdmin(), 403);
+        abort_if(auth()->user()->accessRole?->branch_id && (int) $user->branch_id !== (int) auth()->user()->accessRole->branch_id, 403);
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
         }

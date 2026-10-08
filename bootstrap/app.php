@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ReceiptDomain::class,
         ]);
         $middleware->alias([
+            'access' => \App\Http\Middleware\CheckAccess::class,
             'branch' => \App\Http\Middleware\SelectBranch::class,
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,

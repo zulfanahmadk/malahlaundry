@@ -13,7 +13,7 @@ class BranchController extends Controller
 {
     public function index(Request $request)
     {
-        $rows = Branch::query()->when(! $request->user()->isOwner(), fn ($q) => $q->whereKey($request->user()->branch_id))->get();
+        $rows = Branch::query()->when(! $request->user()->isOwner() || $request->user()->accessRole?->branch_id, fn ($q) => $q->whereKey($request->user()->branch_id))->get();
         return response()->json(['data' => $rows->map(function ($branch) {
             return array_merge($branch->toArray(), [
                 'active_orders' => Transaction::withoutGlobalScope('branch')->where('branch_id', $branch->id)->where('laundry_status', '!=', 'SELESAI')->count(),
@@ -25,6 +25,9 @@ class BranchController extends Controller
     public function save(Request $request, ?Branch $branch = null)
     {
         abort_unless($request->user()->isOwner(), 403);
+        if ($scope = $request->user()->accessRole?->branch_id) {
+            abort_unless((int) $branch?->id === (int) $scope, 403, 'Role Anda hanya dapat mengubah cabang penempatan.');
+        }
         $data = $request->validate([
             'name' => ($branch?->exists ? 'sometimes|' : '').'required|string|max:100',
             'code' => [...($branch?->exists ? ['sometimes'] : []), 'required', 'string', 'max:30', Rule::unique('branches')->ignore($branch?->id)],
@@ -44,6 +47,11 @@ class BranchController extends Controller
             'radius_meters' => 'sometimes|integer|between:10,10000',
             'logo_base64' => 'sometimes|nullable|string|max:1400000',
         ]);
+        foreach (['opening_hours' => 'hours', 'templates' => 'templates', 'message_preferences' => 'templates'] as $field => $feature) {
+            if (array_key_exists($field, $data) && $data[$field] != $branch?->$field) {
+                abort_unless($request->user()->canAccess($feature, 'write'), 403, 'Role Anda tidak dapat mengubah fitur '.$feature.'.');
+            }
+        }
         if (array_key_exists('logo_base64', $data)) {
             $data['logo_data'] = app(\App\Services\BranchLogo::class)->normalize($data['logo_base64']);
             unset($data['logo_base64']);

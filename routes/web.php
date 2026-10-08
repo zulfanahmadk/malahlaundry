@@ -24,8 +24,12 @@ Route::get('/store/logo', [StoreSettingsController::class, 'logo'])->name('store
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth:web', 'active', 'admin', 'access'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Web\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/roles', [\App\Http\Controllers\Web\AccessRoleController::class, 'index'])->name('roles.index');
+    Route::post('/roles', [\App\Http\Controllers\Web\AccessRoleController::class, 'save'])->name('roles.store');
+    Route::post('/roles/{accessRole}', [\App\Http\Controllers\Web\AccessRoleController::class, 'save'])->name('roles.update');
+    Route::post('/roles/{accessRole}/delete', [\App\Http\Controllers\Web\AccessRoleController::class, 'delete'])->name('roles.delete');
     Route::get('/audit', [\App\Http\Controllers\Web\AdminAuditController::class, 'index'])->name('audit.index');
     Route::get('/notifications', [\App\Http\Controllers\Web\AdminNotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/feed', [\App\Http\Controllers\Web\AdminNotificationController::class, 'feed'])->name('notifications.feed');
@@ -38,6 +42,7 @@ Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin
     Route::get('/users', [\App\Http\Controllers\Web\AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [\App\Http\Controllers\Web\AdminUserController::class, 'create'])->name('users.create');
     Route::post('/users', [\App\Http\Controllers\Web\AdminUserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/logins', [\App\Http\Controllers\Web\AdminUserController::class, 'logins'])->name('users.logins');
     Route::get('/users/{user}/edit', [\App\Http\Controllers\Web\AdminUserController::class, 'edit'])->name('users.edit');
     Route::post('/users/{user}', [\App\Http\Controllers\Web\AdminUserController::class, 'update'])->name('users.update');
     Route::post('/users/{user}/toggle', [\App\Http\Controllers\Web\AdminUserController::class, 'toggle'])->name('users.toggle');
@@ -48,13 +53,19 @@ Route::middleware(['auth:web', 'active', 'admin'])->prefix('admin')->name('admin
     Route::post('/password', [\App\Http\Controllers\Web\AdminProfileController::class, 'password'])->name('password');
 });
 
+Route::post('/login-location', [\App\Services\LoginHistory::class, 'location'])->middleware(['auth:web', 'active'])->name('login.location');
+
 // Public Paperless Digital Receipt (Tanpa Auth, UUIDv4)
 Route::get('/n/{uuid}', [NotaPublicController::class, 'show'])
     ->where('uuid', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}')
     ->name('nota.public');
 
 // Owner store operations (Protected)
-Route::middleware(['auth:web', 'active', 'owner', 'branch'])->group(function () {
+Route::middleware(['auth:web', 'active', 'owner', 'branch', 'access'])->group(function () {
+    Route::get('/roles', [\App\Http\Controllers\Web\AccessRoleController::class, 'index'])->name('roles.index');
+    Route::post('/roles', [\App\Http\Controllers\Web\AccessRoleController::class, 'save'])->name('roles.store');
+    Route::post('/roles/{accessRole}', [\App\Http\Controllers\Web\AccessRoleController::class, 'save'])->name('roles.update');
+    Route::post('/roles/{accessRole}/delete', [\App\Http\Controllers\Web\AccessRoleController::class, 'delete'])->name('roles.delete');
     Route::get('/tickets', [\App\Http\Controllers\Web\TicketController::class, 'ownerIndex'])->name('tickets.index');
     Route::get('/tickets/create', [\App\Http\Controllers\Web\TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [\App\Http\Controllers\Web\TicketController::class, 'store'])->name('tickets.store');

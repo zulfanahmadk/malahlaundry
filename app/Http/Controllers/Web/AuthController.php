@@ -33,6 +33,8 @@ class AuthController extends Controller
 
         if (Auth::attemptWhen(['username' => $credentials['username'], 'password' => $credentials['password'], 'active' => true], fn ($user) => $user->isOwner() || $user->isAdmin(), $request->boolean('remember'))) {
             $request->session()->regenerate();
+            $login = app(\App\Services\LoginHistory::class)->record($request, $request->user());
+            $request->session()->put('login_history_id', $login->id);
             $request->user()->forceFill(['last_login_at' => now()])->save();
             return $request->user()->isAdmin()
                 ? redirect()->route('admin.dashboard') : redirect()->intended(route('dashboard'));

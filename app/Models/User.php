@@ -25,6 +25,7 @@ class User extends Authenticatable
         'phone',
         'notify_login',
         'role',
+        'access_role_id',
         'password',
         'active',
     ];
@@ -43,6 +44,21 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'notify_login' => 'boolean',
         ];
+    }
+
+    public function accessRole(): BelongsTo
+    {
+        return $this->belongsTo(AccessRole::class);
+    }
+
+    public function latestLogin(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserLogin::class)->latestOfMany();
+    }
+
+    public function canAccess(string $feature, string $action = 'view'): bool
+    {
+        return \App\Support\Access::allowed($this, $feature, $action);
     }
 
     public function isOwner(): bool

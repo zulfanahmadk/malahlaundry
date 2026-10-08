@@ -81,6 +81,7 @@ class SyncController extends Controller
             }
 
             foreach ($payload['users'] ?? [] as $index => $data) {
+                abort_if(array_diff(\App\Support\Access::defaults($data['role'] ?? 'cashier'), \App\Support\Access::permissions($actor)), 403, 'Tidak dapat membuat akun dengan akses melebihi akun Anda.');
                 $user = User::firstOrNew(['username' => $data['username']]);
                 if ($user->exists) {
                     // A lost response may cause the same creation to be sent again.
@@ -287,6 +288,7 @@ class SyncController extends Controller
 
     public function upload(Request $request): JsonResponse
     {
+        abort_unless($request->user()->canAccess('attendances', 'write'), 403);
         $data = $request->validate([
             'entity_type' => ['required', Rule::in(['attendance_photo'])],
             'entity_uuid' => ['required', 'uuid:4'],
@@ -328,7 +330,8 @@ class SyncController extends Controller
     public function pull(): JsonResponse
     {
         return response()->json([
-            'users' => User::where('branch_id', request()->attributes->get('branch_id'))->where('role', '!=', 'admin')->select('id', 'name', 'username', 'role', 'active', 'branch_id')->get(),
+            'permissions' => \App\Support\Access::permissions(request()->user()),
+            'users' => (request()->user()->canAccess('users') ? User::where('branch_id', request()->attributes->get('branch_id'))->where('role', '!=', 'admin')->select('id', 'name', 'username', 'role', 'active', 'branch_id')->get() : collect()),
             'services' => Service::select('uuid', 'name', 'unit', 'price', 'is_active', 'speed', 'duration_hours', 'duration_unit', 'branch_id')->get(),
             'wa_templates' => collect(app(\App\Services\StoreConfiguration::class)->read()['templates'])->map(fn ($content, $type) => ['type' => $type, 'content' => $content])->values(),
             'store' => app(\App\Services\StoreConfiguration::class)->read(true),

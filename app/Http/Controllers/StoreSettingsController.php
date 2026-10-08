@@ -17,6 +17,9 @@ class StoreSettingsController extends Controller
     public function update(Request $request, StoreConfiguration $configuration)
     {
         abort_unless($request->user()->role === 'owner', 403);
+        if ($request->has('templates')) {
+            abort_unless($request->user()->canAccess('templates', 'write'), 403, 'Role Anda tidak dapat mengubah template pesan.');
+        }
         $configuration->save($request);
         if ($request->is('api/*')) {
             return response()->json(['status' => 'success', 'store' => $configuration->read(true)]);

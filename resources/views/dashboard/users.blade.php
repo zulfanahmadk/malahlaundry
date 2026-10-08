@@ -58,7 +58,7 @@
                     </td>
                     <td>{{ $user->username }}</td>
                     <td>
-                        <span class="badge {{ $user->isOwner() ? 'badge-primary' : '' }}">{{ $user->isOwner() ? 'OWNER' : 'KASIR' }}</span>
+                        <span class="badge {{ $user->isOwner() ? 'badge-primary' : '' }}">{{ $user->isOwner() ? 'OWNER' : 'KASIR' }}</span>@if($user->accessRole)<small class="muted">{{ $user->accessRole->name }}</small>@endif
                     </td>
                     <td>{{ request()->attributes->get('branch')->name }}</td>
                     <td>
@@ -117,6 +117,7 @@
                     </span>
                 </label>
             </div>
+            <x-access-role-select />
             <div class="form-group span-all">
                 <label>Password<input type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required>
                 </label>

@@ -32,6 +32,7 @@
                 <x-figma-icon name="imgIconChevron" />
             </span>
         </div>
+        <x-access-role-select :user="$user" />
         <div class="form-group">
             <label for="active">Status akun</label>
             <span class="select-field">

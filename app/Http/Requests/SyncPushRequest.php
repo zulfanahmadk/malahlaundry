@@ -48,6 +48,11 @@ class SyncPushRequest extends FormRequest
             ]);
         }
 
+        foreach (['users', 'services', 'customers', 'transactions', 'attendances'] as $feature) {
+            if (! empty($this->input($feature)) && ! $this->user()->canAccess($feature, 'write')) {
+                return false;
+            }
+        }
         return $this->user()->isOwner()
             || (empty($this->input('users')) && empty($this->input('services')));
     }

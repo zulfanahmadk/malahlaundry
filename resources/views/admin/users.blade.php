@@ -19,18 +19,21 @@
     <button class="btn btn-secondary">Terapkan</button><a class="btn btn-small" href="{{ route('admin.users.index') }}">Reset</a><span class="count">{{ $users->total() }} pengguna</span>
 </form>
 <div class="card table-card"><div class="table-container"><table>
-    <thead><tr><th>Nama pengguna</th><th>Username</th><th>Peran</th><th>Penempatan dan akses cabang</th><th>Aktivitas / aksi</th></tr></thead>
+    <thead><tr><th>Nama pengguna</th><th>Username</th><th>Peran</th><th>Penempatan dan akses cabang</th><th>IP / perangkat / lokasi terakhir</th><th>Aktivitas / aksi</th></tr></thead>
     <tbody>@forelse($users as $user)<tr>
         <td>{{ $user->name }}<small class="muted">{{ $user->active ? 'Aktif' : 'Nonaktif' }}</small></td>
-        <td>{{ $user->username }}</td><td><span class="badge {{ $user->isCashier() ? '' : 'badge-primary' }}">{{ ['admin' => 'ADMIN', 'owner' => 'OWNER', 'cashier' => 'KASIR'][$user->role] }}</span></td>
+        <td>{{ $user->username }}</td><td><span class="badge {{ $user->isCashier() ? '' : 'badge-primary' }}">{{ ['admin' => 'ADMIN', 'owner' => 'OWNER', 'cashier' => 'KASIR'][$user->role] }}</span>@if($user->accessRole)<small class="muted">{{ $user->accessRole->name }}</small>@endif</td>
         <td>@if($user->isAdmin())Administrasi sistem<small class="muted">Tanpa akses operasional cabang</small>@else{{ $user->branch?->name ?? 'Cabang tidak tersedia' }}<small class="muted">{{ $user->branch?->code }}{{ $user->branch && !$user->branch->active ? ' · Nonaktif' : '' }}</small>
             @if($user->isOwner())<details><summary>Akses seluruh cabang ({{ $branches->count() }})</summary>@foreach($branches as $branch)<div>{{ $branch->name }}{{ $branch->active ? '' : ' · Nonaktif' }}</div>@endforeach</details>@else<small class="muted">Akses hanya cabang penempatan</small>@endif
         @endif</td>
+        <td>{{ $user->latestLogin?->ip_address ?? 'Belum tercatat' }}<small class="muted">{{ $user->latestLogin?->device ?? 'Login berikutnya akan dicatat' }}</small>
+        @if($user->latestLogin?->latitude !== null && $user->latestLogin)<a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q={{ $user->latestLogin->latitude }},{{ $user->latestLogin->longitude }}">Lihat lokasi</a>@else<small class="muted">Lokasi belum tersedia</small>@endif
+        <a class="btn btn-small btn-secondary" href="{{ route('admin.users.logins', $user) }}">Riwayat login</a></td>
         <td><small class="table-nowrap">{{ \App\Support\Workspace::date($user->last_login_at) }}</small><div class="table-actions table-actions-secondary">
             <a class="btn btn-small btn-secondary" href="{{ route('admin.users.edit', $user) }}">Edit</a>
             @if($user->id !== auth()->id())<form action="{{ route('admin.users.toggle', $user) }}" method="POST">@csrf<button class="btn btn-small {{ $user->active ? 'btn-danger' : 'btn-secondary' }}">{{ $user->active ? 'Nonaktifkan' : 'Aktifkan' }}</button></form>@endif
         </div></td>
-    </tr>@empty<tr><td colspan="5" class="empty">Belum ada pengguna yang sesuai filter.</td></tr>@endforelse</tbody>
+    </tr>@empty<tr><td colspan="6" class="empty">Belum ada pengguna yang sesuai filter.</td></tr>@endforelse</tbody>
 </table></div></div>
 @if($users->hasPages())<nav aria-label="Halaman pengguna" class="toolbar">@if($users->previousPageUrl())<a class="btn btn-secondary" href="{{ $users->previousPageUrl() }}">Sebelumnya</a>@endif<span>Halaman {{ $users->currentPage() }} dari {{ $users->lastPage() }}</span>@if($users->nextPageUrl())<a class="btn btn-secondary" href="{{ $users->nextPageUrl() }}">Berikutnya</a>@endif</nav>@endif
 @endsection

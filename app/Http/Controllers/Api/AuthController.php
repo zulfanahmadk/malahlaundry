@@ -69,6 +69,7 @@ class AuthController extends Controller
             ], 403);
         }
 
+        $login = app(\App\Services\LoginHistory::class)->record($request, $user);
         $deviceName = $request->input('device_name', 'Android-Device');
         $user->forceFill(['last_login_at' => now()])->save();
         $token = $user->createToken($deviceName)->plainTextToken;
@@ -79,6 +80,8 @@ class AuthController extends Controller
             'message' => 'Login berhasil.',
             'data' => [
                 'token' => $token,
+                'login_id' => $login->id,
+                'permissions' => \App\Support\Access::permissions($user),
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -86,6 +89,8 @@ class AuthController extends Controller
                     'role' => $user->role,
                     'active' => $user->active,
                     'branch_id' => $user->branch_id,
+                    'branch_scoped' => (bool) $user->accessRole?->branch_id,
+                    'permissions' => \App\Support\Access::permissions($user),
                 ],
             ],
         ]);
@@ -99,7 +104,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'user' => $request->user()->only(['id', 'name', 'username', 'role', 'active', 'branch_id']),
+                'user' => array_merge($request->user()->only(['id', 'name', 'username', 'role', 'active', 'branch_id']), ['permissions' => \App\Support\Access::permissions($request->user())]),
             ],
         ]);
     }
