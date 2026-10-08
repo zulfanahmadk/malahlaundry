@@ -153,4 +153,86 @@ class AccessRolesTest extends TestCase
         $this->postJson('/api/v1/branches/'.$owner->branch_id, ['opening_hours' => null])->assertForbidden();
         $this->postJson('/api/v1/branches/'.$owner->branch_id, ['name' => 'Test', 'code' => 'TEST', 'templates' => ['WA_DITERIMA' => 'Denied']])->assertForbidden();
     }
+
+    public function test_admin_can_set_menu_access_on_user_without_changing_role_peers(): void
+    {
+        $admin = $this->account('admin');
+        $role = AccessRole::create(['name' => 'Supervisor', 'base_role' => 'owner', 'permissions' => ['dashboard.view', 'profile.view', 'customers.view', 'customers.export']]);
+        $user = $this->account('owner', $role);
+        $peer = $this->account('owner', $role);
+        $user->createToken('old-device');
+        $this->actingAs($admin)->get('/admin/users/'.$user->id.'/edit')->assertOk()->assertSee('Atur khusus untuk pengguna ini');
+        $this->post('/admin/users/'.$user->id, [
+            'name' => $user->name, 'username' => $user->username, 'role' => 'owner', 'active' => 1, 'branch_id' => $user->branch_id,
+            'access_role_id' => $role->id, 'access_mode' => 'custom', 'menu_permissions' => ['dashboard.view', 'profile.view', 'customers.view'],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertFalse($user->fresh()->canAccess('customers', 'export'));
+        $this->assertTrue($peer->fresh()->canAccess('customers', 'export'));
+        $this->assertSame(0, $user->tokens()->count());
+        $this->actingAs($user->fresh())->get('/customers')->assertOk();
+        $this->get('/customers/export')->assertForbidden();
+        $this->get('/reports')->assertForbidden();
+        Sanctum::actingAs($user->fresh());
+        $this->getJson('/api/v1/auth/user')->assertOk()->assertJsonMissing(['reports.view']);
+        $this->postJson('/api/v1/sync/push', ['customers' => [['uuid' => '4599d1ed-0758-44f7-b49b-e5f51cbf939e', 'name' => 'Denied']]])->assertForbidden();
+    }
+
+    public function test_only_existing_actions_are_offered_and_accepted(): void
+    {
+        $admin = $this->account('admin');
+        $this->actingAs($admin)->get('/admin/roles')->assertOk()
+            ->assertSee('Unduh laporan Excel')->assertDontSee('value="dashboard.export"', false)
+            ->assertDontSee('value="reports.write"', false)->assertDontSee('value="sync.write"', false);
+        $this->post('/admin/roles', ['name' => 'Invalid', 'base_role' => 'owner', 'permissions' => ['dashboard.view', 'profile.view', 'reports.write']])
+            ->assertSessionHasErrors('permissions.2');
+    }
+
+    public function test_owner_can_create_user_with_custom_access_and_cannot_exceed_own_permissions(): void
+    {
+        $owner = $this->account();
+        $owner->update(['menu_permissions' => ['dashboard.view', 'profile.view', 'users.view', 'users.write']]);
+        $payload = ['name' => 'Limited cashier', 'username' => 'limited-cashier', 'role' => 'cashier', 'branch_id' => $owner->branch_id,
+            'password' => 'test-password', 'access_mode' => 'custom', 'menu_permissions' => ['dashboard.view', 'profile.view']];
+        $this->actingAs($owner)->post('/users', $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $cashier = User::where('username', 'limited-cashier')->firstOrFail();
+        $this->assertSame(['dashboard.view', 'profile.view'], $cashier->menu_permissions);
+        $payload['username'] = 'escalated-cashier';
+        $payload['menu_permissions'][] = 'transactions.view';
+        $this->post('/users', $payload)->assertSessionHasErrors('access_role_id');
+        $this->assertDatabaseMissing('users', ['username' => 'escalated-cashier']);
+    }
+
+    public function test_user_permissions_survive_old_client_edit_and_can_be_reset_to_role(): void
+    {
+        $admin = $this->account('admin');
+        $user = $this->account();
+        $user->update(['menu_permissions' => ['dashboard.view', 'profile.view']]);
+        $payload = ['name' => $user->name, 'username' => $user->username, 'role' => 'owner', 'active' => 1, 'branch_id' => $user->branch_id];
+        $this->actingAs($admin)->post('/admin/users/'.$user->id, $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame(['dashboard.view', 'profile.view'], $user->fresh()->menu_permissions);
+        $this->post('/admin/users/'.$user->id, $payload + ['access_mode' => 'role'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull($user->fresh()->menu_permissions);
+        $this->assertTrue($user->fresh()->canAccess('reports'));
+    }
+
+    public function test_custom_access_cannot_exceed_role_or_remove_required_menus(): void
+    {
+        $admin = $this->account('admin');
+        $role = AccessRole::create(['name' => 'Viewer', 'base_role' => 'owner', 'permissions' => ['dashboard.view', 'profile.view']]);
+        $user = $this->account('owner', $role);
+        $payload = ['name' => $user->name, 'username' => $user->username, 'role' => 'owner', 'active' => 1, 'branch_id' => $user->branch_id, 'access_mode' => 'custom'];
+        $this->actingAs($admin)->post('/admin/users/'.$user->id, $payload + ['menu_permissions' => ['dashboard.view', 'profile.view', 'reports.view']])
+            ->assertSessionHasErrors('menu_permissions');
+        $this->post('/admin/users/'.$user->id, $payload + ['menu_permissions' => ['dashboard.view']])->assertSessionHasErrors('menu_permissions');
+        $this->assertNull($user->fresh()->menu_permissions);
+    }
+
+    public function test_custom_admin_cannot_grant_broader_roles_or_change_own_access(): void
+    {
+        $admin = $this->account('admin');
+        $admin->update(['menu_permissions' => ['dashboard.view', 'profile.view', 'roles.view', 'roles.write', 'users.view', 'users.write']]);
+        $this->actingAs($admin)->post('/admin/roles', ['name' => 'Escalation', 'base_role' => 'admin', 'permissions' => ['dashboard.view', 'profile.view', 'apk.view']])->assertForbidden();
+        $this->post('/admin/users/'.$admin->id, ['name' => $admin->name, 'username' => $admin->username, 'role' => 'admin', 'active' => 1, 'access_mode' => 'role'])
+            ->assertSessionHasErrors('menu_permissions');
+    }
 }

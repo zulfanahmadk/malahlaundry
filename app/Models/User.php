@@ -26,6 +26,7 @@ class User extends Authenticatable
         'notify_login',
         'role',
         'access_role_id',
+        'menu_permissions',
         'password',
         'active',
     ];
@@ -40,6 +41,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'active' => 'boolean',
+            'menu_permissions' => 'array',
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'notify_login' => 'boolean',

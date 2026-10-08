@@ -22,6 +22,30 @@ class Access
         ];
     }
 
+    public static function actions(): array
+    {
+        return [
+            'dashboard' => ['view' => 'Buka beranda'],
+            'transactions' => ['view' => 'Lihat cucian', 'write' => 'Buat / ubah cucian (Android)'],
+            'customers' => ['view' => 'Lihat pelanggan', 'write' => 'Kelola pelanggan (Android)', 'export' => 'Unduh data pelanggan'],
+            'reports' => ['view' => 'Lihat laporan & omzet', 'export' => 'Unduh laporan Excel'],
+            'services' => ['view' => 'Lihat layanan', 'write' => 'Tambah / ubah layanan'],
+            'branches' => ['view' => 'Lihat / pilih cabang', 'write' => 'Tambah / ubah cabang'],
+            'users' => ['view' => 'Lihat pengguna', 'write' => 'Tambah / ubah pengguna & akses'],
+            'attendances' => ['view' => 'Lihat presensi', 'write' => 'Catat presensi (Android)', 'export' => 'Unduh data presensi'],
+            'settings' => ['view' => 'Lihat pengaturan toko', 'write' => 'Ubah toko & nota'],
+            'hours' => ['view' => 'Lihat jam buka', 'write' => 'Ubah jam buka'],
+            'templates' => ['view' => 'Lihat template', 'write' => 'Ubah template pesan'],
+            'profile' => ['view' => 'Buka profil', 'write' => 'Ubah profil / password'],
+            'sync' => ['view' => 'Lihat status sinkronisasi'],
+            'notifications' => ['view' => 'Lihat notifikasi', 'write' => 'Tandai sudah dibaca'],
+            'apk' => ['view' => 'Lihat / unduh APK', 'write' => 'Unggah APK (admin)'],
+            'tickets' => ['view' => 'Lihat tiket bantuan', 'write' => 'Buat / balas tiket'],
+            'roles' => ['view' => 'Lihat role', 'write' => 'Buat / ubah / hapus role'],
+            'audit' => ['view' => 'Lihat log audit'],
+        ];
+    }
+
     public static function defaults(string $base): array
     {
         $features = match ($base) {
@@ -31,7 +55,10 @@ class Access
         };
         $permissions = [];
         foreach ($features as $feature) {
-            foreach (['view', 'write', 'export'] as $action) {
+            foreach (array_keys(self::actions()[$feature]) as $action) {
+                if ($feature === 'apk' && $action === 'write' && $base !== 'admin') {
+                    continue;
+                }
                 $permissions[] = "$feature.$action";
             }
         }
@@ -42,6 +69,9 @@ class Access
     {
         $permission = "$feature.$action";
         if (! in_array($permission, self::defaults($user->role), true)) {
+            return false;
+        }
+        if ($user->menu_permissions !== null && ! in_array($permission, $user->menu_permissions, true)) {
             return false;
         }
         if (! $user->access_role_id) {
@@ -106,8 +136,10 @@ class Access
         if ($target?->id === $request->user()->id && (int) $data['access_role_id'] !== (int) $target->access_role_id) {
             throw ValidationException::withMessages(['access_role_id' => 'Role akun sendiri tidak dapat diganti. Gunakan admin lain.']);
         }
+        self::validateUserPermissions($request, $data, $target);
+        $limitedActor = ! $request->user()->isAdmin() || $request->user()->access_role_id || $request->user()->menu_permissions !== null;
         if (! $data['access_role_id']) {
-            if ((! $request->user()->isAdmin() || $request->user()->access_role_id) && array_diff(self::defaults($data['role']), self::permissions($request->user()))) {
+            if ($limitedActor && array_diff($data['menu_permissions'] ?? self::defaults($data['role']), self::permissions($request->user()))) {
                 throw ValidationException::withMessages(['access_role_id' => 'Pilih role dengan akses yang tidak melebihi akun Anda.']);
             }
             return;
@@ -116,8 +148,42 @@ class Access
         if (! $role || $role->base_role !== $data['role'] || ($role->branch_id && (int) $role->branch_id !== (int) ($data['branch_id'] ?? $target?->branch_id))) {
             throw ValidationException::withMessages(['access_role_id' => 'Role tidak sesuai peran dasar atau cabang pengguna.']);
         }
-        if ((! $request->user()->isAdmin() || $request->user()->access_role_id) && array_diff($role->permissions, self::permissions($request->user()))) {
+        if ($data['menu_permissions'] !== null && array_diff($data['menu_permissions'], $role->permissions)) {
+            throw ValidationException::withMessages(['menu_permissions' => 'Akses pengguna harus sesuai batas role yang dipilih.']);
+        }
+        if ($limitedActor && array_diff(array_intersect(self::defaults($data['role']), $role->permissions, $data['menu_permissions'] ?? $role->permissions), self::permissions($request->user()))) {
             throw ValidationException::withMessages(['access_role_id' => 'Tidak dapat memberikan akses melebihi akun Anda.']);
         }
+    }
+
+    private static function validateUserPermissions(Request $request, array &$data, ?User $target): void
+    {
+        $data['menu_permissions'] = $target?->menu_permissions;
+        if (! $request->exists('access_mode')) {
+            return;
+        }
+        $validated = $request->validate([
+            'access_mode' => 'required|in:role,custom',
+            'menu_permissions' => 'nullable|array',
+            'menu_permissions.*' => ['string', 'distinct', \Illuminate\Validation\Rule::in(self::defaults($data['role']))],
+        ]);
+        $permissions = $validated['access_mode'] === 'custom' ? ($validated['menu_permissions'] ?? []) : null;
+        if ($target?->id === $request->user()->id && $permissions !== $target->menu_permissions) {
+            throw ValidationException::withMessages(['menu_permissions' => 'Akses akun sendiri tidak dapat diubah. Gunakan akun pengelola lain.']);
+        }
+        if ($permissions !== null) {
+            foreach (['dashboard.view', 'profile.view'] as $required) {
+                if (! in_array($required, $permissions, true)) {
+                    throw ValidationException::withMessages(['menu_permissions' => 'Beranda dan Profil harus tetap dapat diakses.']);
+                }
+            }
+            foreach ($permissions as $permission) {
+                [$feature, $action] = explode('.', $permission);
+                if ($action !== 'view' && ! in_array("$feature.view", $permissions, true)) {
+                    throw ValidationException::withMessages(['menu_permissions' => 'Aktifkan akses lihat menu sebelum memilih tindakan lainnya.']);
+                }
+            }
+        }
+        $data['menu_permissions'] = $permissions;
     }
 }

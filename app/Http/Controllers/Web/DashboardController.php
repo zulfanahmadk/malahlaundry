@@ -158,6 +158,7 @@ class DashboardController extends Controller
         \App\Support\Access::validateAssignment($request, $validated);
         User::create([
             'access_role_id' => $validated['access_role_id'],
+            'menu_permissions' => $validated['menu_permissions'],
             'name' => $validated['name'],
             'username' => $validated['username'],
             'role' => $validated['role'],

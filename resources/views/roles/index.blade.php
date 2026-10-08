@@ -24,9 +24,8 @@
     <form class="stack" method="POST" action="{{ $accessRole->exists ? route($prefix.'roles.update', $accessRole) : route($prefix.'roles.store') }}">@csrf<input type="hidden" name="_role_form" value="{{ $formKey }}">
         <div class="form-group"><label>Nama role<input name="name" value="{{ $formName }}" maxlength="100" required placeholder="Contoh: Supervisor"></label></div>
         <div class="form-group"><label>Peran dasar<select name="base_role" data-role-base>@foreach((auth()->user()->isAdmin() ? ['cashier'=>'Kasir','owner'=>'Owner','admin'=>'Admin'] : ['cashier'=>'Kasir','owner'=>'Owner']) as $value => $label)<option value="{{ $value }}" @selected($formBase === $value)>{{ $label }}</option>@endforeach</select></label></div>
-        <div class="table-container"><table><thead><tr><th>Menu / fitur</th><th>Lihat</th><th>Tambah / ubah</th><th>Ekspor</th></tr></thead><tbody>
-        @foreach($features as $feature => $label)<tr data-access-feature="{{ $feature }}"><td>{{ $label }}</td>@foreach(['view','write','export'] as $action)<td><input aria-label="{{ $label }}: {{ $action }}" type="checkbox" name="permissions[]" value="{{ $feature.'.'.$action }}" @checked(in_array($feature.'.'.$action, $formPermissions))></td>@endforeach</tr>@endforeach
-        </tbody></table></div>
+        <p class="form-help">Centang menu dan tindakan yang diizinkan. Unduh data hanya tersedia untuk pelanggan, laporan, dan presensi. Tindakan berlabel Android digunakan di aplikasi.</p>
+        <x-permission-options :selected="$formPermissions" />
         <button class="btn btn-primary">{{ $accessRole->exists ? 'Simpan role' : 'Buat role' }}</button>
     </form>
     @if($accessRole->exists)<form method="POST" action="{{ route($prefix.'roles.delete', $accessRole) }}" style="margin-top:12px">@csrf<button class="btn btn-danger">Hapus role</button></form>@endif
@@ -39,11 +38,25 @@
 const roleDefaults = @json($roleDefaults);
 const actorPermissions = @json($actorPermissions);
 document.querySelectorAll('[data-role-base]').forEach(select => {
-    const refresh = () => select.form.querySelectorAll('input[name="permissions[]"]').forEach(input => {
-        input.disabled = !roleDefaults[select.value].includes(input.value) || !actorPermissions.includes(input.value);
-        if (input.disabled) input.checked = false;
-    });
+    const refresh = () => {
+        select.form.querySelectorAll('input[name="permissions[]"]').forEach(input => {
+            const supported = roleDefaults[select.value].includes(input.value);
+            input.closest('[data-permission-option]').style.display = supported ? 'flex' : 'none';
+            input.disabled = !supported || !actorPermissions.includes(input.value);
+            if (input.disabled) input.checked = false;
+        });
+        select.form.querySelectorAll('[data-access-feature]').forEach(row => {
+            row.hidden = ![...row.querySelectorAll('[data-permission-option]')].some(option => option.style.display !== 'none');
+        });
+    };
     select.addEventListener('change', refresh); refresh();
+    select.form.querySelector('[data-permission-options]').addEventListener('change', event => {
+        const input = event.target;
+        if (!input.matches('input[type="checkbox"]')) return;
+        const row = input.closest('[data-access-feature]');
+        if (input.dataset.permissionAction === 'view' && !input.checked) row.querySelectorAll('input').forEach(item => { item.checked = false; });
+        if (input.dataset.permissionAction !== 'view' && input.checked) row.querySelector('[data-permission-action="view"]').checked = true;
+    });
 });
 </script>
 @endpush

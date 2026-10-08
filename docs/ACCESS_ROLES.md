@@ -1,6 +1,8 @@
 # Role dan riwayat login
 
-Admin dan owner memiliki menu **Role & akses**. Pilih peran dasar, lalu centang akses **Lihat**, **Tambah / ubah**, dan **Ekspor** untuk setiap menu. Beranda dan Profil wajib dapat dilihat. Pilih role tersebut di formulir tambah/edit pengguna; peran dasar dan cabangnya harus sesuai.
+Admin dan owner memiliki menu **Role & akses**. Pilih peran dasar, lalu centang menu dan tindakan yang tersedia. Setiap menu hanya menampilkan tindakan yang benar-benar ada: Beranda dan Log audit hanya untuk dilihat; unduh data tersedia pada Pelanggan, Laporan, dan Presensi; unggah APK hanya untuk admin. Tindakan khusus Android diberi keterangan. Beranda dan Profil wajib dapat dilihat.
+
+Pada formulir tambah/edit pengguna, pilih **Ikuti akses role / peran** atau **Atur khusus untuk pengguna ini**. Pilihan khusus menampilkan daftar menu dan tindakan langsung di formulir pengguna. Akses khusus hanya berlaku untuk akun tersebut, dibatasi oleh role/peran dasar, dan tidak mengubah akses akun lain. Kembali ke pilihan ikuti role untuk menghapus batas khusus. Perubahan akses mencabut sesi/token perangkat lain. Akun tidak dapat mengubah aksesnya sendiri.
 
 - Akun tanpa role buatan mempertahankan akses bawaan.
 - Admin dapat membuat role bersama. Owner membuat role untuk cabang aktif, tanpa hak admin.
@@ -25,7 +27,7 @@ php artisan optimize:clear
 php artisan up
 ```
 
-Jalankan Artisan menggunakan akun layanan yang memiliki akses storage (server ini memakai `www-data`). Jika migrasi gagal, perbaiki penyebabnya sebelum mengaktifkan aplikasi kembali. Migrasi hanya menambahkan tabel `access_roles`, `user_logins`, dan kolom `users.access_role_id`; tidak mengubah password atau data transaksi lama.
+Jalankan Artisan menggunakan akun layanan yang memiliki akses storage (server ini memakai `www-data`). Jika migrasi gagal, perbaiki penyebabnya sebelum mengaktifkan aplikasi kembali. Migrasi hanya menambahkan tabel `access_roles`, `user_logins`, dan kolom `users.access_role_id` serta `users.menu_permissions`; tidak mengubah password atau data transaksi lama. Gunakan `migrate --force`, bukan `migrate:fresh`, untuk pembaruan server.
 
 Untuk lokasi login browser, kebijakan Nginx/Cloudflare pada domain laundry harus mengizinkan `geolocation=(self)`. Kebijakan `geolocation=()` akan menolak lokasi browser meskipun pengguna ingin mengizinkannya. Pengaturan ini tidak memengaruhi pelaporan GPS dari aplikasi Android.
 

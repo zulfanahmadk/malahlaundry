@@ -15,7 +15,7 @@ class AccessRoleController extends Controller
     public function index(Request $request)
     {
         $defaults = collect(['admin', 'owner', 'cashier'])->mapWithKeys(fn ($base) => [$base => Access::defaults($base)]);
-        $permissions = $request->user()->isAdmin() && ! $request->user()->access_role_id
+        $permissions = $request->user()->isAdmin() && ! $request->user()->access_role_id && $request->user()->menu_permissions === null
             ? $defaults->flatten()->unique()->values()->all() : Access::permissions($request->user());
         return view('roles.index', ['roles' => Access::roleOptions($request->user()), 'features' => Access::features(),
             'roleDefaults' => $defaults, 'actorPermissions' => $permissions]);
@@ -38,7 +38,7 @@ class AccessRoleController extends Controller
         if (! in_array('dashboard.view', $data['permissions'], true) || ! in_array('profile.view', $data['permissions'], true)) {
             return back()->withErrors(['permissions' => 'Role harus mengizinkan Beranda dan Profil agar akun tetap dapat digunakan.'])->withInput();
         }
-        abort_if((! $actor->isAdmin() || $actor->access_role_id) && array_diff($data['permissions'], Access::permissions($actor)), 403, 'Tidak dapat memberikan akses melebihi akun Anda.');
+        abort_if((! $actor->isAdmin() || $actor->access_role_id || $actor->menu_permissions !== null) && array_diff($data['permissions'], Access::permissions($actor)), 403, 'Tidak dapat memberikan akses melebihi akun Anda.');
         foreach ($data['permissions'] as $permission) {
             [$feature, $action] = explode('.', $permission);
             if ($action !== 'view' && ! in_array("$feature.view", $data['permissions'], true)) {

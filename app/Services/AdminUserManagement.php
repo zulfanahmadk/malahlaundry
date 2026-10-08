@@ -44,7 +44,7 @@ class AdminUserManagement
             }
             $account->fill($data);
             $revoke = $account->exists && (
-                $account->isDirty(['branch_id', 'role', 'access_role_id', 'password', 'username'])
+                $account->isDirty(['branch_id', 'role', 'access_role_id', 'menu_permissions', 'password', 'username'])
                 || ($account->isDirty('active') && ! $account->active)
             );
             $forgetCredentials = $account->isDirty(['username', 'password', 'role']);

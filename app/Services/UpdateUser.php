@@ -29,7 +29,7 @@ class UpdateUser
             unset($data['password']);
         }
         $user->fill($data);
-        $revoke = $user->isDirty('branch_id') || $user->isDirty('role') || $user->isDirty('access_role_id') || $user->isDirty('password') || $user->isDirty('username') || ($user->isDirty('active') && ! $user->active);
+        $revoke = $user->isDirty('branch_id') || $user->isDirty('role') || $user->isDirty(['access_role_id', 'menu_permissions']) || $user->isDirty('password') || $user->isDirty('username') || ($user->isDirty('active') && ! $user->active);
         if ($revoke) {
             $user->remember_token = \Illuminate\Support\Str::random(60);
         }
