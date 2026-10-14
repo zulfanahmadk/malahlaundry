@@ -146,6 +146,8 @@ class SyncController extends Controller
             foreach ($payload['transactions'] ?? [] as $index => $data) {
                 $uuid = strtolower($data['uuid']);
                 $transaction = Transaction::where('uuid', $uuid)->lockForUpdate()->first();
+                $created = ! $transaction;
+                $previousStatus = $transaction?->laundry_status;
                 if (! $transaction) {
                     $this->validateRecord($data, ['customer_uuid' => 'required', 'items' => 'required'], "transactions.$index");
                     $transaction = new Transaction([
@@ -271,8 +273,11 @@ class SyncController extends Controller
                     }
                     $transaction->save();
                 }
+                app(\App\Services\TelegramNotifications::class)->record($transaction, $created, $previousStatus);
             }
         }, 3);
+
+        DB::afterCommit(fn () => app(\App\Services\TelegramNotifications::class)->dispatchSafely());
 
         return response()->json([
             'status' => 'success',

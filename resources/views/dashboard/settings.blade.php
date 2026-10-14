@@ -81,4 +81,8 @@
             <x-figma-icon name="imgIconInfo" />Perubahan berlaku pada nota cabang ini dan perangkat Android setelah sinkronisasi berikutnya.</div>
     </aside>
 </form>
+<section class="card" style="margin-top:24px">
+    <div class="section-head"><h2>Notifikasi Telegram owner</h2><a class="btn btn-secondary" href="{{ route('settings.telegram.edit') }}">Atur Telegram</a></div>
+    <p class="form-help">Terima pesan transaksi baru dan cucian yang sudah diambil. Atur Chat ID penerima untuk akun Anda di cabang ini, lalu periksa koneksinya dengan pesan percobaan.</p>
+</section>
 @endsection

@@ -2,6 +2,13 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
+
+Artisan::command('telegram:dispatch', function () {
+    $this->info(app(\App\Services\TelegramNotifications::class)->dispatchPending().' pesan masuk antrean Telegram.');
+})->purpose('Enqueue pending Telegram notifications and scheduled retries');
+
+Schedule::command('telegram:dispatch')->everyMinute()->withoutOverlapping();
 
 Artisan::command('logs:prune {--dry-run : Count files without deleting}', function () {
     $count = app(\App\Jobs\PruneApplicationLogs::class)->handle(dryRun: (bool) $this->option('dry-run'));

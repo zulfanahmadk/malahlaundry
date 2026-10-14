@@ -31,6 +31,16 @@ return [
 
     'connections' => [
 
+        // Keep this connection on the application database for the transactional Telegram outbox.
+        'telegram' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'jobs',
+            'queue' => 'telegram',
+            'retry_after' => 90,
+            'after_commit' => false,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

@@ -78,6 +78,10 @@ Route::middleware(['auth:web', 'active', 'owner', 'branch', 'access'])->group(fu
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/settings', [StoreSettingsController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [StoreSettingsController::class, 'update'])->name('settings.update');
+    Route::get('/settings/telegram', [\App\Http\Controllers\Web\TelegramSettingsController::class, 'edit'])->name('settings.telegram.edit');
+    Route::post('/settings/telegram', [\App\Http\Controllers\Web\TelegramSettingsController::class, 'update'])->name('settings.telegram.update');
+    Route::post('/settings/telegram/test', [\App\Http\Controllers\Web\TelegramSettingsController::class, 'test'])->middleware('throttle:5,1')->name('settings.telegram.test');
+    Route::post('/settings/telegram/{delivery}/retry', [\App\Http\Controllers\Web\TelegramSettingsController::class, 'retry'])->whereNumber('delivery')->middleware('throttle:5,1')->name('settings.telegram.retry');
 
     // Master Services
     Route::get('/services', [DashboardController::class, 'services'])->name('services.index');
