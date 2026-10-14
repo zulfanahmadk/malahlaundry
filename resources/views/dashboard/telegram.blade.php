@@ -1,8 +1,13 @@
 @extends('layouts.app')
+@section('figma_node', '127-2150')
 @section('title', 'Telegram Owner')
 @section('page_title', 'Notifikasi Telegram')
 @section('page_subtitle', 'Penerima transaksi untuk akun owner Anda di cabang aktif')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/telegram.css').'?v='.filemtime(public_path('css/telegram.css')) }}">
+@endpush
 @section('content')
+<div class="telegram-settings">
 <div class="settings-top">
     <a class="btn btn-secondary" href="{{ route('settings.edit') }}">Kembali ke Toko & Nota</a>
     <span class="badge {{ $botConfigured ? 'badge-success' : '' }}">{{ $botConfigured ? 'Token bot sudah dikonfigurasi' : 'Token bot belum dikonfigurasi' }}</span>
@@ -18,9 +23,11 @@
                 <p class="form-help">Isi angka dari message.chat.id setelah penerima menekan Start dan mengirim pesan ke bot. Untuk grup, tambahkan bot dan gunakan Chat ID grup.</p>
             </div>
             <x-workspace-switch name="enabled" label="Aktifkan notifikasi Telegram" note="Pesan otomatis dikirim untuk transaksi baru setelah fitur diaktifkan." :checked="old('enabled', $subscription->enabled)" />
-            <x-workspace-switch name="notify_created" label="Transaksi baru" note="Dikirim setelah transaksi dan rincian layanan berhasil tersimpan di server." :checked="old('notify_created', $subscription->notify_created)" />
-            <x-workspace-switch name="notify_picked_up" label="Cucian sudah diambil" note="Dikirim saat status menjadi Selesai dan waktu pengambilan tercatat." :checked="old('notify_picked_up', $subscription->notify_picked_up)" />
-            <button class="btn btn-primary" type="submit">Simpan pengaturan Telegram</button>
+            <x-workspace-switch name="notify_created" label="Transaksi baru" note="Dikirim setelah transaksi dan rincian layanan berhasil tersimpan di server." :checked="old('notify_created', $subscription->notify_created)" icon="imgIconSemantic1" />
+            <x-workspace-switch name="notify_picked_up" label="Cucian sudah diambil" note="Dikirim saat status menjadi Selesai dan waktu pengambilan tercatat." :checked="old('notify_picked_up', $subscription->notify_picked_up)" icon="imgIconSemantic2" />
+            <div class="actions telegram-actions">
+                <button class="btn btn-primary" type="submit"><x-figma-icon name="imgIconSave" />Simpan pengaturan Telegram</button>
+            </div>
         </form>
     </div>
     <aside class="stack">
@@ -30,9 +37,12 @@
             @if(!$botConfigured)
                 <div class="notice">Token bot perlu dikonfigurasi oleh pengelola server sebelum pesan dapat dikirim.</div>
             @endif
-            <form action="{{ route('settings.telegram.test') }}" method="POST">@csrf
-                <button class="btn btn-secondary" type="submit" @disabled(!$botConfigured || !$subscription->chat_id)>Kirim pesan percobaan</button>
+            <form class="actions telegram-actions" action="{{ route('settings.telegram.test') }}" method="POST">@csrf
+                <button class="btn btn-secondary" type="submit" @disabled(!$botConfigured || !$subscription->chat_id) @if(!$botConfigured || !$subscription->chat_id) aria-describedby="telegram-test-help" @endif>Kirim pesan percobaan</button>
             </form>
+            @if(!$botConfigured || !$subscription->chat_id)
+                <p class="form-help" id="telegram-test-help">{{ !$botConfigured ? 'Konfigurasi token bot terlebih dahulu untuk mengirim pesan percobaan.' : 'Isi dan simpan Chat ID terlebih dahulu untuk mengirim pesan percobaan.' }}</p>
+            @endif
         </section>
         <section class="card">
             <h2>Dari testing ke owner</h2>
@@ -60,7 +70,7 @@
                         <td>
                             @if($delivery->sent_at){{ \App\Support\Workspace::date($delivery->sent_at) }} WIB @else{{ $delivery->last_error ?? 'Menunggu proses pengiriman.' }}@endif
                             @if($delivery->status === 'failed' && $delivery->chat_id === $subscription->chat_id)
-                                <form action="{{ route('settings.telegram.retry', $delivery->id) }}" method="POST">@csrf<button class="btn btn-small btn-secondary" type="submit">Coba kirim ulang</button></form>
+                                <form class="actions telegram-actions" action="{{ route('settings.telegram.retry', $delivery->id) }}" method="POST">@csrf<button class="btn btn-small btn-secondary" type="submit">Coba kirim ulang</button></form>
                             @endif
                         </td>
                     </tr>
@@ -72,4 +82,5 @@
     </div>
     {{ $deliveries->links() }}
 </section>
+</div>
 @endsection

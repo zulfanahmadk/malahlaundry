@@ -14,31 +14,42 @@ Fitur mengirim dua jenis pesan: transaksi baru yang berhasil tersimpan di server
    ```
 
 4. Login sebagai owner, buka **Toko & Nota → Atur Telegram**. Isi Chat ID dan simpan. Tekan **Kirim pesan percobaan**. Aktifkan notifikasi dan jenis pesan yang diinginkan.
-5. Jalankan worker khusus koneksi database `telegram`:
+5. Pada production, gunakan job Cronicle **Telegram Notifications** sesuai bagian berikut. Untuk pengembangan lokal, jalankan worker khusus koneksi database `telegram`:
 
    ```sh
    php artisan queue:work telegram --queue=telegram --sleep=1 --tries=1 --timeout=30
    ```
 
-6. Jalankan scheduler. Untuk pengembangan lokal gunakan terminal kedua:
+6. Untuk pengembangan lokal, jalankan scheduler di terminal kedua:
 
    ```sh
    php artisan schedule:work
    ```
 
-   Di production gunakan cron setiap menit, sesuaikan lokasi project:
+## Production dengan Cronicle
 
-   ```cron
-   * * * * * cd /var/www/malahlaundry && php artisan schedule:run >> /dev/null 2>&1
-   ```
+Gunakan Shell Script plugin dengan isi [telegram-notifications.sh](../deploy/cronicle/telegram-notifications.sh). Cronicle memanggil `telegram:dispatch` langsung lalu memproses antrean `telegram`; ini menangani pengiriman baru dan retry tertunda.
 
-   Worker perlu dikelola oleh Supervisor atau systemd agar otomatis hidup kembali. Jalankan worker, scheduler, dan perintah Laravel production sebagai `www-data`. Setelah deployment kode/token baru, jalankan `php artisan queue:restart`.
+- Judul: **Telegram Notifications**.
+- Kategori: **MalahLaundry Telegram**, dengan maksimal satu job bersamaan. Kategori tersendiri menjaga job pembersihan log/foto tetap berjalan pada jadwalnya.
+- Target: **malahsite** (Primary Group / `maingrp`).
+- Jadwal: setiap menit, zona waktu **Asia/Jakarta** (`timing: {}`).
+- Plugin: **Shell Script** (`shellplug`).
+- Maksimal concurrent job: **1**; timeout **75 detik**.
+- Catch up, detached, antrean event Cronicle, dan retry Cronicle: **nonaktif**. Retry pesan diatur oleh outbox Laravel.
+- Script dijalankan Cronicle sebagai root, sedangkan seluruh Artisan dijalankan sebagai **www-data** melalui `sudo -n`.
+
+`flock` memakai `storage/framework/telegram-cronicle.lock` agar Run Now dan eksekusi terjadwal tidak membuat worker kedua. Worker keluar saat antrean kosong, setelah batas 35 detik di antara job, atau setelah 100 job. Satu job yang sedang diproses boleh selesai terlebih dahulu. Pemrosesan berlanjut pada menit berikutnya, sehingga latensi antrean dapat mencapai sekitar satu menit. Riwayat Cronicle memperlihatkan hasil command; riwayat Telegram owner memperlihatkan konfirmasi tiap pesan.
+
+Worker yang berakhir pada tiap siklus akan membaca kode dan konfigurasi terbaru pada siklus berikutnya. Setelah pull perubahan kode/token, jalankan migrasi yang diperlukan dan `sudo -u www-data php artisan optimize:clear`. Job Cronicle tidak melakukan `git pull`, migrasi, atau perubahan token secara otomatis. Job ini menangani Telegram; tugas Laravel lain tetap mengikuti jadwal masing-masing.
+
+## Penerima
 
 Pengaturan penerima berlaku per **akun owner dan cabang**. Owner dengan akses role cabang hanya dapat menerima pesan cabangnya. Akun nonaktif, bukan owner, atau tanpa akses membaca transaksi tidak menerima pesan. Beberapa owner yang memakai Chat ID sama hanya menghasilkan satu pesan per transaksi dan jenis event.
 
 ## Pergantian penerima / ownership
 
-Transfer ownership bot tidak memilih penerima notifikasi aplikasi. Owner baru menekan Start, lalu Chat ID testing diganti dengan Chat ID owner melalui halaman pengaturan. Pesan tertunda ke penerima lama dibatalkan. Jika token diregenerasi, perbarui `.env`, bersihkan cache konfigurasi, dan restart worker. Pengaturan baru tidak mengirim ulang transaksi lama.
+Transfer ownership bot tidak memilih penerima notifikasi aplikasi. Owner baru menekan Start, lalu Chat ID testing diganti dengan Chat ID owner melalui halaman pengaturan. Pesan tertunda ke penerima lama dibatalkan. Jika token diregenerasi, perbarui `.env` dan bersihkan cache konfigurasi. Worker Cronicle memakai token baru pada siklus berikutnya. Pengaturan baru tidak mengirim ulang transaksi lama.
 
 ## Pengiriman dan kegagalan
 
@@ -55,10 +66,6 @@ Transfer ownership bot tidak memilih penerima notifikasi aplikasi. Owner baru me
 
 ## Pengujian
 
-Pengujian fitur menggunakan SQLite in-memory dan HTTP palsu; tidak mengirim pesan Telegram asli:
+Saat memverifikasi job Cronicle, jalankan **Run Now** dan periksa status sukses serta log `telegram:dispatch`. Konfirmasi pengiriman nyata melalui riwayat owner; job yang berhasil dengan antrean kosong hanya membuktikan worker dapat berjalan. Tombol **Kirim pesan percobaan** tetap dapat dipakai sebelum notifikasi otomatis diaktifkan.
 
-```sh
-php vendor/bin/phpunit --bootstrap vendor/autoload.php tests/Feature/TelegramNotificationsTest.php tests/Feature/AccessRolesTest.php
-```
-
-Referensi resmi: [Telegram sendMessage](https://core.telegram.org/bots/api#sendmessage), [Laravel queue](https://laravel.com/docs/12.x/queues), [Laravel scheduler](https://laravel.com/docs/12.x/scheduling).
+Referensi resmi: [Telegram sendMessage](https://core.telegram.org/bots/api#sendmessage), [Laravel queue](https://laravel.com/docs/12.x/queues), [Cronicle API dan pengaturan event](https://github.com/jhuckaby/Cronicle/blob/master/docs/APIReference.md).
