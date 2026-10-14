@@ -1,0 +1,2 @@
+# Root-owned wrapper, www-data only, no arguments. No generic shell or Artisan access.
+cronicle ALL=(www-data) NOPASSWD: /usr/local/libexec/malahlaundry/telegram-notifications ""

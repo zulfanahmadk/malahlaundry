@@ -37,7 +37,19 @@ Gunakan Shell Script plugin dengan isi [telegram-notifications.sh](../deploy/cro
 - Plugin: **Shell Script** (`shellplug`).
 - Maksimal concurrent job: **1**; timeout **75 detik**.
 - Catch up, detached, antrean event Cronicle, dan retry Cronicle: **nonaktif**. Retry pesan diatur oleh outbox Laravel.
-- Script dijalankan Cronicle sebagai root, sedangkan seluruh Artisan dijalankan sebagai **www-data** melalui `sudo -n`.
+- Layanan Cronicle berjalan sebagai **cronicle**. Sudo hanya mengizinkan akun ini menjalankan wrapper Telegram sebagai **www-data**, tanpa argumen.
+
+Untuk memasang wrapper dan izin pada server baru, jalankan sebagai root dari folder aplikasi:
+
+```sh
+install -d -o root -g root -m 0755 /usr/local/libexec/malahlaundry
+install -o root -g root -m 0755 deploy/cronicle/telegram-worker.sh /usr/local/libexec/malahlaundry/telegram-notifications
+visudo -cf deploy/cronicle/cronicle-malahlaundry-telegram.sudoers
+install -o root -g root -m 0440 deploy/cronicle/cronicle-malahlaundry-telegram.sudoers /etc/sudoers.d/cronicle-malahlaundry-telegram
+visudo -cf /etc/sudoers.d/cronicle-malahlaundry-telegram
+```
+
+Wrapper di luar checkout harus tetap milik root agar akun layanan tidak dapat mengganti perintah yang diizinkan oleh sudo. Saat isi wrapper di repository diperbarui, pasang ulang wrapper sebagai root setelah pull. Shell Script pada event Cronicle berisi `telegram-notifications.sh`.
 
 `flock` memakai `storage/framework/telegram-cronicle.lock` agar Run Now dan eksekusi terjadwal tidak membuat worker kedua. Worker keluar saat antrean kosong, setelah batas 35 detik di antara job, atau setelah 100 job. Satu job yang sedang diproses boleh selesai terlebih dahulu. Pemrosesan berlanjut pada menit berikutnya, sehingga latensi antrean dapat mencapai sekitar satu menit. Riwayat Cronicle memperlihatkan hasil command; riwayat Telegram owner memperlihatkan konfirmasi tiap pesan.
 
